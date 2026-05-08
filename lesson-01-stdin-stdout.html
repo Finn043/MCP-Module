@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 01: stdin/stdout — MCP Learning</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"💡 Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+pre{background:#1a1a1a;border:1px solid #3e3e42;border-radius:8px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
+.cmt{color:#6a9955;}
+.kw{color:#c586c0;}
+.str{color:#ce9178;}
+/* Demo */
+.terminal{background:#0d1117;border:1px solid #3e3e42;border-radius:8px;padding:16px;font-family:monospace;font-size:13px;min-height:80px;margin:12px 0;}
+.terminal-input{width:100%;background:#0d1117;border:none;border-top:1px solid #3e3e42;padding:10px;color:#4ec9b0;font-family:monospace;font-size:13px;outline:none;margin-top:8px;}
+.terminal-prompt{color:#4ec9b0;}
+.terminal-out{color:#ffd700;}
+.terminal-err{color:#f44747;}
+.pipe-arrow{font-size:24px;color:#ffd700;text-align:center;padding:8px;animation:pulse 1.5s infinite;}
+@keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>📡 Bài 01: stdin / stdout / stderr</h1>
+  <p class="subtitle">Standard streams — cách process nhận và gửi dữ liệu</p>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+  </div>
+
+  <!-- THEORY TAB -->
+  <div class="tab-content active" id="tab-theory">
+
+    <h2>1. Ba standard streams của mọi process</h2>
+    <p>Mỗi process trong Unix/Linux/macOS tự động có <span class="highlight">3 kênh giao tiếp</span>:</p>
+
+    <table>
+      <tr><th>Stream</th><th>FD</th><th>Hướng</th><th>Mặc định kết nối đến</th><th>Dùng để</th></tr>
+      <tr><td>📥 stdin</td><td>0</td><td>INPUT (đọc)</td><td>Bàn phím</td><td>Nhận dữ liệu vào</td></tr>
+      <tr><td>📤 stdout</td><td>1</td><td>OUTPUT (ghi)</td><td>Terminal</td><td>Gửi kết quả ra</td></tr>
+      <tr><td>⚠️ stderr</td><td>2</td><td>OUTPUT (ghi)</td><td>Terminal</td><td>Gửi lỗi/debug</td></tr>
+    </table>
+
+    <div class="diagram">
+      <div>Bàn phím <span class="arrow">──→</span> <span class="box">stdin (FD 0)</span> <span class="arrow">──→</span> <span class="box">Process</span> <span class="arrow">──→</span> <span class="box">stdout (FD 1)</span> <span class="arrow">──→</span> Terminal</div>
+      <br>
+      <div style="font-size:12px;color:#858585">stderr (FD 2) cũng ghi ra Terminal, nhưng tách biệt với stdout</div>
+    </div>
+
+    <div class="analogy">
+      Process như một nhà máy: stdin là cửa nhập nguyên liệu, stdout là cửa xuất sản phẩm, stderr là chuông báo lỗi.
+    </div>
+
+    <h2>2. Đọc stdin trong Python</h2>
+    <pre><code><span class="kw">import</span> sys
+
+<span class="cmt"># Đọc một dòng từ stdin (BLOCKING — chờ đến khi có data)</span>
+line = sys.stdin.readline()
+print(f"Nhận được: {line.strip()}")
+
+<span class="cmt"># Đọc toàn bộ stdin cho đến EOF</span>
+data = sys.stdin.read()
+
+<span class="cmt"># Vòng lặp đọc từng dòng (pattern của MCP server)</span>
+<span class="kw">while</span> True:
+    line = sys.stdin.readline()
+    <span class="kw">if not</span> line:  <span class="cmt"># EOF — client đóng kết nối</span>
+        <span class="kw">break</span>
+    handle(line.strip())</code></pre>
+
+    <h2>3. Ghi stdout trong Python</h2>
+    <pre><code><span class="kw">import</span> sys
+
+<span class="cmt"># Cách 1: print (tự thêm newline)</span>
+print("Hello, stdout!")
+
+<span class="cmt"># Cách 2: sys.stdout.write (kiểm soát hơn)</span>
+sys.stdout.write("Hello!\n")
+
+<span class="cmt"># ⚠️ QUAN TRỌNG: flush() sau khi ghi trong MCP!</span>
+sys.stdout.flush()  <span class="cmt"># Đảm bảo data được gửi ngay, không bị buffer</span></code></pre>
+
+    <div class="card card-yellow">
+      <strong>⚠️ Tại sao cần flush()?</strong><br>
+      Python buffer stdout để tối ưu performance. Trong MCP, nếu không flush, message có thể bị giữ lại trong buffer — client sẽ không nhận được response!
+    </div>
+
+    <h2>4. stderr — Kênh riêng cho lỗi và debug</h2>
+    <pre><code><span class="kw">import</span> sys
+
+<span class="cmt"># Ghi ra stderr — KHÔNG bị redirect cùng stdout</span>
+print("Debug info", file=sys.stderr)
+sys.stderr.write("Error: something failed\n")
+
+<span class="cmt"># Redirect riêng biệt trong shell:</span>
+<span class="cmt"># $ python3 server.py > output.txt 2> error.log</span></code></pre>
+
+    <div class="card card-green">
+      <strong>💡 Trong MCP:</strong> Dùng <code style="color:#9cdcfe">stderr</code> cho debug logs.<br>
+      MCP host chỉ đọc <strong>stdout</strong> — stderr không ảnh hưởng giao tiếp.
+    </div>
+
+    <h2>5. Pipe — Kết nối stdout → stdin</h2>
+    <p>Ký tự <code style="color:#ffd700">|</code> kết nối stdout của lệnh trước với stdin của lệnh sau:</p>
+    <pre><code><span class="cmt"># stdout của echo → stdin của python3</span>
+$ echo '{"method":"ping"}' | python3 mcp_server.py
+
+<span class="cmt"># Chuỗi nhiều pipe</span>
+$ cat requests.txt | python3 server.py | python3 parser.py</code></pre>
+
+    <h2>6. Pattern MCP Server hoàn chỉnh</h2>
+    <pre><code><span class="kw">import</span> sys, json
+
+<span class="kw">while</span> True:
+    line = sys.stdin.readline()     <span class="cmt"># ← Nhận JSON-RPC từ host</span>
+    <span class="kw">if not</span> line: <span class="kw">break</span>
+
+    request = json.loads(line)
+    response = process(request)
+
+    sys.stdout.write(json.dumps(response) + <span class="str">"\n"</span>)
+    sys.stdout.flush()              <span class="cmt"># ← Gửi ngay, không buffer</span></code></pre>
+  </div>
+
+  <!-- DEMO TAB -->
+  <div class="tab-content" id="tab-demo">
+    <h2>🎮 Khám phá stdin/stdout</h2>
+
+    <h3>Demo 1: Echo Server — Gõ input, xem output</h3>
+    <p>Mô phỏng một process đơn giản đọc stdin và ghi ra stdout:</p>
+    <div class="terminal" id="echo-terminal">
+      <div><span class="terminal-prompt">$</span> <span style="color:#858585">python3 echo_server.py (đang chạy...)</span></div>
+      <div id="echo-history"></div>
+    </div>
+    <div style="display:flex;gap:8px;align-items:center;">
+      <input type="text" id="echo-input" class="terminal-input" placeholder="Gõ message → Enter để gửi vào stdin..." style="flex:1;border-radius:6px;border:1px solid #3e3e42;">
+      <button class="btn" style="margin-top:0;" onclick="sendEcho()">Gửi →</button>
+    </div>
+    <button class="btn" style="background:#3e3e42;margin-top:8px;" onclick="resetEcho()">↺ Reset</button>
+
+    <h3 style="margin-top:28px;">Demo 2: Mô phỏng Pipe (stdout → stdin)</h3>
+    <p>Xem data chảy qua pipe từ process này sang process khác:</p>
+    <div style="display:flex;gap:16px;align-items:center;flex-wrap:wrap;margin:16px 0;">
+      <div style="flex:1;min-width:180px;background:#1a2d1a;border:2px solid #4ec9b0;border-radius:8px;padding:16px;">
+        <div style="color:#4ec9b0;font-weight:700;margin-bottom:8px;">Process A (Producer)</div>
+        <div id="pipe-out" style="font-family:monospace;font-size:13px;min-height:60px;color:#d4d4d4;"></div>
+      </div>
+      <div class="pipe-arrow" id="pipe-anim" style="flex:0;">│<br>│<br>▼</div>
+      <div style="flex:1;min-width:180px;background:#1a1a2e;border:2px solid #007acc;border-radius:8px;padding:16px;">
+        <div style="color:#007acc;font-weight:700;margin-bottom:8px;">Process B (Consumer)</div>
+        <div id="pipe-in" style="font-family:monospace;font-size:13px;min-height:60px;color:#d4d4d4;"></div>
+      </div>
+    </div>
+    <button class="btn" onclick="simulatePipe()">▶️ Chạy Pipe Simulation</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetPipe()">↺ Reset</button>
+  </div>
+
+  <!-- QUIZ TAB -->
+  <div class="tab-content" id="tab-quiz">
+    <h2>📝 Kiểm tra kiến thức</h2>
+    <div id="quiz-container"></div>
+    <div class="score-box" id="score-display" style="display:none;"></div>
+    <button class="btn" onclick="checkAll()" style="margin-top:20px;">✅ Kiểm tra đáp án</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetQuiz()">↺ Làm lại</button>
+  </div>
+
+  <div class="nav-bar">
+    <a class="nav-btn" href="lesson-00-process.html">← Bài 00: Process</a>
+    <a class="nav-btn" href="lesson-01-file-descriptors.html">Tiếp theo: File Descriptors →</a>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabs = ['theory','demo','quiz'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// Demo 1: Echo server
+let echoHistory = [];
+function sendEcho() {
+  const inp = document.getElementById('echo-input');
+  const msg = inp.value.trim();
+  if (!msg) return;
+  inp.value = '';
+  const h = document.getElementById('echo-history');
+  h.innerHTML += `<div><span class="terminal-prompt">stdin&gt;</span> <span style="color:#9cdcfe">${msg}</span></div>`;
+  setTimeout(() => {
+    const upper = msg.toUpperCase();
+    h.innerHTML += `<div><span style="color:#858585">stdout&gt;</span> <span class="terminal-out">${upper}</span></div>`;
+    document.getElementById('echo-terminal').scrollTop = 9999;
+  }, 300);
+}
+document.getElementById('echo-input').addEventListener('keydown', e => { if(e.key==='Enter') sendEcho(); });
+function resetEcho() {
+  document.getElementById('echo-history').innerHTML = '';
+}
+
+// Demo 2: Pipe simulation
+const pipeMessages = [
+  '{"jsonrpc":"2.0","method":"initialize","id":1}',
+  '{"jsonrpc":"2.0","method":"tools/list","id":2}',
+  '{"jsonrpc":"2.0","method":"tools/call","id":3}',
+];
+let pipeRunning = false;
+function simulatePipe() {
+  if (pipeRunning) return;
+  pipeRunning = true;
+  document.getElementById('pipe-out').innerHTML = '';
+  document.getElementById('pipe-in').innerHTML = '';
+  pipeMessages.forEach((msg, i) => {
+    setTimeout(() => {
+      document.getElementById('pipe-out').innerHTML += `<div style="color:#4ec9b0;margin:2px 0;">→ ${msg}</div>`;
+    }, i * 1200);
+    setTimeout(() => {
+      document.getElementById('pipe-in').innerHTML += `<div style="color:#9cdcfe;margin:2px 0;">← ${msg}</div>`;
+    }, i * 1200 + 600);
+  });
+  setTimeout(() => { pipeRunning = false; }, pipeMessages.length * 1200 + 600);
+}
+function resetPipe() {
+  pipeRunning = false;
+  document.getElementById('pipe-out').innerHTML = '';
+  document.getElementById('pipe-in').innerHTML = '';
+}
+
+// Quiz
+const questions = [
+  {q:'File Descriptor của stdin là số mấy?', opts:['1','2','0','-1'], ans:2, ex:'stdin = FD 0, stdout = FD 1, stderr = FD 2.'},
+  {q:'Tại sao cần gọi sys.stdout.flush() trong MCP server?', opts:['Để xóa màn hình','Để đóng kết nối','Đảm bảo data được gửi ngay, không bị giữ trong buffer','Để tăng tốc độ'], ans:2, ex:'Python buffer stdout. flush() ép gửi ngay lập tức — critical cho real-time communication.'},
+  {q:'Pipe (|) trong shell làm gì?', opts:['Kết nối stderr → stderr','Tạo file mới','Kết nối stdout của cmd trước → stdin của cmd sau','Chỉ hoạt động trên Linux'], ans:2, ex:'Pipe kết nối stdout → stdin. Đây chính là cơ chế MCP stdio transport dùng.'},
+  {q:'Trong MCP, stderr dùng để làm gì?', opts:['Gửi JSON-RPC response','Debug logs mà không ảnh hưởng giao tiếp','Nhận request từ host','Không được dùng'], ans:1, ex:'MCP host chỉ đọc stdout. stderr là nơi an toàn để log debug mà không làm hỏng protocol.'},
+  {q:'sys.stdin.readline() trả về chuỗi rỗng khi nào?', opts:['Khi nhận space','Khi nhận newline','Khi EOF — client đóng kết nối','Khi có lỗi mạng'], ans:2, ex:'readline() trả về "" khi EOF. MCP server dùng điều này để biết host đã đóng kết nối.'},
+];
+
+let selected = new Array(questions.length).fill(null);
+let checked = false;
+
+function buildQuiz() {
+  document.getElementById('quiz-container').innerHTML = questions.map((q,i) => `
+    <div style="background:#252526;border:1px solid #3e3e42;border-radius:8px;padding:20px;margin:16px 0;">
+      <div style="font-weight:700;margin-bottom:12px;color:#ffffff;">${i+1}. ${q.q}</div>
+      ${q.opts.map((o,j) => `<div class="quiz-option" id="opt-${i}-${j}" onclick="pick(${i},${j})">${o}</div>`).join('')}
+      <div class="feedback" id="fb-${i}"></div>
+    </div>`).join('');
+}
+function pick(qi, oi) {
+  if (checked) return;
+  selected[qi] = oi;
+  for (let j=0; j<questions[qi].opts.length; j++) {
+    const el = document.getElementById('opt-'+qi+'-'+j);
+    el.style.borderColor = j===oi?'#007acc':'#3e3e42';
+    el.style.background = j===oi?'#2a3a4a':'#2d2d30';
+  }
+}
+function checkAll() {
+  checked = true; let score = 0;
+  questions.forEach((q,i) => {
+    const fb = document.getElementById('fb-'+i);
+    for (let j=0; j<q.opts.length; j++) {
+      const el = document.getElementById('opt-'+i+'-'+j);
+      if (j===q.ans) el.classList.add('correct');
+      else if (j===selected[i] && selected[i]!==q.ans) el.classList.add('wrong');
+    }
+    if (selected[i]===q.ans) { score++; fb.className='feedback show ok'; fb.textContent='✓ Đúng! '+q.ex; }
+    else { fb.className='feedback show bad'; fb.textContent='✗ Sai. '+q.ex; }
+  });
+  const sd = document.getElementById('score-display');
+  sd.style.display='block';
+  if (score===questions.length) sd.textContent='🏆 Hoàn hảo! '+score+'/'+questions.length;
+  else if (score>=3) sd.textContent='👍 Tốt! '+score+'/'+questions.length;
+  else sd.textContent='📚 Cần ôn lại: '+score+'/'+questions.length;
+}
+function resetQuiz() {
+  selected=new Array(questions.length).fill(null); checked=false;
+  document.getElementById('score-display').style.display='none';
+  buildQuiz();
+}
+buildQuiz();
+</script>
+</body>
+</html>

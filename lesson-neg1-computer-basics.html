@@ -1,0 +1,371 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài -1: Máy tính hoạt động như thế nào?</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"💡 Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🖥️ Bài -1: Máy tính hoạt động như thế nào?</h1>
+  <p class="subtitle">Bài học nền tảng — hiểu máy tính trước khi học về Process</p>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+  </div>
+
+  <!-- THEORY TAB -->
+  <div class="tab-content active" id="tab-theory">
+
+    <h2>1. Bốn thành phần cốt lõi của máy tính</h2>
+    <p>Mọi máy tính dù to hay nhỏ đều có <span class="highlight">4 thành phần chính</span>:</p>
+
+    <table>
+      <tr><th>Thành phần</th><th>Tên đầy đủ</th><th>Vai trò</th><th>Ví dụ thực tế</th></tr>
+      <tr><td>🧠 CPU</td><td>Central Processing Unit</td><td>Bộ xử lý — "Não" của máy tính</td><td>Chef nấu ăn</td></tr>
+      <tr><td>🗂️ RAM</td><td>Random Access Memory</td><td>Bộ nhớ tạm — "Bàn làm việc"</td><td>Mặt bàn bếp</td></tr>
+      <tr><td>💾 Storage</td><td>Hard Disk / SSD</td><td>Lưu trữ lâu dài — "Tủ đồ"</td><td>Tủ lạnh chứa nguyên liệu</td></tr>
+      <tr><td>📡 I/O</td><td>Input / Output</td><td>Giao tiếp với thế giới bên ngoài</td><td>Cửa ra vào nhà bếp</td></tr>
+    </table>
+
+    <div class="analogy">
+      Nhà bếp: Chef (CPU) lấy nguyên liệu từ tủ lạnh (Storage), để lên bàn bếp (RAM) rồi nấu. Khách hàng gọi món qua cửa (I/O).
+    </div>
+
+    <h2>2. CPU — "Não" của máy tính</h2>
+    <div class="card card-blue">
+      <p>CPU chỉ làm <span class="highlight">một việc duy nhất</span>: thực hiện các lệnh (instructions) cực kỳ nhanh.</p>
+      <p>CPU thực hiện <strong>hàng tỷ lệnh mỗi giây</strong> (GHz = gigahertz).</p>
+      <p>Các lệnh đơn giản như: cộng hai số, so sánh, chuyển dữ liệu từ nơi này sang nơi khác.</p>
+    </div>
+    <div class="analogy">
+      CPU như chef rất nhanh tay — mỗi giây có thể thái 3 tỷ lát rau. Nhưng chef chỉ làm theo công thức, không tự sáng tạo.
+    </div>
+
+    <h2>3. RAM vs Storage — Sự khác biệt quan trọng nhất</h2>
+    <div class="diagram">
+      <div>
+        <div class="box" style="border-color:#007acc">💾 Storage (SSD/HDD)</div>
+        <span class="arrow"> ←→ </span>
+        <div class="box" style="border-color:#4ec9b0">🗂️ RAM</div>
+        <span class="arrow"> ←→ </span>
+        <div class="box" style="border-color:#ffd700">🧠 CPU</div>
+      </div>
+      <br>
+      <div style="font-size:12px;color:#858585">Chậm, lâu dài &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Nhanh hơn, tạm thời &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; Nhanh nhất, rất nhỏ</div>
+    </div>
+
+    <table>
+      <tr><th>Đặc điểm</th><th>🗂️ RAM</th><th>💾 Storage</th></tr>
+      <tr><td>Tốc độ</td><td>Rất nhanh (ns)</td><td>Chậm hơn (ms)</td></tr>
+      <tr><td>Dung lượng</td><td>Nhỏ (8-64 GB)</td><td>Lớn (256 GB - nhiều TB)</td></tr>
+      <tr><td>Khi tắt máy</td><td>❌ Mất hết</td><td>✅ Còn nguyên</td></tr>
+      <tr><td>Giá</td><td>Đắt hơn</td><td>Rẻ hơn</td></tr>
+    </table>
+
+    <div class="card card-yellow">
+      <strong>⚠️ Điều quan trọng:</strong> CPU KHÔNG đọc dữ liệu trực tiếp từ Storage.<br>
+      Mọi thứ phải được <span class="highlight">nạp vào RAM trước</span>, rồi CPU mới xử lý được.
+    </div>
+
+    <h2>4. Operating System (OS) — Người quản lý</h2>
+    <p>OS (Windows, macOS, Linux) là phần mềm đặc biệt chạy đầu tiên khi bật máy. OS có nhiệm vụ:</p>
+
+    <div class="step"><div class="step-num">1</div><div>Quản lý CPU — chia thời gian CPU cho nhiều chương trình</div></div>
+    <div class="step"><div class="step-num">2</div><div>Quản lý RAM — cấp phát và thu hồi bộ nhớ</div></div>
+    <div class="step"><div class="step-num">3</div><div>Quản lý Storage — đọc/ghi file qua File System</div></div>
+    <div class="step"><div class="step-num">4</div><div>Quản lý I/O — bàn phím, màn hình, mạng, v.v.</div></div>
+
+    <div class="analogy">
+      OS như người quản lý nhà hàng — điều phối các chef (CPU), phân công bàn bếp (RAM), và kiểm soát nguyên liệu (Storage).
+    </div>
+
+    <h2>5. Khi bạn mở một ứng dụng — chuyện gì xảy ra?</h2>
+    <div class="diagram">
+      <div>Bạn double-click <span style="color:#ffd700">chrome</span></div>
+      <div class="arrow">↓</div>
+      <div>OS đọc file <span class="box">chrome</span> từ Storage</div>
+      <div class="arrow">↓</div>
+      <div>OS nạp code vào <span class="box" style="border-color:#4ec9b0">RAM</span></div>
+      <div class="arrow">↓</div>
+      <div>OS tạo một <span class="box" style="border-color:#ffd700">Process</span> và giao cho CPU chạy</div>
+      <div class="arrow">↓</div>
+      <div>Chrome hiện lên màn hình! 🎉</div>
+    </div>
+
+    <div class="card card-green">
+      <strong>💡 Kết nối với bài tiếp theo:</strong><br>
+      Bước cuối — OS tạo ra một <span class="highlight">Process</span> — chính là thứ bạn sẽ học ở Lesson 00.<br>
+      Process = chương trình đang sống trong RAM, được CPU thực thi.
+    </div>
+
+    <h2>6. File System — Cách tổ chức dữ liệu</h2>
+    <p>Storage không phải một đống dữ liệu hỗn độn. OS tổ chức nó thành <span class="highlight">File System</span>:</p>
+    <div class="diagram">
+      <div>/ (root)</div>
+      <div>├── <span class="box">Users/</span></div>
+      <div>│&nbsp;&nbsp;&nbsp;└── <span class="box">baotin/</span></div>
+      <div>│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;├── <span class="box">Desktop/</span></div>
+      <div>│&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;└── <span class="box">Documents/</span></div>
+      <div>└── <span class="box">usr/bin/</span> &nbsp;← các chương trình như python3, git, ...</div>
+    </div>
+
+    <h2>7. Terminal — Cửa sổ giao tiếp với OS</h2>
+    <div class="card card-blue">
+      <p>Terminal cho phép bạn <span class="highlight">gõ lệnh trực tiếp</span> vào OS bằng text.</p>
+      <p>Thay vì click chuột, bạn gõ: <code style="color:#9cdcfe;">ls</code> để xem files, <code style="color:#9cdcfe;">cd</code> để di chuyển thư mục, <code style="color:#9cdcfe;">python3 app.py</code> để chạy chương trình.</p>
+    </div>
+  </div>
+
+  <!-- DEMO TAB -->
+  <div class="tab-content" id="tab-demo">
+    <h2>🎮 Khám phá từng khái niệm</h2>
+
+    <h3>Demo 1: RAM vs Storage — Tắt máy thì sao?</h3>
+    <div class="card card-yellow">
+      <p>Mô phỏng RAM và Storage:</p>
+    </div>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin:16px 0;">
+      <div style="flex:1;min-width:200px;background:#1a3a2a;border:2px solid #4ec9b0;border-radius:8px;padding:16px;">
+        <div style="color:#4ec9b0;font-weight:700;margin-bottom:10px;">🗂️ RAM (sẽ mất khi tắt)</div>
+        <div id="ram-display" style="font-family:monospace;font-size:13px;min-height:60px;color:#d4d4d4;"></div>
+        <button class="btn" onclick="writeToRAM()" style="margin-top:8px;">Ghi vào RAM</button>
+      </div>
+      <div style="flex:1;min-width:200px;background:#1a2a3a;border:2px solid #007acc;border-radius:8px;padding:16px;">
+        <div style="color:#007acc;font-weight:700;margin-bottom:10px;">💾 Storage (luôn còn)</div>
+        <div id="storage-display" style="font-family:monospace;font-size:13px;min-height:60px;color:#d4d4d4;">
+          <div>📄 chrome (45 MB)</div>
+          <div>📄 python3 (5 MB)</div>
+          <div>📄 my_script.py (2 KB)</div>
+        </div>
+      </div>
+    </div>
+    <button class="btn" style="background:#f44747;" onclick="shutdownRAM()">🔌 Tắt máy (xóa RAM)</button>
+
+    <h3 style="margin-top:28px;">Demo 2: Mô phỏng khi bạn mở Chrome</h3>
+    <div id="open-app-log" style="background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;font-family:monospace;font-size:13px;min-height:100px;">
+      <span style="color:#858585;">// Nhấn nút để xem từng bước...</span>
+    </div>
+    <button class="btn" onclick="simulateOpenApp()">▶️ Double-click Chrome</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetAppSim()">↺ Reset</button>
+  </div>
+
+  <!-- QUIZ TAB -->
+  <div class="tab-content" id="tab-quiz">
+    <h2>📝 Kiểm tra kiến thức</h2>
+    <div id="quiz-container"></div>
+    <div class="score-box" id="score-display" style="display:none;"></div>
+    <button class="btn" onclick="checkAll()" style="margin-top:20px;">✅ Kiểm tra đáp án</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetQuiz()">↺ Làm lại</button>
+  </div>
+
+  <div class="nav-bar">
+    <span style="color:#858585;">← (Đây là bài đầu tiên)</span>
+    <a class="nav-btn" href="lesson-00-process.html">Tiếp theo: Process là gì? →</a>
+  </div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach((t,i) => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabs = ['theory','demo','quiz'];
+  const idx = tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// Demo 1: RAM vs Storage
+let ramData = [];
+function writeToRAM() {
+  const items = ['chrome (đang chạy)','python3 (đang chạy)','tab #1 data','tab #2 data'];
+  const item = items[ramData.length % items.length];
+  ramData.push(item);
+  document.getElementById('ram-display').innerHTML = ramData.map(i => '<div>📌 ' + i + '</div>').join('');
+}
+function shutdownRAM() {
+  ramData = [];
+  document.getElementById('ram-display').innerHTML = '<div style="color:#f44747;">⚡ Mất điện — RAM bị xóa!</div>';
+  setTimeout(() => { document.getElementById('ram-display').innerHTML = '<span style="color:#858585;">(trống)</span>'; }, 1500);
+}
+
+// Demo 2: Open App Simulation
+const appSteps = [
+  {t: 300,  msg: '👆 Bạn double-click Chrome.exe...', color: '#ffd700'},
+  {t: 900,  msg: '🔍 OS tìm file Chrome trong Storage...', color: '#9cdcfe'},
+  {t: 1600, msg: '📖 OS đọc Chrome từ 💾 Storage (45 MB)...', color: '#9cdcfe'},
+  {t: 2400, msg: '📦 OS nạp code Chrome vào 🗂️ RAM...', color: '#4ec9b0'},
+  {t: 3200, msg: '⚙️  OS tạo Process mới → PID: 4521', color: '#4ec9b0'},
+  {t: 4000, msg: '🧠 CPU bắt đầu thực thi Chrome code...', color: '#ffd700'},
+  {t: 4700, msg: '🎉 Chrome hiện ra màn hình! Process đang chạy.', color: '#4ec9b0'},
+];
+let simRunning = false;
+function simulateOpenApp() {
+  if (simRunning) return;
+  simRunning = true;
+  const log = document.getElementById('open-app-log');
+  log.innerHTML = '';
+  appSteps.forEach(step => {
+    setTimeout(() => {
+      log.innerHTML += '<div style="color:' + step.color + ';margin:4px 0;">' + step.msg + '</div>';
+    }, step.t);
+  });
+  setTimeout(() => { simRunning = false; }, 5000);
+}
+function resetAppSim() {
+  simRunning = false;
+  document.getElementById('open-app-log').innerHTML = '<span style="color:#858585;">// Nhấn nút để xem từng bước...</span>';
+}
+
+// Quiz
+const questions = [
+  {
+    q: 'CPU là gì?',
+    opts: ['Bộ nhớ lưu trữ dài hạn','Bộ xử lý trung tâm, thực hiện các lệnh','Hệ điều hành','Card đồ họa'],
+    ans: 1,
+    ex: 'CPU = Central Processing Unit — "Não" của máy tính, thực hiện hàng tỷ lệnh mỗi giây.'
+  },
+  {
+    q: 'Khi tắt máy tính, dữ liệu nào bị mất?',
+    opts: ['Dữ liệu trên SSD','Dữ liệu trong RAM','Cả hai','Không cái nào'],
+    ans: 1,
+    ex: 'RAM là bộ nhớ tạm — mất điện là mất dữ liệu. SSD/HDD lưu lâu dài.'
+  },
+  {
+    q: 'Trước khi CPU chạy một chương trình, chương trình đó phải ở đâu?',
+    opts: ['Trên Internet','Trong Storage','Trong RAM','Trong CPU cache'],
+    ans: 2,
+    ex: 'CPU chỉ làm việc với RAM. Chương trình phải được nạp từ Storage vào RAM trước.'
+  },
+  {
+    q: 'OS (Operating System) có vai trò gì?',
+    opts: ['Chỉ hiển thị giao diện đẹp','Quản lý CPU, RAM, Storage và I/O','Chỉ kết nối Internet','Là một loại RAM đặc biệt'],
+    ans: 1,
+    ex: 'OS là phần mềm quản lý toàn bộ tài nguyên máy tính và cho phép các chương trình chạy.'
+  },
+  {
+    q: 'Điều gì xảy ra khi bạn mở một ứng dụng?',
+    opts: [
+      'Ứng dụng chạy trực tiếp từ SSD',
+      'OS nạp ứng dụng vào RAM rồi tạo Process',
+      'CPU tải ứng dụng từ Internet',
+      'RAM ghi ứng dụng vào CPU'
+    ],
+    ans: 1,
+    ex: 'OS đọc file từ Storage → nạp vào RAM → tạo Process → CPU chạy Process đó.'
+  }
+];
+
+let selected = new Array(questions.length).fill(null);
+let checked = false;
+
+function buildQuiz() {
+  const c = document.getElementById('quiz-container');
+  c.innerHTML = questions.map((q,i) => `
+    <div style="background:#252526;border:1px solid #3e3e42;border-radius:8px;padding:20px;margin:16px 0;">
+      <div style="font-weight:700;margin-bottom:12px;color:#ffffff;">${i+1}. ${q.q}</div>
+      ${q.opts.map((o,j) => `
+        <div class="quiz-option" id="opt-${i}-${j}" onclick="pick(${i},${j})">${o}</div>
+      `).join('')}
+      <div class="feedback" id="fb-${i}"></div>
+    </div>
+  `).join('');
+}
+
+function pick(qi, oi) {
+  if (checked) return;
+  selected[qi] = oi;
+  for (let j = 0; j < questions[qi].opts.length; j++) {
+    const el = document.getElementById('opt-'+qi+'-'+j);
+    el.style.borderColor = j === oi ? '#007acc' : '#3e3e42';
+    el.style.background = j === oi ? '#2a3a4a' : '#2d2d30';
+  }
+}
+
+function checkAll() {
+  checked = true;
+  let score = 0;
+  questions.forEach((q,i) => {
+    const fb = document.getElementById('fb-'+i);
+    for (let j = 0; j < q.opts.length; j++) {
+      const el = document.getElementById('opt-'+i+'-'+j);
+      if (j === q.ans) el.classList.add('correct');
+      else if (j === selected[i] && selected[i] !== q.ans) el.classList.add('wrong');
+    }
+    if (selected[i] === q.ans) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = '✓ Đúng! ' + q.ex;
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = '✗ Sai. ' + q.ex;
+    }
+  });
+  const sd = document.getElementById('score-display');
+  sd.style.display = 'block';
+  if (score === questions.length) sd.textContent = '🏆 Hoàn hảo! ' + score + '/' + questions.length;
+  else if (score >= 3) sd.textContent = '👍 Tốt! ' + score + '/' + questions.length;
+  else sd.textContent = '📚 Cần ôn lại: ' + score + '/' + questions.length;
+}
+
+function resetQuiz() {
+  selected = new Array(questions.length).fill(null);
+  checked = false;
+  document.getElementById('score-display').style.display = 'none';
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

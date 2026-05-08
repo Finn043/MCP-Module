@@ -1,0 +1,665 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson 0: Process — Interactive</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.7;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #252526;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        /* Header */
+        .header {
+            background: #333;
+            padding: 20px 30px;
+            border-bottom: 2px solid #007acc;
+        }
+        .header h1 { color: #fff; font-size: 28px; }
+        .header .subtitle { color: #888; font-size: 14px; margin-top: 5px; }
+
+        /* Navigation tabs */
+        .tabs {
+            display: flex;
+            background: #1e1e1e;
+            border-bottom: 1px solid #333;
+        }
+        .tab {
+            padding: 15px 25px;
+            color: #888;
+            cursor: pointer;
+            border: none;
+            background: none;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        .tab:hover { color: #fff; }
+        .tab.active {
+            color: #fff;
+            background: #252526;
+            border-bottom: 2px solid #007acc;
+        }
+
+        /* Content sections */
+        .content { padding: 30px; display: none; }
+        .content.active { display: block; }
+
+        /* Theory styling */
+        .theory-box {
+            background: #2d2d30;
+            border-left: 4px solid #007acc;
+            padding: 20px;
+            border-radius: 0 8px 8px 0;
+            margin: 20px 0;
+        }
+        .theory-box h3 { color: #fff; margin-bottom: 10px; }
+        .theory-box p, .theory-box li { color: #ccc; }
+        .theory-box ul { margin-left: 20px; }
+        .theory-box li { margin: 8px 0; }
+
+        .diagram {
+            background: #1e1e1e;
+            padding: 25px;
+            border-radius: 8px;
+            text-align: center;
+            margin: 20px 0;
+            font-family: monospace;
+            font-size: 13px;
+            line-height: 2;
+            color: #9cdcfe;
+            border: 1px solid #333;
+        }
+
+        /* Code editor */
+        .editor-container {
+            margin: 20px 0;
+            border: 1px solid #333;
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        .editor-header {
+            background: #333;
+            padding: 10px 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .editor-title { color: #fff; font-size: 13px; }
+        .editor-buttons { display: flex; gap: 10px; }
+        .btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 13px;
+            transition: all 0.2s;
+        }
+        .btn-primary { background: #007acc; color: white; }
+        .btn-primary:hover { background: #005a9e; }
+        .btn-secondary { background: #444; color: white; }
+        .btn-secondary:hover { background: #555; }
+        .btn-success { background: #4ec9b0; color: #1e1e1e; }
+        .btn-success:hover { background: #3bc5a9; }
+
+        .code-editor {
+            width: 100%;
+            min-height: 200px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border: none;
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+            outline: none;
+        }
+        .code-editor:focus { background: #1a1a1a; }
+
+        /* Terminal output */
+        .terminal {
+            background: #1e1e1e;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin: 20px 0;
+            overflow: hidden;
+        }
+        .terminal-header {
+            background: #333;
+            padding: 10px 15px;
+            color: #fff;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .terminal-dots {
+            display: flex;
+            gap: 6px;
+        }
+        .dot { width: 12px; height: 12px; border-radius: 50%; }
+        .dot-red { background: #f44336; }
+        .dot-yellow { background: #ff9800; }
+        .dot-green { background: #4caf50; }
+        .terminal-content {
+            padding: 15px;
+            font-family: 'Fira Code', monospace;
+            font-size: 13px;
+            color: #4ec9b0;
+            min-height: 80px;
+            white-space: pre-wrap;
+        }
+        .terminal-content .cmd { color: #d4d4d4; }
+        .terminal-content .output { color: #ce9178; }
+        .terminal-content .error { color: #f44336; }
+
+        /* Exercise steps */
+        .exercise-box {
+            background: #2d2d30;
+            border: 1px solid #ffc107;
+            border-radius: 8px;
+            padding: 25px;
+            margin: 25px 0;
+        }
+        .exercise-title {
+            color: #ffc107;
+            font-size: 18px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .step {
+            margin: 12px 0;
+            padding: 12px;
+            background: #1e1e1e;
+            border-radius: 5px;
+            border-left: 3px solid #ffc107;
+        }
+        .step-num { color: #ffc107; font-weight: bold; margin-right: 8px; }
+
+        /* Quiz */
+        .quiz-box {
+            background: #2d2d30;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        .quiz-title {
+            color: #fff;
+            font-size: 20px;
+            margin-bottom: 20px;
+        }
+        .question {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #333;
+        }
+        .question:last-child { border-bottom: none; }
+        .question-text {
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 12px;
+            font-size: 15px;
+        }
+        .options { display: flex; flex-direction: column; gap: 8px; }
+        .option {
+            padding: 12px 15px;
+            background: #1e1e1e;
+            border: 2px solid #333;
+            border-radius: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: #ccc;
+        }
+        .option:hover { background: #2d2d30; border-color: #444; }
+        .option.selected { border-color: #007acc; background: #1e3a5f; }
+        .option.correct { border-color: #4ec9b0; background: #1e3a30; }
+        .option.incorrect { border-color: #f44336; background: #3e1a1a; }
+        .feedback {
+            margin-top: 10px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 13px;
+        }
+        .feedback.correct { background: #1e3a30; color: #4ec9b0; }
+        .feedback.incorrect { background: #3e1a1a; color: #f44336; }
+        .quiz-nav {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding-top: 15px;
+            border-top: 1px solid #333;
+        }
+        .score { font-size: 18px; font-weight: 600; color: #007acc; }
+
+        /* Navigation */
+        .nav-box {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 30px;
+            background: #333;
+            border-top: 1px solid #444;
+        }
+        .nav-link {
+            color: #007acc;
+            text-decoration: none;
+            font-weight: 600;
+            padding: 8px 16px;
+            background: #1e1e1e;
+            border-radius: 5px;
+            transition: all 0.2s;
+            font-size: 14px;
+        }
+        .nav-link:hover { background: #2d2d30; }
+        .nav-link.disabled {
+            color: #666;
+            background: #1e1e1e;
+            cursor: default;
+            pointer-events: none;
+        }
+
+        /* Success message */
+        .success-message {
+            background: #1e3a30;
+            border: 1px solid #4ec9b0;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 15px;
+            color: #4ec9b0;
+            display: none;
+        }
+        .success-message.show { display: block; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Lesson 0: Process la gi?</h1>
+            <p class="subtitle">Bai hoc dau tien — Hieu Process tu con so 0</p>
+        </div>
+
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('theory')">Theory</button>
+            <button class="tab" onclick="showTab('demo')">Demo</button>
+            <button class="tab" onclick="showTab('exercise')">Exercise</button>
+            <button class="tab" onclick="showTab('quiz')">Quiz</button>
+        </div>
+
+        <!-- THEORY TAB -->
+        <div id="theory" class="content active">
+            <div class="theory-box">
+                <h3>Process = Chuong trinh dang chay</h3>
+                <p style="margin: 15px 0;">Cu don gian:</p>
+                <ul>
+                    <li><strong>Program</strong> = File nam tren dia cung (chua chay)</li>
+                    <li><strong>Process</strong> = Chuong trinh dang chay trong RAM</li>
+                </ul>
+            </div>
+
+            <div class="diagram">
+                ┌────────────────────────────────────┐<br>
+                │     DIA CUNG (File System)        │<br>
+                │                                    │<br>
+                │  📄 python3   (file chua chay)     │<br>
+                │  📄 chrome    (file chua chay)     │<br>
+                │                                    │<br>
+                │         ↓ BAT DAU CHAY ↓           │<br>
+                │                                    │<br>
+                │  ┌────────────────────────────┐   │<br>
+                │  │       RAM (Memory)         │   │<br>
+                │  │                            │   │<br>
+                │  │  🟢 Process #1             │   │<br>
+                │  │     python3 dang chay      │   │<br>
+                │  │                            │   │<br>
+                │  │  🟢 Process #2             │   │<br>
+                │  │     chrome dang chay       │   │<br>
+                │  └────────────────────────────┘   │<br>
+                └────────────────────────────────────┘
+            </div>
+
+            <div class="theory-box">
+                <h3>Ví du doi thuong</h3>
+                <ul>
+                    <li><strong>Program</strong> = Ung dung iPhone tren App Store</li>
+                    <li><strong>Process</strong> = Khi ban mo app do</li>
+                </ul>
+            </div>
+
+            <div class="theory-box">
+                <h3>PID la gi?</h3>
+                <p>PID = Process ID — So dinh danh duy nhat cho moi process.</p>
+                <ul>
+                    <li>Moi process co PID rieng biet</li>
+                    <li>Hai process khong the co cung PID</li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- DEMO TAB -->
+        <div id="demo" class="content">
+            <div class="theory-box">
+                <h3>Demo 1: Xem processes dang chay</h3>
+                <p>Mo Terminal va go:</p>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <span>Terminal</span>
+                </div>
+                <div class="terminal-content"><span class="cmd">$ ps aux</span>
+<span class="output">USER   PID   %CPU  %MEM  COMMAND
+user   1234  0.5   1.2   /usr/bin/python3
+user   5678  2.1   8.5   /Applications/Chrome.app
+user   9012  0.1   0.3   /bin/bash</span></div>
+            </div>
+
+            <div class="theory-box" style="margin-top: 25px;">
+                <h3>Demo 2: Tao process moi bang Python</h3>
+                <p>Su dung subprocess de spawn process:</p>
+            </div>
+
+            <div class="editor-container">
+                <div class="editor-header">
+                    <span class="editor-title">demo_process.py</span>
+                    <div class="editor-buttons">
+                        <button class="btn btn-secondary" onclick="copyCode('demoCode')">Copy</button>
+                    </div>
+                </div>
+                <textarea id="demoCode" class="code-editor" readonly>import subprocess
+import time
+
+# Tao process moi (spawn)
+process = subprocess.Popen(["sleep", "5"])
+
+print(f"Process PID: {process.pid}")
+print("Process dang chay...")
+
+# Cho process xong
+process.wait()
+print("Process da xong!")</textarea>
+            </div>
+
+            <div class="terminal">
+                <div class="terminal-header">
+                    <div class="terminal-dots">
+                        <div class="dot dot-red"></div>
+                        <div class="dot dot-yellow"></div>
+                        <div class="dot dot-green"></div>
+                    </div>
+                    <span>Terminal Output</span>
+                </div>
+                <div class="terminal-content"><span class="cmd">$ python3 demo_process.py</span>
+<span class="output">Process PID: 54321
+Process dang chay...
+(cho 5 giay)
+Process da xong!</span></div>
+            </div>
+        </div>
+
+        <!-- EXERCISE TAB -->
+        <div id="exercise" class="content">
+            <div class="exercise-box">
+                <div class="exercise-title">
+                    <span>📝</span> Bai tap 1: Tao va kiem tra process
+                </div>
+                <div class="step">
+                    <span class="step-num">Bước 1:</span>
+                    Viet code de spawn process python3 va in ra PID
+                </div>
+                <div class="step">
+                    <span class="step-num">Bước 2:</span>
+                    Bam "Check" de kiem tra ket qua
+                </div>
+            </div>
+
+            <div class="editor-container">
+                <div class="editor-header">
+                    <span class="editor-title">exercise_1.py</span>
+                    <div class="editor-buttons">
+                        <button class="btn btn-secondary" onclick="resetCode('ex1Code')">Reset</button>
+                        <button class="btn btn-primary" onclick="checkExercise1()">Check</button>
+                    </div>
+                </div>
+                <textarea id="ex1Code" class="code-editor" placeholder="Nhap code cua ban o day...
+
+Gợi ý: Sử dụng subprocess.Popen() để tạo process
+Ví dụ: process = subprocess.Popen(['python3', '-c', 'print("Hello")'])
+Sau đó in ra process.pid"></textarea>
+            </div>
+
+            <div id="ex1Success" class="success-message">
+                ✓ Đúng! Bạn đã tạo process và lấy PID thành công.
+            </div>
+
+            <div class="exercise-box" style="margin-top: 30px;">
+                <div class="exercise-title">
+                    <span>📝</span> Bai tap 2: Xem PID cua chinh minh
+                </div>
+                <div class="step">
+                    <span class="step-num">Bước 1:</span>
+                    Su dung os.getpid() de in PID cua process hien tai
+                </div>
+            </div>
+
+            <div class="editor-container">
+                <div class="editor-header">
+                    <span class="editor-title">exercise_2.py</span>
+                    <div class="editor-buttons">
+                        <button class="btn btn-secondary" onclick="resetCode('ex2Code')">Reset</button>
+                        <button class="btn btn-primary" onclick="checkExercise2()">Check</button>
+                    </div>
+                </div>
+                <textarea id="ex2Code" class="code-editor" placeholder="Nhap code cua ban o day...
+
+Gợi ý: Sử dụng os.getpid() để lấy PID
+Ví dụ: pid = os.getpid()"></textarea>
+            </div>
+
+            <div id="ex2Success" class="success-message">
+                ✓ Đúng! Bạn đã lấy PID của process hiện tại.
+            </div>
+        </div>
+
+        <!-- QUIZ TAB -->
+        <div id="quiz" class="content">
+            <div class="quiz-box">
+                <h3 class="quiz-title">📋 5 Cau hoi</h3>
+                <div id="quiz"></div>
+                <div class="quiz-nav">
+                    <div class="score">Score: <span id="score">0</span>/5</div>
+                    <button class="btn btn-primary" onclick="checkAnswers()">Check Answers</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- NAVIGATION -->
+        <div class="nav-box">
+            <a href="#" class="nav-link disabled">← Previous</a>
+            <a href="01-stdio.html" class="nav-link">Next: stdin/stdout →</a>
+        </div>
+    </div>
+
+    <script>
+        // Tab switching
+        function showTab(tabId) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelectorAll('.content').forEach(c => c.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById(tabId).classList.add('active');
+        }
+
+        // Copy code
+        function copyCode(elementId) {
+            const code = document.getElementById(elementId);
+            code.select();
+            document.execCommand('copy');
+            alert('Da copy code!');
+        }
+
+        // Reset code
+        function resetCode(elementId) {
+            document.getElementById(elementId).value = '';
+        }
+
+        // Check exercise 1
+        function checkExercise1() {
+            const code = document.getElementById('ex1Code').value.toLowerCase();
+            const hasSubprocess = code.includes('subprocess') || code.includes('popen');
+            const hasPid = code.includes('pid') || code.includes('.pid');
+
+            if (hasSubprocess && hasPid) {
+                document.getElementById('ex1Success').classList.add('show');
+            } else {
+                alert('Chua dung! Ban can:\n1. Sử dụng subprocess.Popen()\n2. In ra process.pid');
+            }
+        }
+
+        // Check exercise 2
+        function checkExercise2() {
+            const code = document.getElementById('ex2Code').value.toLowerCase();
+            const hasOs = code.includes('os') || code.includes('getpid');
+            const hasPrint = code.includes('print');
+
+            if (hasOs && hasPrint) {
+                document.getElementById('ex2Success').classList.add('show');
+            } else {
+                alert('Chua dung! Ban can:\n1. Sử dụng os.getpid()\n2. In ket qua ra');
+            }
+        }
+
+        // Quiz
+        const questions = [
+            {
+                question: "Su khac biet giua Program va Process la gi?",
+                options: [
+                    "Khong co khac biet",
+                    "Program la file tren dia cung, Process la program dang chay",
+                    "Process la file, Program la process",
+                    "Program chay nhanh hon Process"
+                ],
+                correct: 1,
+                explanation: "Program = file chua chay. Process = program dang chay trong RAM."
+            },
+            {
+                question: "PID nghia la gi?",
+                options: [
+                    "Process Internal Data",
+                    "Process Identifier",
+                    "Program ID",
+                    "Pipe ID"
+                ],
+                correct: 1,
+                explanation: "PID = Process Identifier — so ID duy nhat cho moi process."
+            },
+            {
+                question: "Hai process co the co cung PID khong?",
+                options: [
+                    "Co, luon luon",
+                    "Khong, moi process co PID rieng",
+                    "Chi tren Windows",
+                    "Chi khi cung ten"
+                ],
+                correct: 1,
+                explanation: "PID la duy nhat. Hai process khong the co cung PID."
+            },
+            {
+                question: "Khi ban chay python3 script.py, co bao nhieu process duoc tao?",
+                options: [
+                    "0",
+                    "1",
+                    "2",
+                    "Tuy vao script"
+                ],
+                correct: 1,
+                explanation: "Moi lan chay lenh tao 1 process moi."
+            },
+            {
+                question: "Ham nao trong Python lay PID cua process hien tai?",
+                options: [
+                    "os.getpid()",
+                    "os.getid()",
+                    "subprocess.pid()",
+                    "sys.pid()"
+                ],
+                correct: 0,
+                explanation: "os.getpid() tra ve PID cua process dang chay."
+            }
+        ];
+
+        let selectedAnswers = new Array(questions.length).fill(null);
+
+        function renderQuiz() {
+            const quizDiv = document.getElementById('quiz');
+            quizDiv.innerHTML = questions.map((q, i) => `
+                <div class="question">
+                    <div class="question-text">${i + 1}. ${q.question}</div>
+                    <div class="options">
+                        ${q.options.map((opt, j) => `
+                            <div class="option" onclick="selectOption(${i}, ${j})" id="q${i}o${j}">
+                                ${opt}
+                            </div>
+                        `).join('')}
+                    </div>
+                    <div class="feedback" id="feedback${i}"></div>
+                </div>
+            `).join('');
+        }
+
+        function selectOption(qIndex, oIndex) {
+            selectedAnswers[qIndex] = oIndex;
+            document.querySelectorAll(`[id^="q${qIndex}o"]`).forEach((el, idx) => {
+                el.classList.toggle('selected', idx === oIndex);
+            });
+        }
+
+        function checkAnswers() {
+            let score = 0;
+            questions.forEach((q, i) => {
+                const feedbackEl = document.getElementById(`feedback${i}`);
+                const options = document.querySelectorAll(`[id^="q${i}o"]`);
+
+                options.forEach((el, idx) => {
+                    el.classList.remove('correct', 'incorrect');
+                    if (idx === q.correct) {
+                        el.classList.add('correct');
+                    } else if (idx === selectedAnswers[i] && selectedAnswers[i] !== q.correct) {
+                        el.classList.add('incorrect');
+                    }
+                });
+
+                if (selectedAnswers[i] === q.correct) {
+                    score++;
+                    feedbackEl.className = 'feedback correct';
+                    feedbackEl.textContent = '✓ Dung! ' + q.explanation;
+                } else {
+                    feedbackEl.className = 'feedback incorrect';
+                    feedbackEl.textContent = '✗ Sai. ' + q.explanation;
+                }
+            });
+            document.getElementById('score').textContent = score;
+        }
+
+        renderQuiz();
+    </script>
+</body>
+</html>

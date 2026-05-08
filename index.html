@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Learning Module — Index</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.7;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #252526;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+        }
+
+        .progress-section {
+            background: #2d2d30;
+            padding: 25px 30px;
+            border-bottom: 1px solid #333;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4ec9b0;
+            width: 5%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            color: #4ec9b0;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .content { padding: 30px; }
+
+        .phase-section {
+            margin: 30px 0;
+        }
+        .phase-title {
+            color: #007acc;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .lesson-card {
+            background: #2d2d30;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+        }
+        .lesson-card:hover {
+            border-color: #007acc;
+            background: #1e3a5f;
+            transform: translateY(-2px);
+        }
+        .lesson-card.done {
+            border-color: #4ec9b0;
+        }
+        .lesson-card.done::before {
+            content: '✓';
+            float: right;
+            color: #4ec9b0;
+            font-size: 18px;
+        }
+        .lesson-card.in-progress {
+            border-color: #ffc107;
+        }
+        .lesson-card.in-progress::before {
+            content: '🔄';
+            float: right;
+            font-size: 16px;
+        }
+
+        .lesson-number {
+            color: #007acc;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .lesson-title {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .lesson-desc {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .start-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: #007acc;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .start-btn:hover {
+            background: #005a9e;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            background: #333;
+            padding: 20px 30px;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .badge {
+            display: inline-block;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .badge.done { background: #1e3a30; color: #4ec9b0; }
+        .badge.progress { background: #3a3a1e; color: #ffc107; }
+        .badge.todo { background: #3a1e1e; color: #f44336; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCP Learning Module</h1>
+            <p class="subtitle">Học MCP (Model Context Protocol) từ foundation đến advanced</p>
+        </div>
+
+        <div class="progress-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #fff; font-weight: 600;">Tiến độ</span>
+                <span style="color: #888; font-size: 13px;">3/20 lessons (15%)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 15%;"></div>
+            </div>
+            <div class="progress-text">🎯 Đang học: Foundation — Process, stdin/stdout, FD</div>
+        </div>
+
+        <div class="content">
+            <!-- Pre-Foundation -->
+            <div class="phase-section">
+                <h2 class="phase-title">Pre-Foundation: Máy tính & OS <span class="badge done">✓</span></h2>
+                <div class="lesson-grid">
+                    <a href="lesson-neg1-computer-basics.html" class="lesson-card done">
+                        <div class="lesson-number">BÀI -1</div>
+                        <div class="lesson-title">Máy tính hoạt động như thế nào?</div>
+                        <div class="lesson-desc">CPU, RAM, Storage, OS, Terminal — nền tảng trước khi học Process</div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 1 -->
+            <div class="phase-section">
+                <h2 class="phase-title">Phase 1: Foundation <span class="badge progress">In Progress</span></h2>
+                <div class="lesson-grid">
+                    <a href="lesson-00-process.html" class="lesson-card done">
+                        <div class="lesson-number">BÀI 00</div>
+                        <div class="lesson-title">Process là gì?</div>
+                        <div class="lesson-desc">Process vs Program, PID, spawn process, MCP handshake</div>
+                    </a>
+                    <a href="lesson-01-stdin-stdout.html" class="lesson-card in-progress">
+                        <div class="lesson-number">BÀI 01</div>
+                        <div class="lesson-title">stdin / stdout / stderr</div>
+                        <div class="lesson-desc">Standard streams, flush(), pipe, MCP server pattern</div>
+                    </a>
+                    <a href="lesson-01-file-descriptors.html" class="lesson-card in-progress">
+                        <div class="lesson-number">BÀI 02</div>
+                        <div class="lesson-title">File Descriptors (FD)</div>
+                        <div class="lesson-desc">FD numbers, redirect, FD table, pipe mechanism</div>
+                    </a>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">BÀI 03</div>
+                        <div class="lesson-title">JSON-RPC 2.0</div>
+                        <div class="lesson-desc">Request/Response format, jsonrpc field, error codes</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 2 -->
+            <div class="phase-section">
+                <h2 class="phase-title">Phase 2: Protocol <span class="badge todo">0%</span></h2>
+                <div class="lesson-grid">
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 04</div>
+                        <div class="lesson-title">JSON-RPC 2.0 Basics</div>
+                        <div class="lesson-desc">Request/Response format, jsonrpc field</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 05</div>
+                        <div class="lesson-title">JSON-RPC Methods</div>
+                        <div class="lesson-desc">initialize, ping, error codes</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 06</div>
+                        <div class="lesson-title">JSON-RPC Notifications</div>
+                        <div class="lesson-desc">No id field, one-way messages</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 07</div>
+                        <div class="lesson-title">JSON-RPC Batch</div>
+                        <div class="lesson-desc">Multiple requests in one</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 3 -->
+            <div class="phase-section">
+                <h2 class="phase-title">Phase 3: MCP Core <span class="badge todo">0%</span></h2>
+                <div class="lesson-grid">
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 08</div>
+                        <div class="lesson-title">MCP Introduction</div>
+                        <div class="lesson-desc">What is MCP, why use it, architecture</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 09</div>
+                        <div class="lesson-title">MCP Initialize</div>
+                        <div class="lesson-desc">Handshake flow, capabilities exchange</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 10</div>
+                        <div class="lesson-title">MCP Tools</div>
+                        <div class="lesson-desc">Tool definition, tools/list, tools/call</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 11</div>
+                        <div class="lesson-title">MCP Resources</div>
+                        <div class="lesson-desc">Resource URIs, resources/list, resources/read</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 12</div>
+                        <div class="lesson-title">MCP Prompts</div>
+                        <div class="lesson-desc">Prompt templates, prompts/list, prompts/get</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 4 -->
+            <div class="phase-section">
+                <h2 class="phase-title">Phase 4: Transport <span class="badge todo">0%</span></h2>
+                <div class="lesson-grid">
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 13</div>
+                        <div class="lesson-title">stdio Transport</div>
+                        <div class="lesson-desc">Line-delimited JSON, subprocess, pipe</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 14</div>
+                        <div class="lesson-title">SSE Transport</div>
+                        <div class="lesson-desc">HTTP + SSE, remote access, bidirectional</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 15</div>
+                        <div class="lesson-title">Transport Comparison</div>
+                        <div class="lesson-desc">When to use which, pros/cons</div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Phase 5 -->
+            <div class="phase-section">
+                <h2 class="phase-title">Phase 5: Build MCP Server <span class="badge todo">0%</span></h2>
+                <div class="lesson-grid">
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 16</div>
+                        <div class="lesson-title">Project Setup</div>
+                        <div class="lesson-desc">Structure, dependencies, config</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 17</div>
+                        <div class="lesson-title">Implement Tools</div>
+                        <div class="lesson-desc">Hello, calculate, time tools</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 18</div>
+                        <div class="lesson-title">Implement Resources</div>
+                        <div class="lesson-desc">File system, database resources</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 19</div>
+                        <div class="lesson-title">Error Handling</div>
+                        <div class="lesson-desc">Protocol errors, tool errors, validation</div>
+                    </div>
+                    <div class="lesson-card" style="cursor: not-allowed; opacity: 0.5;">
+                        <div class="lesson-number">LESSON 20</div>
+                        <div class="lesson-title">Testing & Debug</div>
+                        <div class="lesson-desc">Unit tests, integration tests, debugging</div>
+                    </div>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="00-process.html" class="start-btn">🚀 Bắt đầu học ngay</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>MCP Learning Module — Created for learning MCP from scratch</p>
+            <p style="margin-top: 5px;">20 Lessons • Interactive Exercises • Quizzes</p>
+        </div>
+    </div>
+</body>
+</html>

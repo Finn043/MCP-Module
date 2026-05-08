@@ -1,0 +1,361 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 00: Process là gì? — MCP Learning</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"💡 Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1a1a1a;border:1px solid #3e3e42;border-radius:8px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
+.cmd{color:#4ec9b0;}
+.out{color:#ffd700;}
+.cmt{color:#6a9955;}
+/* Demo styles */
+.process-card{background:#1e2d3d;border:2px solid #3e3e42;border-radius:8px;padding:14px;margin:8px 0;transition:all 0.3s;position:relative;}
+.process-card.running{border-color:#4ec9b0;box-shadow:0 0 12px rgba(78,201,176,0.3);}
+.process-card.dead{border-color:#f44747;opacity:0.5;}
+.pid-badge{background:#007acc;color:white;padding:2px 8px;border-radius:3px;font-size:12px;font-weight:700;}
+.status-dot{width:10px;height:10px;border-radius:50%;display:inline-block;margin-right:6px;}
+.status-dot.running{background:#4ec9b0;box-shadow:0 0 6px #4ec9b0;}
+.status-dot.dead{background:#f44747;}
+.demo-log{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;font-family:monospace;font-size:13px;min-height:80px;margin:12px 0;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>⚙️ Bài 00: Process là gì?</h1>
+  <p class="subtitle">Foundation — hiểu Process trước khi học stdin/stdout và MCP</p>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+  </div>
+
+  <!-- THEORY TAB -->
+  <div class="tab-content active" id="tab-theory">
+
+    <h2>1. Program vs Process — Sự khác biệt cốt lõi</h2>
+    <table>
+      <tr><th>Khái niệm</th><th>Là gì?</th><th>Ví dụ</th><th>Ở đâu?</th></tr>
+      <tr><td>🗂️ Program</td><td>File mã máy trên đĩa</td><td>chrome, python3</td><td>Storage (SSD)</td></tr>
+      <tr><td>⚙️ Process</td><td>Program đang chạy trong RAM</td><td>Chrome tab đang mở</td><td>RAM + CPU time</td></tr>
+    </table>
+    <div class="analogy">
+      Bản nhạc (Program) vs ban nhạc đang biểu diễn (Process). Một bản nhạc có thể có nhiều ban nhạc biểu diễn cùng lúc.
+    </div>
+
+    <h2>2. Mỗi Process có PID riêng</h2>
+    <div class="card card-blue">
+      <p>OS cấp cho mỗi process một <span class="highlight">PID (Process ID)</span> — số định danh duy nhất.</p>
+      <p>Dùng lệnh <code style="color:#9cdcfe">ps aux</code> để xem tất cả process đang chạy.</p>
+    </div>
+    <pre><code><span class="cmd">$ ps aux</span>
+<span class="out">USER   PID  %CPU  %MEM  COMMAND</span>
+user   <span class="highlight">123</span>  0.5   1.2   /usr/bin/python3
+user   <span class="highlight">456</span>  2.1   8.5   /Applications/Chrome.app
+user   <span class="highlight">789</span>  0.1   0.3   /bin/bash</code></pre>
+
+    <h2>3. Process có bộ nhớ riêng biệt</h2>
+    <div class="step"><div class="step-num">1</div><div>Khi chạy, OS cấp phát <span class="highlight">vùng RAM riêng</span> cho process đó</div></div>
+    <div class="step"><div class="step-num">2</div><div>Các process <span class="highlight">không thể đọc RAM</span> của nhau (mặc định)</div></div>
+    <div class="step"><div class="step-num">3</div><div>Process bị kill → OS thu hồi RAM ngay lập tức</div></div>
+
+    <h2>4. Processes giao tiếp với nhau như thế nào?</h2>
+    <table>
+      <tr><th>Cách</th><th>Ví dụ</th><th>MCP dùng?</th></tr>
+      <tr><td>🔗 Pipe (stdio)</td><td><code>cat file | grep error</code></td><td>✅ Có (stdio transport)</td></tr>
+      <tr><td>🌐 Socket</td><td>HTTP, TCP</td><td>✅ Có (SSE transport)</td></tr>
+      <tr><td>🧠 Shared Memory</td><td>Cùng vùng RAM</td><td>❌ Không</td></tr>
+      <tr><td>📡 Signal</td><td>kill, interrupt</td><td>❌ Không</td></tr>
+    </table>
+
+    <h2>5. MCP — Hai process nói chuyện qua stdio</h2>
+    <div class="diagram">
+      <div><span class="box">🤖 Claude Desktop (MCP Host)</span> <span class="arrow">←──pipe──→</span> <span class="box">🔧 MCP Server</span></div>
+      <br>
+      <div style="font-size:12px;color:#858585">stdin/stdout JSON messages • line-delimited</div>
+    </div>
+    <div class="card card-green">
+      <strong>💡 Kết nối với bài tiếp theo:</strong><br>
+      Pipe dùng <span class="highlight">stdin/stdout</span> — chính là thứ bạn sẽ học ở Bài 01.<br>
+      MCP Server = một process liên tục đọc stdin, xử lý, ghi ra stdout.
+    </div>
+
+    <h2>6. Spawn process trong Python</h2>
+    <pre><code><span class="cmt">import</span> subprocess
+
+<span class="cmt"># Tạo process mới (spawn)</span>
+process = subprocess.Popen(
+    ["python3", "mcp_server.py"],
+    stdin=subprocess.PIPE,   <span class="cmt"># ← pipe stdin vào</span>
+    stdout=subprocess.PIPE,  <span class="cmt"># ← pipe stdout ra</span>
+    text=True
+)
+
+<span class="cmt"># Gửi JSON-RPC vào process</span>
+process.stdin.write('{"jsonrpc":"2.0","method":"ping","id":1}\n')
+process.stdin.flush()
+
+<span class="cmt"># Nhận response</span>
+response = process.stdout.readline()
+print(response)</code></pre>
+  </div>
+
+  <!-- DEMO TAB -->
+  <div class="tab-content" id="tab-demo">
+    <h2>🎮 Khám phá từng khái niệm</h2>
+
+    <h3>Demo 1: Spawn và Kill Process</h3>
+    <p>Mô phỏng OS quản lý các process — nhấn nút để tạo hoặc kill:</p>
+    <div style="display:flex;gap:10px;margin:14px 0;flex-wrap:wrap;">
+      <button class="btn" onclick="spawnProcess()">➕ Spawn Process</button>
+      <button class="btn" style="background:#f44747;" onclick="killLast()">💀 Kill Process</button>
+      <button class="btn" style="background:#3e3e42;" onclick="resetProcesses()">↺ Reset</button>
+    </div>
+    <div id="process-list" style="min-height:100px;"></div>
+    <div class="demo-log" id="proc-log"><span style="color:#858585">// OS log sẽ hiện ở đây...</span></div>
+
+    <h3 style="margin-top:28px;">Demo 2: Mô phỏng MCP Communication</h3>
+    <p>Xem hai process (Host ↔ MCP Server) trao đổi JSON-RPC qua stdio:</p>
+    <div id="mcp-comm-log" class="demo-log">
+      <span style="color:#858585">// Nhấn nút để bắt đầu handshake...</span>
+    </div>
+    <button class="btn" onclick="simulateMCP()">▶️ Bắt đầu MCP Handshake</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetMCP()">↺ Reset</button>
+  </div>
+
+  <!-- QUIZ TAB -->
+  <div class="tab-content" id="tab-quiz">
+    <h2>📝 Kiểm tra kiến thức</h2>
+    <div id="quiz-container"></div>
+    <div class="score-box" id="score-display" style="display:none;"></div>
+    <button class="btn" onclick="checkAll()" style="margin-top:20px;">✅ Kiểm tra đáp án</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetQuiz()">↺ Làm lại</button>
+  </div>
+
+  <div class="nav-bar">
+    <a class="nav-btn" href="lesson-neg1-computer-basics.html">← Bài -1: Máy tính</a>
+    <a class="nav-btn" href="lesson-01-stdin-stdout.html">Tiếp theo: stdin/stdout →</a>
+  </div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabs = ['theory','demo','quiz'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// Demo 1: Process management
+let processes = [];
+let nextPid = 1001;
+const programs = ['python3 mcp_server.py','node server.js','chrome','bash script.sh','python3 app.py'];
+
+function log(msg, color) {
+  const el = document.getElementById('proc-log');
+  if (el.innerHTML.includes('OS log')) el.innerHTML = '';
+  el.innerHTML += `<div style="color:${color||'#d4d4d4'};margin:2px 0;">${msg}</div>`;
+  el.scrollTop = el.scrollHeight;
+}
+
+function renderProcesses() {
+  const el = document.getElementById('process-list');
+  if (processes.length === 0) { el.innerHTML = '<div style="color:#858585;padding:12px;">Chưa có process nào chạy.</div>'; return; }
+  el.innerHTML = processes.map(p => `
+    <div class="process-card ${p.alive ? 'running' : 'dead'}">
+      <span class="status-dot ${p.alive ? 'running' : 'dead'}"></span>
+      <span class="pid-badge">PID ${p.pid}</span>
+      <span style="margin-left:10px;color:${p.alive?'#d4d4d4':'#858585'}">${p.name}</span>
+      <span style="float:right;font-size:12px;color:${p.alive?'#4ec9b0':'#f44747'}">${p.alive?'RUNNING':'TERMINATED'}</span>
+    </div>`).join('');
+}
+
+function spawnProcess() {
+  const name = programs[processes.length % programs.length];
+  const pid = nextPid++;
+  processes.push({pid, name, alive: true});
+  log(`[OS] Spawned process → PID ${pid}: ${name}`, '#4ec9b0');
+  renderProcesses();
+}
+
+function killLast() {
+  const alive = processes.filter(p => p.alive);
+  if (!alive.length) { log('[OS] Không có process để kill.', '#f44747'); return; }
+  const p = alive[alive.length-1];
+  p.alive = false;
+  log(`[OS] Killed PID ${p.pid} (${p.name}) — RAM freed`, '#f44747');
+  renderProcesses();
+}
+
+function resetProcesses() {
+  processes = []; nextPid = 1001;
+  document.getElementById('process-list').innerHTML = '';
+  document.getElementById('proc-log').innerHTML = '<span style="color:#858585">// OS log sẽ hiện ở đây...</span>';
+}
+
+// Demo 2: MCP Handshake
+const mcpSteps = [
+  {t:300,  msg:'[Host → Server] {"jsonrpc":"2.0","method":"initialize","id":1}', color:'#9cdcfe'},
+  {t:1000, msg:'[Server] Nhận request, xử lý...', color:'#858585'},
+  {t:1700, msg:'[Server → Host] {"jsonrpc":"2.0","result":{"capabilities":{...}},"id":1}', color:'#4ec9b0'},
+  {t:2400, msg:'[Host → Server] {"jsonrpc":"2.0","method":"notifications/initialized"}', color:'#9cdcfe'},
+  {t:3000, msg:'[Host] Handshake hoàn tất ✓', color:'#ffd700'},
+  {t:3500, msg:'[Host → Server] {"jsonrpc":"2.0","method":"tools/list","id":2}', color:'#9cdcfe'},
+  {t:4100, msg:'[Server → Host] {"jsonrpc":"2.0","result":{"tools":[...]},"id":2}', color:'#4ec9b0'},
+  {t:4700, msg:'🎉 MCP Session đã sẵn sàng!', color:'#4ec9b0'},
+];
+let mcpRunning = false;
+function simulateMCP() {
+  if (mcpRunning) return;
+  mcpRunning = true;
+  const log = document.getElementById('mcp-comm-log');
+  log.innerHTML = '';
+  mcpSteps.forEach(s => {
+    setTimeout(() => {
+      log.innerHTML += `<div style="color:${s.color};margin:3px 0;">${s.msg}</div>`;
+      log.scrollTop = log.scrollHeight;
+    }, s.t);
+  });
+  setTimeout(() => { mcpRunning = false; }, 5000);
+}
+function resetMCP() {
+  mcpRunning = false;
+  document.getElementById('mcp-comm-log').innerHTML = '<span style="color:#858585">// Nhấn nút để bắt đầu handshake...</span>';
+}
+
+// Quiz
+const questions = [
+  {
+    q: 'Sự khác biệt giữa Program và Process?',
+    opts: ['Program đang chạy, Process là file','Program là file trên đĩa, Process là program đang chạy trong RAM','Không có khác biệt','Program nhanh hơn Process'],
+    ans: 1, ex: 'Program = file trên Storage. Process = program đó đang chạy, được nạp vào RAM.'
+  },
+  {
+    q: 'PID là gì?',
+    opts: ['Process Internal Data','Python ID','Process Identifier — số định danh duy nhất','Pipe ID'],
+    ans: 2, ex: 'PID = Process Identifier. Mỗi process được OS cấp một PID duy nhất.'
+  },
+  {
+    q: 'Hai processes có chia sẻ RAM mặc định không?',
+    opts: ['Có, luôn luôn','Không, mỗi process có vùng RAM riêng','Chỉ trên macOS','Chỉ khi cùng user'],
+    ans: 1, ex: 'Mặc định mỗi process có memory riêng biệt. Muốn share phải dùng shared memory API.'
+  },
+  {
+    q: 'MCP dùng cơ chế gì để 2 processes giao tiếp?',
+    opts: ['Shared memory','Database','stdio pipe và SSE socket','Signal (kill)'],
+    ans: 2, ex: 'MCP hỗ trợ stdio (pipe qua stdin/stdout) cho local và SSE (HTTP) cho remote.'
+  },
+  {
+    q: 'Khi bạn chạy `python3 server.py`, điều gì xảy ra?',
+    opts: ['File server.py được thực thi trực tiếp từ SSD','OS tạo 1 process mới với PID riêng, nạp code vào RAM','Không có process nào được tạo','Cần phải compile trước'],
+    ans: 1, ex: 'OS tạo process mới → cấp PID → nạp code vào RAM → CPU thực thi.'
+  }
+];
+
+let selected = new Array(questions.length).fill(null);
+let checked = false;
+
+function buildQuiz() {
+  document.getElementById('quiz-container').innerHTML = questions.map((q,i) => `
+    <div style="background:#252526;border:1px solid #3e3e42;border-radius:8px;padding:20px;margin:16px 0;">
+      <div style="font-weight:700;margin-bottom:12px;color:#ffffff;">${i+1}. ${q.q}</div>
+      ${q.opts.map((o,j) => `<div class="quiz-option" id="opt-${i}-${j}" onclick="pick(${i},${j})">${o}</div>`).join('')}
+      <div class="feedback" id="fb-${i}"></div>
+    </div>`).join('');
+}
+
+function pick(qi, oi) {
+  if (checked) return;
+  selected[qi] = oi;
+  for (let j = 0; j < questions[qi].opts.length; j++) {
+    const el = document.getElementById('opt-'+qi+'-'+j);
+    el.style.borderColor = j===oi ? '#007acc' : '#3e3e42';
+    el.style.background = j===oi ? '#2a3a4a' : '#2d2d30';
+  }
+}
+
+function checkAll() {
+  checked = true;
+  let score = 0;
+  questions.forEach((q,i) => {
+    const fb = document.getElementById('fb-'+i);
+    for (let j = 0; j < q.opts.length; j++) {
+      const el = document.getElementById('opt-'+i+'-'+j);
+      if (j===q.ans) el.classList.add('correct');
+      else if (j===selected[i] && selected[i]!==q.ans) el.classList.add('wrong');
+    }
+    if (selected[i]===q.ans) {
+      score++;
+      fb.className='feedback show ok'; fb.textContent='✓ Đúng! '+q.ex;
+    } else {
+      fb.className='feedback show bad'; fb.textContent='✗ Sai. '+q.ex;
+    }
+  });
+  const sd = document.getElementById('score-display');
+  sd.style.display='block';
+  if (score===questions.length) sd.textContent='🏆 Hoàn hảo! '+score+'/'+questions.length;
+  else if (score>=3) sd.textContent='👍 Tốt! '+score+'/'+questions.length;
+  else sd.textContent='📚 Cần ôn lại: '+score+'/'+questions.length;
+}
+
+function resetQuiz() {
+  selected = new Array(questions.length).fill(null);
+  checked = false;
+  document.getElementById('score-display').style.display='none';
+  buildQuiz();
+}
+
+buildQuiz();
+renderProcesses();
+</script>
+</body>
+</html>

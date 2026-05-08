@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 02: File Descriptors — MCP Learning</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+pre{background:#1a1a1a;border:1px solid #3e3e42;border-radius:8px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
+.cmt{color:#6a9955;}
+.kw{color:#c586c0;}
+/* Demo */
+.fd-table-demo{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:20px;font-family:monospace;font-size:13px;}
+.fd-row{display:flex;align-items:center;gap:12px;padding:8px 0;border-bottom:1px solid #2a2a3a;transition:all 0.3s;}
+.fd-row:last-child{border-bottom:none;}
+.fd-num{background:#007acc;color:white;padding:2px 10px;border-radius:3px;font-weight:700;min-width:40px;text-align:center;}
+.fd-arrow{color:#ffd700;}
+.fd-target{color:#9cdcfe;}
+.fd-row.highlight-row{background:#2a3a2a;border-radius:6px;}
+.redirect-demo{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:14px;font-family:monospace;font-size:13px;margin:12px 0;min-height:60px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>🔢 Bài 02: File Descriptors (FD)</h1>
+  <p class="subtitle">Hiểu cách process truy cập stdin, stdout, files — nền tảng của MCP transport</p>
+
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+  </div>
+
+  <!-- THEORY TAB -->
+  <div class="tab-content active" id="tab-theory">
+
+    <h2>1. File Descriptor = Số đại diện cho "mở file"</h2>
+    <p>Trong Unix, khi process mở một file (hoặc stream), OS trả về một <span class="highlight">số nguyên</span> — đó là File Descriptor (FD).</p>
+
+    <div class="diagram">
+      <div>Process mở file → OS cấp FD</div>
+      <br>
+      <div><span class="box">open("data.txt")</span> <span class="arrow">──→</span> <span class="box" style="border-color:#ffd700">FD = 3</span></div>
+      <br>
+      <div style="font-size:12px;color:#858585">FD chỉ là số, nhưng OS dùng nó để biết "file nào đang được mở"</div>
+    </div>
+
+    <h2>2. Ba FD mặc định — Tự động có khi process khởi động</h2>
+    <table>
+      <tr><th>FD</th><th>Tên</th><th>Hướng</th><th>Mặc định trỏ đến</th></tr>
+      <tr><td><strong style="color:#ffd700">0</strong></td><td>stdin</td><td>READ</td><td>Bàn phím (keyboard)</td></tr>
+      <tr><td><strong style="color:#4ec9b0">1</strong></td><td>stdout</td><td>WRITE</td><td>Terminal (màn hình)</td></tr>
+      <tr><td><strong style="color:#f44747">2</strong></td><td>stderr</td><td>WRITE</td><td>Terminal (màn hình)</td></tr>
+    </table>
+    <div class="card card-blue">
+      <strong>Key insight:</strong> stdin, stdout, stderr <span class="highlight">cũng là files</span>. Mọi thứ trong Unix đều là file — bàn phím, màn hình, socket, pipe đều là file.
+    </div>
+
+    <h2>3. FD Table trong mỗi Process</h2>
+    <div class="diagram">
+      <div><span class="box">Process (python3)</span></div>
+      <br>
+      <div>│ FD Table │</div>
+      <div>├─ FD 0 <span class="arrow">──→</span> <span style="color:#ffd700">stdin (keyboard)</span></div>
+      <div>├─ FD 1 <span class="arrow">──→</span> <span style="color:#4ec9b0">stdout (terminal)</span></div>
+      <div>├─ FD 2 <span class="arrow">──→</span> <span style="color:#f44747">stderr (terminal)</span></div>
+      <div>├─ FD 3 <span class="arrow">──→</span> <span style="color:#9cdcfe">/home/user/data.txt</span></div>
+      <div>└─ FD 4 <span class="arrow">──→</span> <span style="color:#9cdcfe">socket(127.0.0.1:8080)</span></div>
+    </div>
+
+    <h2>4. Redirect — Thay đổi nơi FD trỏ đến</h2>
+    <p>Shell cho phép redirect FD sang nơi khác trước khi chạy lệnh:</p>
+    <pre><code><span class="cmt"># Redirect stdout (FD 1) vào file</span>
+$ echo "Hello" > output.txt
+
+<span class="cmt"># Redirect stdin (FD 0) từ file</span>
+$ python3 server.py < input.json
+
+<span class="cmt"># Redirect stderr (FD 2) vào file riêng</span>
+$ python3 server.py 2> debug.log
+
+<span class="cmt"># Redirect stderr vào stdout</span>
+$ python3 server.py 2>&1
+
+<span class="cmt"># Cả hai vào file khác nhau</span>
+$ python3 server.py > out.txt 2> err.log</code></pre>
+
+    <h2>5. Pipe = Nối FD 1 của process A với FD 0 của process B</h2>
+    <div class="diagram">
+      <div><span class="box">Process A</span> <span class="arrow">stdout (FD 1) ──pipe──→</span> <span class="arrow">stdin (FD 0)</span> <span class="box">Process B</span></div>
+      <br>
+      <div style="font-size:12px;color:#858585">Lệnh: <code>python3 producer.py | python3 consumer.py</code></div>
+    </div>
+
+    <h2>6. FD trong Python</h2>
+    <pre><code><span class="kw">import</span> sys
+
+<span class="cmt"># Xem số FD của standard streams</span>
+print(sys.stdin.fileno())   <span class="cmt"># → 0</span>
+print(sys.stdout.fileno())  <span class="cmt"># → 1</span>
+print(sys.stderr.fileno())  <span class="cmt"># → 2</span>
+
+<span class="cmt"># Mở file → nhận FD mới</span>
+<span class="kw">with</span> open("data.txt", "r") <span class="kw">as</span> f:
+    print(f.fileno())  <span class="cmt"># → 3 (hoặc số cao hơn)</span></code></pre>
+
+    <h2>7. Tại sao FD quan trọng cho MCP?</h2>
+    <div class="card card-green">
+      <strong>MCP stdio transport:</strong><br>
+      • MCP Host spawn MCP Server process<br>
+      • Host <strong>redirect</strong> FD 0 (stdin) của Server ← pipe từ Host<br>
+      • Host <strong>redirect</strong> FD 1 (stdout) của Server → pipe về Host<br>
+      • Kết quả: 2 processes giao tiếp qua FD, không cần HTTP!
+    </div>
+  </div>
+
+  <!-- DEMO TAB -->
+  <div class="tab-content" id="tab-demo">
+    <h2>🎮 Khám phá File Descriptors</h2>
+
+    <h3>Demo 1: FD Table — Mở và đóng files</h3>
+    <p>Xem FD Table thay đổi khi process mở/đóng files:</p>
+    <div class="fd-table-demo" id="fd-table">
+      <!-- Rendered by JS -->
+    </div>
+    <div style="display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;">
+      <button class="btn" onclick="openFile()">📄 Mở file</button>
+      <button class="btn" onclick="openSocket()">🌐 Mở socket</button>
+      <button class="btn" style="background:#f44747;" onclick="closeLastFD()">✕ Đóng FD cuối</button>
+      <button class="btn" style="background:#3e3e42;" onclick="resetFD()">↺ Reset</button>
+    </div>
+    <div id="fd-log" style="background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:12px;font-family:monospace;font-size:13px;min-height:50px;margin-top:12px;">
+      <span style="color:#858585">// OS log...</span>
+    </div>
+
+    <h3 style="margin-top:28px;">Demo 2: Redirect Simulation</h3>
+    <p>Xem stdout bị redirect vào file thay vì terminal:</p>
+    <div style="display:flex;gap:16px;flex-wrap:wrap;margin:14px 0;">
+      <div style="flex:1;min-width:180px;">
+        <div style="color:#858585;font-size:13px;margin-bottom:6px;">🖥️ Terminal (stdout bình thường):</div>
+        <div class="redirect-demo" id="terminal-out"><span style="color:#858585">(trống)</span></div>
+      </div>
+      <div style="flex:1;min-width:180px;">
+        <div style="color:#858585;font-size:13px;margin-bottom:6px;">📄 output.txt (sau redirect &gt;):</div>
+        <div class="redirect-demo" id="file-out"><span style="color:#858585">(trống)</span></div>
+      </div>
+    </div>
+    <div style="margin-bottom:10px;font-family:monospace;font-size:13px;">
+      <label style="color:#858585;margin-right:8px;">Chế độ:</label>
+      <label style="margin-right:12px;cursor:pointer;"><input type="radio" name="redirect" value="normal" checked onchange="setRedirect(this.value)"> <span style="color:#d4d4d4">python3 script.py</span></label>
+      <label style="cursor:pointer;"><input type="radio" name="redirect" value="file" onchange="setRedirect(this.value)"> <span style="color:#d4d4d4">python3 script.py > output.txt</span></label>
+    </div>
+    <button class="btn" onclick="runScript()">▶️ Chạy script</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="clearRedirect()">↺ Xóa</button>
+  </div>
+
+  <!-- QUIZ TAB -->
+  <div class="tab-content" id="tab-quiz">
+    <h2>📝 Kiểm tra kiến thức</h2>
+    <div id="quiz-container"></div>
+    <div class="score-box" id="score-display" style="display:none;"></div>
+    <button class="btn" onclick="checkAll()" style="margin-top:20px;">✅ Kiểm tra đáp án</button>
+    <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetQuiz()">↺ Làm lại</button>
+  </div>
+
+  <div class="nav-bar">
+    <a class="nav-btn" href="lesson-01-stdin-stdout.html">← Bài 01: stdin/stdout</a>
+    <span style="color:#858585;">Bài tiếp theo: JSON-RPC (sắp ra)</span>
+  </div>
+</div>
+
+<script>
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  const tabs = ['theory','demo','quiz'];
+  document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// Demo 1: FD Table
+let fds = [
+  {num:0, name:'stdin', target:'keyboard', color:'#ffd700'},
+  {num:1, name:'stdout', target:'terminal (screen)', color:'#4ec9b0'},
+  {num:2, name:'stderr', target:'terminal (screen)', color:'#f44747'},
+];
+let nextFD = 3;
+const fileNames = ['/home/user/data.txt','/var/log/app.log','/tmp/output.json','/etc/config'];
+const socketNames = ['socket(127.0.0.1:8080)','socket(api.example.com:443)','pipe(mcp-server)'];
+
+function renderFD() {
+  document.getElementById('fd-table').innerHTML = fds.map(fd => `
+    <div class="fd-row ${fd.num>=3?'highlight-row':''}">
+      <span class="fd-num" style="background:${fd.num<3?'#333':'#007acc'};color:${fd.color}">${fd.num}</span>
+      <span class="fd-arrow">──►</span>
+      <span class="fd-target" style="color:${fd.color}">${fd.name} → ${fd.target}</span>
+    </div>`).join('');
+}
+function fdLog(msg, color) {
+  const el = document.getElementById('fd-log');
+  if (el.innerHTML.includes('OS log')) el.innerHTML = '';
+  el.innerHTML += `<div style="color:${color||'#d4d4d4'}">${msg}</div>`;
+}
+function openFile() {
+  const target = fileNames[Math.floor(Math.random()*fileNames.length)];
+  fds.push({num:nextFD, name:`file(${nextFD})`, target, color:'#9cdcfe'});
+  fdLog(`[OS] FD ${nextFD} allocated → ${target}`, '#4ec9b0');
+  nextFD++; renderFD();
+}
+function openSocket() {
+  const target = socketNames[Math.floor(Math.random()*socketNames.length)];
+  fds.push({num:nextFD, name:`socket(${nextFD})`, target, color:'#ce9178'});
+  fdLog(`[OS] FD ${nextFD} allocated → ${target}`, '#4ec9b0');
+  nextFD++; renderFD();
+}
+function closeLastFD() {
+  if (fds.length <= 3) { fdLog('[OS] Không thể đóng standard streams (FD 0,1,2)', '#f44747'); return; }
+  const fd = fds.pop();
+  fdLog(`[OS] FD ${fd.num} closed — released`, '#f44747');
+  nextFD = Math.max(3, nextFD-1); renderFD();
+}
+function resetFD() {
+  fds = [
+    {num:0, name:'stdin', target:'keyboard', color:'#ffd700'},
+    {num:1, name:'stdout', target:'terminal (screen)', color:'#4ec9b0'},
+    {num:2, name:'stderr', target:'terminal (screen)', color:'#f44747'},
+  ];
+  nextFD = 3;
+  document.getElementById('fd-log').innerHTML = '<span style="color:#858585">// OS log...</span>';
+  renderFD();
+}
+renderFD();
+
+// Demo 2: Redirect
+let redirectMode = 'normal';
+function setRedirect(v) { redirectMode = v; }
+const scriptOutput = [
+  'Starting MCP server...',
+  'Listening on stdin...',
+  'Received: {"method":"ping"}',
+  'Sent: {"result":"pong"}',
+];
+function runScript() {
+  const terminal = document.getElementById('terminal-out');
+  const fileEl = document.getElementById('file-out');
+  scriptOutput.forEach((line, i) => {
+    setTimeout(() => {
+      const div = `<div style="color:#4ec9b0;margin:2px 0;">${line}</div>`;
+      if (redirectMode === 'normal') {
+        if (terminal.innerHTML.includes('trống')) terminal.innerHTML = '';
+        terminal.innerHTML += div;
+      } else {
+        if (fileEl.innerHTML.includes('trống')) fileEl.innerHTML = '';
+        fileEl.innerHTML += div;
+        if (terminal.innerHTML.includes('trống')) terminal.innerHTML = '';
+        terminal.innerHTML = `<div style="color:#858585">(stdout đã redirect sang file)</div>`;
+      }
+    }, i * 400);
+  });
+}
+function clearRedirect() {
+  document.getElementById('terminal-out').innerHTML = '<span style="color:#858585">(trống)</span>';
+  document.getElementById('file-out').innerHTML = '<span style="color:#858585">(trống)</span>';
+}
+
+// Quiz
+const questions = [
+  {q:'File Descriptor là gì?', opts:['Tên của file','Đường dẫn đến file','Số nguyên đại diện cho một opened file/stream','Permission của file'], ans:2, ex:'FD là integer. OS dùng nó để biết process đang trỏ đến file nào.'},
+  {q:'FD số 1 đại diện cho gì?', opts:['stdin','stderr','File đầu tiên mở','stdout'], ans:3, ex:'FD 0=stdin, FD 1=stdout, FD 2=stderr.'},
+  {q:'Lệnh `python3 script.py > output.txt` redirect FD nào?', opts:['FD 0 (stdin)','FD 2 (stderr)','FD 1 (stdout)','FD 3'], ans:2, ex:'> redirect stdout (FD 1) vào file.'},
+  {q:'Pipe trong shell làm gì với FDs?', opts:['Tạo FD mới cho cả 2 process','Kết nối FD 1 (stdout) của process A với FD 0 (stdin) của process B','Xóa FD của cả 2 process','Chia sẻ FD table'], ans:1, ex:'Pipe nối stdout→stdin. Đây chính là cơ chế MCP stdio transport dùng.'},
+  {q:'Trong Python, sys.stdin.fileno() trả về?', opts:['1','2','"stdin"','0'], ans:3, ex:'sys.stdin có FD = 0.'},
+];
+let selected = new Array(questions.length).fill(null);
+let checked = false;
+function buildQuiz() {
+  document.getElementById('quiz-container').innerHTML = questions.map((q,i) => `
+    <div style="background:#252526;border:1px solid #3e3e42;border-radius:8px;padding:20px;margin:16px 0;">
+      <div style="font-weight:700;margin-bottom:12px;color:#ffffff;">${i+1}. ${q.q}</div>
+      ${q.opts.map((o,j) => `<div class="quiz-option" id="opt-${i}-${j}" onclick="pick(${i},${j})">${o}</div>`).join('')}
+      <div class="feedback" id="fb-${i}"></div>
+    </div>`).join('');
+}
+function pick(qi, oi) {
+  if (checked) return;
+  selected[qi] = oi;
+  for (let j=0; j<questions[qi].opts.length; j++) {
+    const el = document.getElementById('opt-'+qi+'-'+j);
+    el.style.borderColor = j===oi?'#007acc':'#3e3e42';
+    el.style.background = j===oi?'#2a3a4a':'#2d2d30';
+  }
+}
+function checkAll() {
+  checked = true; let score = 0;
+  questions.forEach((q,i) => {
+    const fb = document.getElementById('fb-'+i);
+    for (let j=0; j<q.opts.length; j++) {
+      const el = document.getElementById('opt-'+i+'-'+j);
+      if (j===q.ans) el.classList.add('correct');
+      else if (j===selected[i] && selected[i]!==q.ans) el.classList.add('wrong');
+    }
+    if (selected[i]===q.ans) { score++; fb.className='feedback show ok'; fb.textContent='✓ Đúng! '+q.ex; }
+    else { fb.className='feedback show bad'; fb.textContent='✗ Sai. '+q.ex; }
+  });
+  const sd = document.getElementById('score-display');
+  sd.style.display='block';
+  if (score===questions.length) sd.textContent='🏆 Hoàn hảo! '+score+'/'+questions.length;
+  else if (score>=3) sd.textContent='👍 Tốt! '+score+'/'+questions.length;
+  else sd.textContent='📚 Cần ôn lại: '+score+'/'+questions.length;
+}
+function resetQuiz() {
+  selected=new Array(questions.length).fill(null); checked=false;
+  document.getElementById('score-display').style.display='none'; buildQuiz();
+}
+buildQuiz();
+</script>
+</body>
+</html>
