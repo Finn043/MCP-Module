@@ -1,0 +1,581 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 07: MCP Prompts - Template chi thi cho nguoi dung</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 07: MCP Prompts — Template chỉ thị cho người dùng</h1>
+<p class="subtitle">Prompts là pre-built instruction templates — user-controlled, encode domain expertise</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ==================== LÝ THUYẾT ==================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Prompts là gì?</h2>
+<p><span class="highlight">Prompts</span> là primitive được điều khiển bởi người dùng (<strong>user-controlled</strong>). Người dùng trigger prompt thông qua slash commands, buttons, hoặc menu selections.</p>
+
+<div class="card card-blue">
+<p><strong>Đặc điểm chính của Prompts:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li>Được điều khiển bởi <strong>người dùng (user)</strong></li>
+<li>Là <strong>pre-built instruction templates</strong> — đã được test và tối ưu</li>
+<li>Encode <strong>domain expertise</strong> — kiến thức chuyên môn được đóng gói</li>
+<li>User trigger qua slash commands (<code>/format</code>), buttons, hoặc menu</li>
+</ul>
+</div>
+
+<div class="analogy">
+Hãy tưởng tượng bạn đến nhà hàng. Bạn có thể tự nấu ăn (ad-hoc instructions), nhưng món ăn do đầu bếp chuẩn bị (prompts) luôn ngon hơn vì đầu bếp đã dành nhiều thời gian hoàn thiện công thức. MCP Prompts chính là những "công thức" được đầu bếp (server author) cẩn thận chuẩn bị.
+</div>
+
+<h2>2. Tại sao Prompts cho kết quả tốt hơn?</h2>
+<p>Người dùng có thể hỏi Claude trực tiếp, nhưng prompts mang lại kết quả <strong>nhất quán và chất lượng hơn</strong>.</p>
+
+<div class="card card-green">
+<p><strong>Lợi ích của Prompts so với ad-hoc instructions:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li><strong>Pre-crafted</strong> — Được soạn sẵn cẩn thận, không phải tự viết</li>
+<li><strong>Tested</strong> — Đã thử nghiệm qua nhiều scenarios</li>
+<li><strong>Domain-specific</strong> — Tối ưu cho từng lĩnh vực cụ thể</li>
+<li><strong>Consistent</strong> — Kết quả nhất quán mỗi lần sử dụng</li>
+<li><strong>Maintainable</strong> — Cập nhật một nơi, cải thiện tất cả clients</li>
+</ul>
+</div>
+
+<p><strong>Ví dụ:</strong> User có thể gõ "reformat report.pdf thành markdown" và nhận kết quả khá. Nhưng prompt <code>/format</code> được server author viết, test và tối ưu sẽ cho kết quả tốt hơn nhiều — xử lý edge cases, follow best practices.</p>
+
+<h2>3. Định nghĩa Prompt</h2>
+<p>Sử dụng <span class="highlight">@mcp.prompt()</span> decorator. Function trả về <code>list[base.Message]</code>.</p>
+
+<pre><code>from mcp.server.fastmcp import FastMCP
+from mcp.server.fastmcp.prompts import base
+from pydantic import Field
+
+mcp = FastMCP("DocumentMCP")
+
+@mcp.prompt(
+    name="format",
+    description="Rewrites the contents of the document in Markdown format.",
+)
+def format_document(
+    doc_id: str = Field(description="Id of the document to format"),
+) -> list[base.Message]:
+    prompt = f"""
+    Your goal is to reformat a document to be written with markdown syntax.
+
+    The id of the document you need to reformat is:
+    &lt;document_id&gt;
+    {doc_id}
+    &lt;/document_id&gt;
+
+    Add in headers, bullet points, tables, etc as necessary. Feel free to add
+    in extra text, but don't change the meaning of the report.
+    Use the 'edit_document' tool to edit the document.
+    After the document has been edited, respond with the final version of the doc.
+    Don't explain your changes.
+    """
+    return [base.UserMessage(prompt)]</code></pre>
+
+<div class="card card-yellow">
+<p><strong>Các thành phần quan trọng:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li><code>@mcp.prompt()</code> — Decorator đăng ký prompt với server</li>
+<li><code>name</code> — Tên prompt (dùng trong slash command: <code>/format</code>)</li>
+<li><code>description</code> — Mô tả prompt (hiển thị cho client)</li>
+<li><code>Field()</code> — Mô tả parameter, giúp client biết cần input gì</li>
+<li><code>list[base.Message]</code> — Trả về danh sách messages</li>
+<li><code>base.UserMessage()</code> — Tạo user message (có thể có nhiều messages)</li>
+</ul>
+</div>
+
+<h2>4. prompts/list và prompts/get</h2>
+
+<div class="card card-yellow">
+<p><strong>prompts/list — Liệt kê tất cả prompts có sẵn</strong></p>
+<pre><code>// Request
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "prompts/list"
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "prompts": [
+      {
+        "name": "format",
+        "description": "Rewrites the contents of the document in Markdown format.",
+        "arguments": [
+          {
+            "name": "doc_id",
+            "description": "Id of the document to format",
+            "required": true
+          }
+        ]
+      }
+    ]
+  }
+}</code></pre>
+</div>
+
+<div class="card card-yellow">
+<p><strong>prompts/get — Lấy prompt cụ thể với arguments</strong></p>
+<pre><code>// Request
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "prompts/get",
+  "params": {
+    "name": "format",
+    "arguments": {
+      "doc_id": "plan.md"
+    }
+  }
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "description": "Rewrites the contents of the document in Markdown format.",
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "type": "text",
+          "text": "Your goal is to reformat a document to be written with markdown syntax.\n\nThe id of the document you need to reformat is:\n&lt;document_id&gt;\nplan.md\n&lt;/document_id&gt;\n\nAdd in headers, bullet points, tables, etc..."
+        }
+      }
+    ]
+  }
+}</code></pre>
+</div>
+
+<h2>5. Prompt Lifecycle</h2>
+<p>Vòng đời hoàn chỉnh của một prompt từ lúc tạo đến khi gửi cho Claude.</p>
+
+<div class="diagram">
+<span class="box" style="border-color:#ffd700;">1. Viết prompt</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#ffd700;">2. Định nghĩa với decorator</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#ffd700;">3. Client request</span>
+<br><br>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#4ec9b0;">4. Arguments interpolated</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#4ec9b0;">5. Messages returned</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#4ec9b0;">6. Gửi cho Claude</span>
+</div>
+
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>Viết và đánh giá</strong> — Server author soạn thảo prompt, test với nhiều scenarios, tinh chỉnh cho kết quả tốt nhất.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>Định nghĩa với decorator</strong> — Dùng <code>@mcp.prompt()</code> để đăng ký prompt với MCP server.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div><strong>Client request</strong> — Client gọi <code>prompts/list</code> để khám phá, hoặc gọi trực tiếp <code>prompts/get</code>.</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div><strong>Arguments interpolated</strong> — Arguments từ client (vd: <code>doc_id="plan.md"</code>) được chèn vào prompt template.</div>
+</div>
+<div class="step">
+<div class="step-num">5</div>
+<div><strong>Messages returned</strong> — Function trả về <code>list[Message]</code> đã được điền đầy đủ thông tin.</div>
+</div>
+<div class="step">
+<div class="step-num">6</div>
+<div><strong>Gửi cho Claude</strong> — Messages được convert và gửi cho Claude như một phần của conversation.</div>
+</div>
+
+<h2>6. Slash Command Pattern</h2>
+<p>Trong CLI app, user gõ slash command để trigger prompt.</p>
+
+<pre><code># Xử lý slash command trong CLI
+async def _process_command(self, query: str) -> bool:
+    if not query.startswith("/"):
+        return False
+
+    words = query.split()
+    command = words[0].replace("/", "")  # "/format" → "format"
+
+    # Gọi prompts/get với arguments
+    messages = await self.doc_client.get_prompt(
+        command,           # prompt name
+        {"doc_id": words[1]}  # arguments
+    )
+
+    # Convert và thêm vào conversation
+    self.messages += convert_prompt_messages_to_message_params(messages)
+    return True</code></pre>
+
+<div class="card card-blue">
+<p><strong>Workflow khi user gõ <code>/format plan.md</code>:</strong></p>
+<ol style="margin-left:20px;margin-top:8px;">
+<li>App nhận diện <code>/</code> → đây là slash command</li>
+<li>Extract: command = <code>"format"</code>, argument = <code>"plan.md"</code></li>
+<li>Gọi <code>get_prompt("format", {"doc_id": "plan.md"})</code></li>
+<li>Server trả về messages với <code>plan.md</code> đã được interpolate</li>
+<li>Messages được inject vào conversation → gửi cho Claude</li>
+<li>Claude sử dụng tools để đọc và format document</li>
+</ol>
+</div>
+
+</div>
+
+<!-- ==================== DEMO ==================== -->
+<div id="demo" class="tab-content">
+
+<h2>Prompt Template Editor</h2>
+<p>Chọn prompt, điền parameters, và xem JSON request/response. Mô phỏng workflow <code>/format plan.md</code>.</p>
+
+<div style="margin-top:20px;">
+  <label style="color:#9cdcfe;font-weight:600;">Chọn Prompt: </label>
+  <select id="prompt-select" onchange="updatePromptParams()" style="padding:8px 12px;background:#2d2d2d;color:#d4d4d4;border:1px solid #3e3e42;border-radius:6px;font-size:14px;">
+    <option value="format">/format — Rewrite document in Markdown</option>
+    <option value="summarize">/summarize — Summarize document</option>
+  </select>
+</div>
+
+<div style="margin-top:16px;">
+  <label style="color:#9cdcfe;font-weight:600;">Parameters:</label>
+  <div style="margin-top:8px;">
+    <label style="color:#858585;">doc_id: </label>
+    <input id="prompt-doc-id" type="text" value="plan.md" style="padding:6px 10px;background:#2d2d2d;color:#d4d4d4;border:1px solid #3e3e42;border-radius:4px;font-size:14px;width:200px;">
+  </div>
+</div>
+
+<div style="margin-top:20px;">
+  <button class="btn" onclick="simulatePromptsList()">Gọi prompts/list</button>
+  <button class="btn" onclick="simulatePromptsGet()" style="margin-left:10px;">Gọi prompts/get</button>
+  <button class="btn" onclick="simulateSlashCommand()" style="margin-left:10px;background:#6a9955;">Mô phỏng /format plan.md</button>
+</div>
+
+<div id="prompt-output" style="margin-top:24px;display:none;">
+  <h3 id="prompt-output-title"></h3>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:280px;">
+      <p><strong>Request:</strong></p>
+      <pre><code id="prompt-request"></code></pre>
+    </div>
+    <div style="flex:1;min-width:280px;">
+      <p><strong>Response:</strong></p>
+      <pre><code id="prompt-response"></code></pre>
+    </div>
+  </div>
+</div>
+
+<div id="slash-simulation" style="margin-top:24px;display:none;">
+  <h3 style="color:#4ec9b0;">Workflow: /format plan.md</h3>
+  <div id="slash-steps"></div>
+</div>
+
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiểm tra kiến thức — MCP Prompts</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu biết của bạn về MCP Prompts.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="margin-left:10px;background:#3e3e42;">Làm lại</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- ==================== NAVIGATION ==================== -->
+<div class="nav-bar">
+  <a href="lesson-06-mcp-resources.html" class="nav-btn">&larr; Bài 06: MCP Resources</a>
+  <a href="lesson-08-primitive-comparison.html" class="nav-btn">Bài 08: So sánh Primitives &rarr;</a>
+</div>
+</div>
+
+<script>
+// === Tab Switching ===
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// === Demo Functions ===
+var promptsData = {
+  format: {
+    name: "format",
+    description: "Rewrites the contents of the document in Markdown format.",
+    args: [{ name: "doc_id", description: "Id of the document to format", required: true }],
+    template: function(docId) {
+      return "Your goal is to reformat a document to be written with markdown syntax.\n\nThe id of the document you need to reformat is:\n<document_id>\n" + docId + "\n</document_id>\n\nAdd in headers, bullet points, tables, etc as necessary. Feel free to add in extra text, but don't change the meaning of the report. Use the 'edit_document' tool to edit the document. After the document has been edited, respond with the final version of the doc. Don't explain your changes.";
+    }
+  },
+  summarize: {
+    name: "summarize",
+    description: "Summarize the contents of a document concisely.",
+    args: [{ name: "doc_id", description: "Id of the document to summarize", required: true }],
+    template: function(docId) {
+      return "Please provide a concise summary of the following document.\n\nThe id of the document to summarize is:\n<document_id>\n" + docId + "\n</document_id>\n\nUse the 'read_doc_contents' tool to read the document first, then provide a clear summary with key points.";
+    }
+  }
+};
+
+function updatePromptParams() {
+  // params stay the same for this demo
+}
+
+function simulatePromptsList() {
+  document.getElementById('prompt-output').style.display = 'block';
+  document.getElementById('slash-simulation').style.display = 'none';
+  document.getElementById('prompt-output-title').textContent = 'prompts/list — JSON-RPC Exchange';
+
+  document.getElementById('prompt-request').textContent = JSON.stringify({
+    "jsonrpc": "2.0", "id": 1, "method": "prompts/list"
+  }, null, 2);
+
+  document.getElementById('prompt-response').textContent = JSON.stringify({
+    "jsonrpc": "2.0", "id": 1,
+    "result": {
+      "prompts": [
+        {
+          "name": "format",
+          "description": "Rewrites the contents of the document in Markdown format.",
+          "arguments": [{ "name": "doc_id", "description": "Id of the document to format", "required": true }]
+        },
+        {
+          "name": "summarize",
+          "description": "Summarize the contents of a document concisely.",
+          "arguments": [{ "name": "doc_id", "description": "Id of the document to summarize", "required": true }]
+        }
+      ]
+    }
+  }, null, 2);
+}
+
+function simulatePromptsGet() {
+  var promptName = document.getElementById('prompt-select').value;
+  var docId = document.getElementById('prompt-doc-id').value || 'plan.md';
+  var pd = promptsData[promptName];
+
+  document.getElementById('prompt-output').style.display = 'block';
+  document.getElementById('slash-simulation').style.display = 'none';
+  document.getElementById('prompt-output-title').textContent = 'prompts/get — JSON-RPC Exchange';
+
+  document.getElementById('prompt-request').textContent = JSON.stringify({
+    "jsonrpc": "2.0", "id": 2, "method": "prompts/get",
+    "params": { "name": promptName, "arguments": { "doc_id": docId } }
+  }, null, 2);
+
+  document.getElementById('prompt-response').textContent = JSON.stringify({
+    "jsonrpc": "2.0", "id": 2,
+    "result": {
+      "description": pd.description,
+      "messages": [
+        { "role": "user", "content": { "type": "text", "text": pd.template(docId) } }
+      ]
+    }
+  }, null, 2);
+}
+
+function simulateSlashCommand() {
+  var docId = document.getElementById('prompt-doc-id').value || 'plan.md';
+  document.getElementById('prompt-output').style.display = 'none';
+  document.getElementById('slash-simulation').style.display = 'block';
+
+  var steps = [
+    { num: 1, text: 'User gõ: <code style="color:#ffd700;">/format ' + docId + '</code>', color: '#ffd700' },
+    { num: 2, text: 'App nhận diện slash command → command = <code>"format"</code>', color: '#9cdcfe' },
+    { num: 3, text: 'App gọi <code>get_prompt("format", {"doc_id": "' + docId + '"})</code>', color: '#007acc' },
+    { num: 4, text: 'Server trả về messages với <code>' + docId + '</code> đã được interpolate', color: '#4ec9b0' },
+    { num: 5, text: 'Messages được inject vào conversation', color: '#4ec9b0' },
+    { num: 6, text: 'Claude nhận prompt → gọi <code>read_doc_contents</code> tool → format → gọi <code>edit_document</code> tool', color: '#ffc107' },
+    { num: 7, text: 'Kết quả: Document đã được format thành Markdown', color: '#4ec9b0' }
+  ];
+
+  var html = '';
+  for (var i = 0; i < steps.length; i++) {
+    html += '<div class="step">';
+    html += '<div class="step-num" style="background:' + steps[i].color + ';">' + steps[i].num + '</div>';
+    html += '<div>' + steps[i].text + '</div>';
+    html += '</div>';
+  }
+
+  html += '<div class="card card-green" style="margin-top:16px;">';
+  html += '<p><strong>Generated Message:</strong></p>';
+  html += '<pre><code>' + promptsData.format.template(docId).replace(/</g, '&lt;').replace(/>/g, '&gt;') + '</code></pre>';
+  html += '</div>';
+
+  document.getElementById('slash-steps').innerHTML = html;
+}
+
+// === Quiz System ===
+var quizData = [
+  {
+    q: "Ai quyết định khi nào dùng Prompt trong MCP?",
+    options: ["Claude (model-controlled)", "Ứng dụng (app-controlled)", "Người dùng (user-controlled)", "MCP Server tự động"],
+    correct: 2
+  },
+  {
+    q: "Prompt function trả về kiểu dữ liệu gì?",
+    options: ["Chuỗi string", "list[Message] objects", "Dictionary", "JSON string"],
+    correct: 1
+  },
+  {
+    q: "Tại sao Prompts cho kết quả tốt hơn ad-hoc instructions?",
+    options: ["Prompts chạy nhanh hơn", "Pre-crafted, tested, domain-specific", "Prompts dùng ít tokens hơn", "Prompts không cần Claude"],
+    correct: 1
+  },
+  {
+    q: "prompts/get cần tham số gì?",
+    options: ["Chỉ cần name", "Chỉ cần arguments", "name và arguments (optional)", "uri của resource"],
+    correct: 2
+  },
+  {
+    q: "Slash command /format plan.md trigger điều gì?",
+    options: ["Claude tự động đọc document", "get_prompt(\"format\", {doc_id: \"plan.md\"})", "resources/read với URI plan.md", "tools/call với name format"],
+    correct: 1
+  }
+];
+
+function buildQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" id="q' + i + '">';
+    html += '<p><strong>Câu ' + (i + 1) + ':</strong> ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].options.length; j++) {
+      html += '<div class="quiz-option" data-q="' + i + '" data-a="' + j + '" onclick="pick(' + i + ',' + j + ')">';
+      html += String.fromCharCode(65 + j) + '. ' + quizData[i].options[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="fb' + i + '"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var answers = {};
+
+function pick(qi, ai) {
+  answers[qi] = ai;
+  var opts = document.querySelectorAll('[data-q="' + qi + '"]');
+  opts.forEach(function(el) { el.style.borderColor = '#3e3e42'; el.style.background = '#2d2d30'; });
+  var selected = document.querySelector('[data-q="' + qi + '"][data-a="' + ai + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('fb' + i);
+    fb.classList.add('show');
+    var opts = document.querySelectorAll('[data-q="' + i + '"]');
+    if (answers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Đáp án đúng: ' + String.fromCharCode(65 + quizData[i].correct) + '. ' + quizData[i].options[quizData[i].correct];
+      if (answers[i] !== undefined) {
+        opts.forEach(function(el) {
+          if (parseInt(el.getAttribute('data-a')) === answers[i]) {
+            el.classList.add('wrong');
+          }
+        });
+      }
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    }
+  }
+  document.getElementById('score-display').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  answers = {};
+  document.getElementById('score-display').textContent = '';
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

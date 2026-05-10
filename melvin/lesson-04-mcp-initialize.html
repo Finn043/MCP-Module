@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Initialize — Bat tay 3 buoc</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.btn:disabled{background:#3e3e42;cursor:not-allowed;}
+.btn-success{background:#4ec9b0;}
+.btn-success:hover{background:#3ba890;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.kw{color:#c586c0;} .str{color:#ce9178;} .cm{color:#6a9955;} .fn{color:#dcdcaa;} .num{color:#b5cea8;}
+.handshake-step{background:#2d2d30;border:2px solid #3e3e42;border-radius:10px;padding:20px;margin:16px 0;position:relative;}
+.handshake-step.completed{border-color:#4ec9b0;background:#1a2a2a;}
+.handshake-step.active-step{border-color:#ffd700;background:#2a3a2a;}
+.step-title{font-size:16px;font-weight:700;color:#9cdcfe;margin-bottom:10px;}
+.step-status{position:absolute;top:12px;right:16px;font-size:13px;font-weight:600;}
+.step-status.pending{color:#858585;}
+.step-status.done{color:#4ec9b0;}
+.msg-log{background:#0d1117;border:1px solid #3e3e42;border-radius:6px;padding:12px;font-family:'Courier New',monospace;font-size:12px;margin-top:10px;max-height:200px;overflow-y:auto;display:none;line-height:1.6;}
+.msg-log.show{display:block;}
+.msg-log .direction{color:#ffd700;font-weight:700;}
+.msg-log .json-key{color:#4fc1ff;}
+.msg-log .json-str{color:#ce9178;}
+.caps-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;margin:12px 0;}
+.cap-item{display:flex;align-items:center;gap:8px;background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:8px 12px;cursor:pointer;transition:all 0.2s;}
+.cap-item:hover{border-color:#007acc;}
+.cap-item.checked{border-color:#4ec9b0;background:#1a2a2a;}
+.cap-item input{accent-color:#4ec9b0;}
+.completion-banner{background:#1a3a2a;border:2px solid #4ec9b0;border-radius:10px;padding:20px;margin:20px 0;text-align:center;display:none;}
+.completion-banner.show{display:block;}
+.completion-banner h3{color:#4ec9b0;font-size:18px;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Bài 04: MCP Initialize — Bắt tay 3 bước</h1>
+  <p class="subtitle">Hiểu quá trình handshake bắt buộc trước khi giao tiếp MCP</p>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+  </div>
+
+  <!-- ==================== THEORY TAB ==================== -->
+  <div id="tab-theory" class="tab-content active">
+
+    <!-- Section 1 -->
+    <h2>1. Tại sao cần Initialize?</h2>
+    <p>MCP yêu cầu một quá trình <strong>handshake (bắt tay)</strong> bắt buộc trước khi gửi bất kỳ request nào. Handshake đảm bảo cả client và server hiểu nhau về phiên bản giao thức và khả năng hỗ trợ.</p>
+
+    <div class="analogy">
+      Giống như khi gọi điện thoại: bạn phải "Alo" trước, xác nhận người nghe đúng số, rồi mới bắt đầu nói chuyện. Trong MCP, handshake chính là tiếng "Alo" đó — ba bước để thiết lập kết nối trước khi làm việc thực sự.
+    </div>
+
+    <!-- Section 2 -->
+    <h2>2. Ba bước Handshake</h2>
+    <div class="diagram">
+      <span class="box">Client</span>
+      <span class="arrow"> -- Initialize Request --&gt; </span>
+      <span class="box">Server</span><br><br>
+      <span class="box">Client</span>
+      <span class="arrow"> &lt;-- Initialize Result -- </span>
+      <span class="box">Server</span><br><br>
+      <span class="box">Client</span>
+      <span class="arrow"> -- Initialized Notification --&gt; </span>
+      <span class="box">Server</span><br>
+      <span style="color:#6a9955;font-size:12px;">(Khong co response)</span>
+    </div>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><strong>Initialize Request</strong> — Client gửi yêu cầu khởi tạo, kèm theo <code>protocolVersion</code> mà client hỗ trợ và <code>clientCapabilities</code> (những gì client có thể làm).</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><strong>Initialize Result</strong> — Server phản hồi với <code>protocolVersion</code> được chốt, <code>serverCapabilities</code> (những gì server hỗ trợ), và thông tin server.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><strong>Initialized Notification</strong> — Client gửi notification xác nhận đã nhận kết quả. Đây là message một chiều — <span class="highlight">không có response</span>.</div>
+    </div>
+
+    <!-- Section 3 -->
+    <h2>3. Initialize Request — Chi tiết</h2>
+    <p>Client gửi JSON-RPC request với method <code>"initialize"</code>:</p>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"method"</span>: <span class="str">"initialize"</span>,
+  <span class="str">"params"</span>: {
+    <span class="str">"protocolVersion"</span>: <span class="str">"2024-11-05"</span>,
+    <span class="str">"capabilities"</span>: {
+      <span class="str">"sampling"</span>: {},
+      <span class="str">"roots"</span>: { <span class="str">"listChanged"</span>: <span class="kw">true</span> }
+    },
+    <span class="str">"clientInfo"</span>: {
+      <span class="str">"name"</span>: <span class="str">"my-mcp-client"</span>,
+      <span class="str">"version"</span>: <span class="str">"1.0.0"</span>
+    }
+  }
+}</code></pre>
+
+    <div class="card card-blue">
+      <h3>clientCapabilities có thể bao gồm:</h3>
+      <table>
+        <tr><th>Capability</th><th>Mô tả</th></tr>
+        <tr><td><code>sampling</code></td><td>Client có thể gọi LLM thay server (sampling callback)</td></tr>
+        <tr><td><code>roots</code></td><td>Client có thể cung cấp roots (thư mục/truy cập file)</td></tr>
+      </table>
+    </div>
+
+    <!-- Section 4 -->
+    <h2>4. Initialize Result — Chi tiết</h2>
+    <p>Server phản hồi với capabilities của mình:</p>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"result"</span>: {
+    <span class="str">"protocolVersion"</span>: <span class="str">"2024-11-05"</span>,
+    <span class="str">"capabilities"</span>: {
+      <span class="str">"tools"</span>: { <span class="str">"listChanged"</span>: <span class="kw">true</span> },
+      <span class="str">"resources"</span>: { <span class="str">"subscribe"</span>: <span class="kw">true</span>, <span class="str">"listChanged"</span>: <span class="kw">true</span> },
+      <span class="str">"prompts"</span>: { <span class="str">"listChanged"</span>: <span class="kw">true</span> },
+      <span class="str">"logging"</span>: {}
+    },
+    <span class="str">"serverInfo"</span>: {
+      <span class="str">"name"</span>: <span class="str">"github-mcp-server"</span>,
+      <span class="str">"version"</span>: <span class="str">"2.1.0"</span>
+    }
+  }
+}</code></pre>
+
+    <div class="card card-green">
+      <h3>serverCapabilities có thể bao gồm:</h3>
+      <table>
+        <tr><th>Capability</th><th>Mô tả</th></tr>
+        <tr><td><code>tools</code></td><td>Server cung cấp tools cho Claude gọi</td></tr>
+        <tr><td><code>resources</code></td><td>Server cung cấp resources cho app fetch</td></tr>
+        <tr><td><code>prompts</code></td><td>Server cung cấp prompt templates</td></tr>
+        <tr><td><code>logging</code></td><td>Server có thể gửi log messages</td></tr>
+      </table>
+    </div>
+
+    <!-- Section 5 -->
+    <h2>5. Initialized Notification — Chi tiết</h2>
+    <p>Sau khi nhận Initialize Result, client gửi notification xác nhận:</p>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"method"</span>: <span class="str">"notifications/initialized"</span>
+}</code></pre>
+
+    <div class="card card-yellow">
+      <p><span class="highlight">Đặc điểm quan trọng:</span></p>
+      <ul style="margin-left:20px;margin-top:8px;">
+        <li><strong>Không có trường <code>id</code></strong> — Đây là notification, không mong đợi response</li>
+        <li><strong>Không có params</strong> — Notification đơn giản, chỉ xác nhận "tôi đã sẵn sàng"</li>
+        <li><strong>Server KHÔNG trả về response</strong> — Một chiều, fire-and-forget</li>
+      </ul>
+    </div>
+
+    <!-- Section 6 -->
+    <h2>6. Sau Handshake</h2>
+    <div class="card card-red">
+      <p><span class="highlight">Chỉ SAU khi cả 3 bước hoàn tất</span> mới có thể gửi các requests khác:</p>
+      <ul style="margin-left:20px;margin-top:8px;">
+        <li><code>tools/list</code> — Liệt kê tools</li>
+        <li><code>tools/call</code> — Gọi một tool</li>
+        <li><code>resources/list</code> — Liệt kê resources</li>
+        <li><code>resources/read</code> — Đọc một resource</li>
+        <li><code>prompts/list</code> — Liệt kê prompts</li>
+        <li><code>prompts/get</code> — Lấy một prompt</li>
+      </ul>
+      <p style="margin-top:12px;">Nếu gửi bất kỳ request nào trước khi initialize, server sẽ trả về error.</p>
+    </div>
+
+    <div class="card card-blue" style="margin-top:16px;">
+      <h3>Session ID trong HTTP Transport</h3>
+      <p>Khi sử dụng StreamableHTTP transport, server trả thêm <strong>mcp-session-id</strong> trong response header của Initialize Result. Session ID này <span class="highlight">phải được gửi kèm trong mọi request sau đó</span> để server nhận diện client. Nếu dùng stdio transport, không cần session ID vì client và server chạy trên cùng một tiến trình.</p>
+    </div>
+
+  </div>
+
+  <!-- ==================== DEMO TAB ==================== -->
+  <div id="tab-demo" class="tab-content">
+    <h2>Mo phong Handshake MCP</h2>
+    <p>Thuc hien 3 buoc handshake de ket noi MCP Client voi MCP Server. Chon capabilities de thay doi noi dung JSON.</p>
+
+    <h3 style="margin-top:20px;">Client Capabilities</h3>
+    <div class="caps-grid">
+      <label class="cap-item checked">
+        <input type="checkbox" checked onchange="updateCaps()"> sampling
+      </label>
+      <label class="cap-item checked">
+        <input type="checkbox" checked onchange="updateCaps()"> roots
+      </label>
+    </div>
+
+    <h3>Server Capabilities</h3>
+    <div class="caps-grid">
+      <label class="cap-item checked">
+        <input type="checkbox" checked onchange="updateCaps()"> tools
+      </label>
+      <label class="cap-item checked">
+        <input type="checkbox" checked onchange="updateCaps()"> resources
+      </label>
+      <label class="cap-item checked">
+        <input type="checkbox" checked onchange="updateCaps()"> prompts
+      </label>
+      <label class="cap-item">
+        <input type="checkbox" onchange="updateCaps()"> logging
+      </label>
+    </div>
+
+    <!-- Step 1 -->
+    <div class="handshake-step" id="step1">
+      <div class="step-title">Buoc 1: Initialize Request</div>
+      <div class="step-status pending" id="step1-status">Cho</div>
+      <p>Client gui yeu cau khoi tao voi protocolVersion va clientCapabilities.</p>
+      <button class="btn" id="btn-step1" onclick="doStep1()">Gui Initialize Request</button>
+      <div class="msg-log" id="log-step1"></div>
+    </div>
+
+    <!-- Step 2 -->
+    <div class="handshake-step" id="step2">
+      <div class="step-title">Buoc 2: Initialize Result</div>
+      <div class="step-status pending" id="step2-status">Cho</div>
+      <p>Server phan hoi voi serverCapabilities va protocolVersion.</p>
+      <button class="btn" id="btn-step2" onclick="doStep2()" disabled>Server phan hoi</button>
+      <div class="msg-log" id="log-step2"></div>
+    </div>
+
+    <!-- Step 3 -->
+    <div class="handshake-step" id="step3">
+      <div class="step-title">Buoc 3: Initialized Notification</div>
+      <div class="step-status pending" id="step3-status">Cho</div>
+      <p>Client gui notification xac nhan (khong co response).</p>
+      <button class="btn" id="btn-step3" onclick="doStep3()" disabled>Gui Initialized Notification</button>
+      <div class="msg-log" id="log-step3"></div>
+    </div>
+
+    <!-- Completion -->
+    <div class="completion-banner" id="completion">
+      <h3>Handshake hoan tat!</h3>
+      <p>Gio co the gui cac requests nhu <code>tools/list</code>, <code>tools/call</code>, <code>resources/read</code>, etc.</p>
+    </div>
+
+    <button class="btn" style="background:#6a9955;margin-top:16px;" onclick="resetHandshake()">Lam moi</button>
+  </div>
+
+  <!-- ==================== QUIZ TAB ==================== -->
+  <div id="tab-quiz" class="tab-content">
+    <h2>Kiem tra kien thuc MCP Initialize</h2>
+    <p>Tra loi 5 cau hoi de kiem tra hieu bai cua ban.</p>
+
+    <div id="quiz-container"></div>
+
+    <button class="btn" id="submitQuiz" onclick="submitQuiz()">Nop bai</button>
+    <div class="score-box" id="scoreBox" style="display:none;"></div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="nav-bar">
+    <a class="nav-btn" href="lesson-03-mcp-intro.html">&larr; Bai truoc</a>
+    <a class="nav-btn" href="lesson-05-mcp-tools.html">Bai tiep &rarr;</a>
+  </div>
+</div>
+
+<script>
+// ========== Tab switching ==========
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  var tabs = ['theory','demo','quiz'];
+  var idx = tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ========== DEMO: Handshake Simulator ==========
+function getCheckedCaps(container) {
+  var items = container.querySelectorAll('.cap-item');
+  var result = [];
+  items.forEach(function(item) {
+    var cb = item.querySelector('input');
+    if (cb.checked) {
+      item.classList.add('checked');
+      result.push(cb.parentElement.textContent.trim());
+    } else {
+      item.classList.remove('checked');
+    }
+  });
+  return result;
+}
+
+function buildClientCaps() {
+  var section = document.querySelectorAll('.caps-grid')[0];
+  var caps = getCheckedCaps(section);
+  var obj = {};
+  caps.forEach(function(c) {
+    if (c === 'roots') obj.roots = { listChanged: true };
+    else obj[c] = {};
+  });
+  return obj;
+}
+
+function buildServerCaps() {
+  var section = document.querySelectorAll('.caps-grid')[1];
+  var caps = getCheckedCaps(section);
+  var obj = {};
+  caps.forEach(function(c) {
+    if (c === 'tools') obj.tools = { listChanged: true };
+    else if (c === 'resources') obj.resources = { subscribe: true, listChanged: true };
+    else if (c === 'prompts') obj.prompts = { listChanged: true };
+    else obj[c] = {};
+  });
+  return obj;
+}
+
+function updateCaps() {
+  buildClientCaps();
+  buildServerCaps();
+}
+
+function formatJson(obj) {
+  return JSON.stringify(obj, null, 2)
+    .replace(/"([^"]+)":/g, '<span class="json-key">"$1"</span>:')
+    .replace(/: "([^"]+)"/g, ': <span class="json-str">"$1"</span>')
+    .replace(/: (\d+)/g, ': <span class="json-str">$1</span>')
+    .replace(/: (true|false)/g, ': <span class="json-str">$1</span>');
+}
+
+function doStep1() {
+  var clientCaps = buildClientCaps();
+  var msg = {
+    jsonrpc: "2.0",
+    id: 1,
+    method: "initialize",
+    params: {
+      protocolVersion: "2024-11-05",
+      capabilities: clientCaps,
+      clientInfo: { name: "my-mcp-client", version: "1.0.0" }
+    }
+  };
+
+  var logEl = document.getElementById('log-step1');
+  logEl.innerHTML = '<span class="direction">Client --&gt; Server:</span>\n' + formatJson(msg);
+  logEl.classList.add('show');
+
+  document.getElementById('step1').classList.add('completed');
+  document.getElementById('step1-status').textContent = 'Hoan tat';
+  document.getElementById('step1-status').className = 'step-status done';
+  document.getElementById('btn-step1').disabled = true;
+  document.getElementById('btn-step2').disabled = false;
+  document.getElementById('step2').classList.add('active-step');
+}
+
+function doStep2() {
+  var serverCaps = buildServerCaps();
+  var msg = {
+    jsonrpc: "2.0",
+    id: 1,
+    result: {
+      protocolVersion: "2024-11-05",
+      capabilities: serverCaps,
+      serverInfo: { name: "github-mcp-server", version: "2.1.0" }
+    }
+  };
+
+  var logEl = document.getElementById('log-step2');
+  logEl.innerHTML = '<span class="direction">Server --&gt; Client:</span>\n' + formatJson(msg);
+  logEl.classList.add('show');
+
+  document.getElementById('step2').classList.remove('active-step');
+  document.getElementById('step2').classList.add('completed');
+  document.getElementById('step2-status').textContent = 'Hoan tat';
+  document.getElementById('step2-status').className = 'step-status done';
+  document.getElementById('btn-step2').disabled = true;
+  document.getElementById('btn-step3').disabled = false;
+  document.getElementById('step3').classList.add('active-step');
+}
+
+function doStep3() {
+  var msg = {
+    jsonrpc: "2.0",
+    method: "notifications/initialized"
+  };
+
+  var logEl = document.getElementById('log-step3');
+  logEl.innerHTML = '<span class="direction">Client --&gt; Server (notification, khong co response):</span>\n' + formatJson(msg);
+  logEl.classList.add('show');
+
+  document.getElementById('step3').classList.remove('active-step');
+  document.getElementById('step3').classList.add('completed');
+  document.getElementById('step3-status').textContent = 'Hoan tat';
+  document.getElementById('step3-status').className = 'step-status done';
+  document.getElementById('btn-step3').disabled = true;
+
+  document.getElementById('completion').classList.add('show');
+}
+
+function resetHandshake() {
+  document.getElementById('step1').className = 'handshake-step';
+  document.getElementById('step2').className = 'handshake-step';
+  document.getElementById('step3').className = 'handshake-step';
+  document.getElementById('step1-status').textContent = 'Cho';
+  document.getElementById('step1-status').className = 'step-status pending';
+  document.getElementById('step2-status').textContent = 'Cho';
+  document.getElementById('step2-status').className = 'step-status pending';
+  document.getElementById('step3-status').textContent = 'Cho';
+  document.getElementById('step3-status').className = 'step-status pending';
+  document.getElementById('btn-step1').disabled = false;
+  document.getElementById('btn-step2').disabled = true;
+  document.getElementById('btn-step3').disabled = true;
+  document.getElementById('log-step1').classList.remove('show');
+  document.getElementById('log-step2').classList.remove('show');
+  document.getElementById('log-step3').classList.remove('show');
+  document.getElementById('completion').classList.remove('show');
+}
+
+// ========== QUIZ ==========
+var quizData = [
+  {
+    q: "Bat tay MCP co bao nhieu buoc?",
+    opts: ["1", "2", "3", "4"],
+    correct: 2,
+    explain: "Handshake MCP co 3 buoc: (1) Initialize Request, (2) Initialize Result, (3) Initialized Notification."
+  },
+  {
+    q: "Trong Initialize Request, client gui gi?",
+    opts: ["Chi protocolVersion", "protocolVersion + clientCapabilities", "Chi clientCapabilities", "serverCapabilities + clientCapabilities"],
+    correct: 1,
+    explain: "Client gui protocolVersion (de thoa thuan phien ban) va clientCapabilities (de bao cho server biet client ho tro gi)."
+  },
+  {
+    q: "Initialized Notification co truong id khong?",
+    opts: ["Co, luon la id: 1", "Co, phai match voi Initialize Request id", "Khong — do la notification", "Co nhung la tuy chon"],
+    correct: 2,
+    explain: "Notification KHONG co truong id. Vi khong co id, server khong gui response. Day la message mot chieu (fire-and-forget)."
+  },
+  {
+    q: "Dieu gi xay ra neu gui tools/list truoc khi initialize?",
+    opts: ["Server tu dong initialize truoc", "Loi — phai initialize truoc", "Server tra ve danh sach trong", "Client tu dong goi initialize"],
+    correct: 1,
+    explain: "Handshake la bat buoc. Gui bat ky request nao truoc khi initialize se gay loi vi server chua thiet lap ket noi."
+  },
+  {
+    q: "Server tra ve gi trong Initialize Result?",
+    opts: ["Chi serverInfo", "Chi protocolVersion", "serverCapabilities + protocolVersion", "Chi danh sach tools"],
+    correct: 2,
+    explain: "Initialize Result chua serverCapabilities (nhung gi server ho tro), protocolVersion (phien ban duoc chot), va serverInfo (ten, version)."
+  }
+];
+
+function renderQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" style="margin:20px 0;">';
+    html += '<p style="font-weight:700;margin-bottom:12px;">Cau ' + (i+1) + ': ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].opts.length; j++) {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">';
+      html += String.fromCharCode(65+j) + '. ' + quizData[i].opts[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="feedback-'+i+'"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var userAnswers = {};
+function selectAnswer(q, a) {
+  userAnswers[q] = a;
+  var opts = document.querySelectorAll('[data-q="'+q+'"]');
+  opts.forEach(function(el) { el.classList.remove('correct','wrong'); });
+}
+
+function submitQuiz() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('feedback-'+i);
+    var opts = document.querySelectorAll('[data-q="'+i+'"]');
+    opts.forEach(function(el) {
+      el.classList.remove('correct','wrong');
+      var a = parseInt(el.getAttribute('data-a'));
+      if (a === quizData[i].correct) el.classList.add('correct');
+      else if (userAnswers[i] === a) el.classList.add('wrong');
+    });
+
+    if (userAnswers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chinh xac! ' + quizData[i].explain;
+    } else if (userAnswers[i] !== undefined) {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. ' + quizData[i].explain;
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Ban chua chon cau tra loi. ' + quizData[i].explain;
+    }
+  }
+
+  var scoreBox = document.getElementById('scoreBox');
+  scoreBox.style.display = 'block';
+  scoreBox.textContent = 'Ket qua: ' + score + '/' + quizData.length + ' cau dung';
+  document.getElementById('submitQuiz').disabled = true;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

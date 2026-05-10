@@ -1,0 +1,505 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 16: Sampling — Server xin Client gọi LLM</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>🧠 Bài 16: Sampling — Server xin Client gọi LLM</h1>
+<p class="subtitle">Đảo ngược thông thường: server nhờ client gọi AI model thay mình</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- THEORY TAB -->
+<div id="tab-theory" class="tab-content active">
+
+<h2>1. Sampling là gì?</h2>
+<p>Trong kiến trúc MCP bình thường, <span class="highlight">client</span> là bên gọi AI model (Claude) và <span class="highlight">server</span> cung cấp tools/resources. Nhưng đôi khi server cũng cần khả năng của LLM — ví dụ: tóm tắt một đoạn text dài, phân tích dữ liệu phức tạp, hay tạo nội dung.</p>
+
+<p>Thay vì tự gọi API (cần API key, xử lý authentication, chịu phí token), server có thể <span class="highlight">nhờ client gọi Claude thay mình</span>. Client đã có sẵn connection đến Claude, nên đây là cách tự nhiên và hiệu quả nhất.</p>
+
+<div class="analogy">
+Bạn đến nhà hàng và muốn một ly sinh tố. Thay vì tự mua máy xay và nguyên liệu (đắt tiền, phức tạp), bạn nhờ người phục vụ mang ra cho mình. Người phục vụ đã có sẵn bếp và nguyên liệu — bạn chỉ cần đặt hàng và trả tiền.
+</div>
+
+<h2>2. Hai cách tiếp cận</h2>
+<p>Khi server cần gọi LLM, có hai lựa chọn:</p>
+
+<table>
+<tr><th>Cách</th><th>Cách tiếp cận</th><th>Trade-off</th></tr>
+<tr><td><strong>Direct API Access</strong></td><td>Server tự gọi API với API key riêng, xử lý auth và cost</td><td>Thêm complexity đáng kể cho server</td></tr>
+<tr><td><strong>Sampling</strong></td><td>Server tạo prompt, nhờ client gọi Claude thay</td><td>Server giữ đơn giản; client chịu cost và auth</td></tr>
+</table>
+
+<div class="card card-yellow">
+<strong>🔑 Điểm chính:</strong> Sampling "đảo ngược" flow thông thường. Thay vì client hỏi server, server chủ động gửi request đến client. Đây là ví dụ điển hình của giao thức bidirectional trong MCP.
+</div>
+
+<h2>3. Server-side Implementation</h2>
+<p>Trên server, bạn dùng <code>ctx.session.create_message()</code> để gửi sampling request đến client. Method này nhận các tham số:</p>
+<ul style="margin:10px 0 10px 20px;">
+<li><code>messages</code> — Danh sách <code>SamplingMessage</code> với role và content</li>
+<li><code>max_tokens</code> — Giới hạn tokens cho response</li>
+<li><code>system_prompt</code> — Hướng dẫn hệ thống cho LLM (optional)</li>
+</ul>
+
+<pre><code># server.py
+from mcp.server.fastmcp import FastMCP, Context
+from mcp.types import SamplingMessage, TextContent
+
+mcp = FastMCP(name="Demo Server")
+
+@mcp.tool()
+async def summarize(text_to_summarize: str, ctx: Context):
+    prompt = f"""
+        Please summarize the following text:
+        {text_to_summarize}
+    """
+
+    result = await ctx.session.create_message(
+        messages=[
+            SamplingMessage(
+                role="user",
+                content=TextContent(type="text", text=prompt)
+            )
+        ],
+        max_tokens=4000,
+        system_prompt="You are a helpful research assistant.",
+    )
+
+    if result.content.type == "text":
+        return result.content.text
+    else:
+        raise ValueError("Sampling failed")</code></pre>
+
+<h2>4. Client-side Implementation</h2>
+<p>Client cần cung cấp <code>sampling_callback</code> cho <code>ClientSession</code>. Callback này:</p>
+<ol style="margin:10px 0 10px 20px;">
+<li>Nhận messages từ server (định dạng MCP)</li>
+<li>Convert sang định dạng tương thích với Anthropic SDK</li>
+<li>Gọi Claude và trả về <code>CreateMessageResult</code></li>
+</ol>
+
+<pre><code># client.py
+from anthropic import AsyncAnthropic
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from mcp.client.session import RequestContext
+from mcp.types import (
+    CreateMessageRequestParams, CreateMessageResult,
+    TextContent, SamplingMessage,
+)
+
+anthropic_client = AsyncAnthropic()
+model = "claude-sonnet-4-0"
+
+async def chat(input_messages: list[SamplingMessage], max_tokens=4000):
+    """Convert SamplingMessages to Anthropic SDK format."""
+    messages = []
+    for msg in input_messages:
+        if msg.role == "user" and msg.content.type == "text":
+            content = (
+                msg.content.text
+                if hasattr(msg.content, "text")
+                else str(msg.content)
+            )
+            messages.append({"role": "user", "content": content})
+        elif msg.role == "assistant" and msg.content.type == "text":
+            content = (
+                msg.content.text
+                if hasattr(msg.content, "text")
+                else str(msg.content)
+            )
+            messages.append({"role": "assistant", "content": content})
+
+    response = await anthropic_client.messages.create(
+        model=model,
+        messages=messages,
+        max_tokens=max_tokens,
+    )
+    text = "".join([p.text for p in response.content if p.type == "text"])
+    return text
+
+async def sampling_callback(
+    context: RequestContext, params: CreateMessageRequestParams
+):
+    text = await chat(params.messages)
+    return CreateMessageResult(
+        role="assistant",
+        model=model,
+        content=TextContent(type="text", text=text),
+    )
+
+async def run():
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(
+            read, write, sampling_callback=sampling_callback
+        ) as session:
+            await session.initialize()
+            result = await session.call_tool(
+                name="summarize",
+                arguments={"text_to_summarize": "lots of text"},
+            )
+            print(result.content)</code></pre>
+
+<h2>5. 6-Step Walkthrough</h2>
+
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>Server gọi create_message()</strong> — Trong lúc thực thi tool, server gọi <code>ctx.session.create_message()</code> với prompt cần tóm tắt.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>Client nhận sampling request</strong> — MCP framework tự động chuyển request đến <code>sampling_callback</code> trên client.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div><strong>Callback convert messages</strong> — Callback chuyển đổi <code>SamplingMessage</code> objects sang định dạng Anthropic SDK (dict với role/content).</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div><strong>Client gọi Claude</strong> — Sử dụng Anthropic SDK, client gửi prompt đến Claude và nhận response.</div>
+</div>
+<div class="step">
+<div class="step-num">5</div>
+<div><strong>Trả kết quả về server</strong> — Client wrap kết quả trong <code>CreateMessageResult</code> và gửi ngược về server.</div>
+</div>
+<div class="step">
+<div class="step-num">6</div>
+<div><strong>Server sử dụng kết quả</strong> — Server nhận text đã generate và trả về cho người dùng.</div>
+</div>
+
+<div class="diagram">
+<span class="box">Server Tool</span> <span class="arrow">→ create_message() →</span>
+<span class="box">Client Callback</span> <span class="arrow">→ convert →</span>
+<span class="box">Claude API</span> <span class="arrow">→ response →</span>
+<span class="box">Server Tool</span>
+</div>
+
+<h2>6. Khi nào dùng Sampling?</h2>
+
+<div class="card card-green">
+<strong>Sử dụng Sampling khi:</strong>
+<ul style="margin:8px 0 0 20px;">
+<li>Xây dựng <strong>public MCP servers</strong> — không muốn absorb AI costs cho mỗi user</li>
+<li>Server cần LLM nhưng không muốn quản lý API keys</li>
+<li>Client đã có connection đến Claude — tận dụng thay vì tạo mới</li>
+<li>Muốn shift authentication burden đến client</li>
+</ul>
+</div>
+
+<div class="card card-red">
+<strong>Không dùng Sampling khi:</strong>
+<ul style="margin:8px 0 0 20px;">
+<li>Server chạy nội bộ (private) — có thể dùng API key trực tiếp</li>
+<li>Dùng <code>stateless_http=True</code> — sampling không hoạt động</li>
+<li>Không cần LLM capabilities trong server</li>
+</ul>
+</div>
+
+</div>
+
+<!-- DEMO TAB -->
+<div id="tab-demo" class="tab-content">
+
+<h2>Sampling Flow Simulator</h2>
+<p>Nhấn vào từng bước để xem cách sampling hoạt động qua 6 giai đoạn.</p>
+
+<div style="display:flex;gap:8px;margin:16px 0;">
+<button class="btn" onclick="resetDemo(); advanceStep()">▶ Bắt đầu</button>
+<button class="btn" onclick="resetDemo()" style="background:#3e3e42;">↺ Reset</button>
+</div>
+
+<div id="demo-flow" style="margin:20px 0;">
+
+<div id="step-1" style="opacity:0.3;transition:opacity 0.5s;margin:10px 0;padding:12px;background:#252526;border:1px solid #3e3e42;border-radius:8px;">
+<strong style="color:#4fc1ff;">Bước 1:</strong> Server Tool gọi <code>ctx.session.create_message()</code>
+<div id="step-1-detail" style="display:none;margin-top:10px;">
+<pre><code>result = await ctx.session.create_message(
+    messages=[
+        SamplingMessage(role="user",
+            content=TextContent(type="text", text="Summarize: ..."))
+    ],
+    max_tokens=4000,
+    system_prompt="You are a helpful research assistant."
+)</code></pre>
+</div>
+</div>
+
+<div style="text-align:center;color:#ffd700;font-size:20px;">↓</div>
+
+<div id="step-2" style="opacity:0.3;transition:opacity 0.5s;margin:10px 0;padding:12px;background:#252526;border:1px solid #3e3e42;border-radius:8px;">
+<strong style="color:#4ec9b0;">Bước 2:</strong> Client nhận sampling request qua callback
+<div id="step-2-detail" style="display:none;margin-top:10px;">
+<pre><code>async def sampling_callback(context, params):
+    # params.messages chứa SamplingMessage từ server
+    # params.max_tokens = 4000
+    # Chờ convert và gọi Claude...</code></pre>
+</div>
+</div>
+
+<div style="text-align:center;color:#ffd700;font-size:20px;">↓</div>
+
+<div id="step-3" style="opacity:0.3;transition:opacity 0.5s;margin:10px 0;padding:12px;background:#252526;border:1px solid #3e3e42;border-radius:8px;">
+<strong style="color:#ffd700;">Bước 3:</strong> Callback convert SamplingMessage → Anthropic format
+<div id="step-3-detail" style="display:none;margin-top:10px;">
+<pre><code># MCP Format → Anthropic Format
+SamplingMessage(role="user", content=...)
+  → {"role": "user", "content": "Summarize: ..."}</code></pre>
+</div>
+</div>
+
+<div style="text-align:center;color:#ffd700;font-size:20px;">↓</div>
+
+<div id="step-4" style="opacity:0.3;transition:opacity 0.5s;margin:10px 0;padding:12px;background:#252526;border:1px solid #3e3e42;border-radius:8px;">
+<strong style="color:#f44747;">Bước 4:</strong> Client gọi Claude API
+<div id="step-4-detail" style="display:none;margin-top:10px;">
+<div class="card card-yellow" style="margin:0;">
+<strong>💰 Cost Flow:</strong><br>
+Server: <strong style="color:#4ec9b0;">$0.00</strong> — không trả gì cả<br>
+Client: <strong style="color:#f44747;">$0.024</strong> — trả cho tokens sử dụng<br>
+<em>Sampling shift cost từ server sang client!</em>
+</div>
+</div>
+</div>
+
+<div style="text-align:center;color:#ffd700;font-size:20px;">↓</div>
+
+<div id="step-5" style="opacity:0.3;transition:opacity 0.5s;margin:10px 0;padding:12px;background:#252526;border:1px solid #3e3e42;border-radius:8px;">
+<strong style="color:#4fc1ff;">Bước 5:</strong> Client trả CreateMessageResult về server
+<div id="step-5-detail" style="display:none;margin-top:10px;">
+<pre><code>return CreateMessageResult(
+    role="assistant",
+    model="claude-sonnet-4-0",
+    content=TextContent(type="text", text="Tóm tắt...")
+)</code></pre>
+</div>
+</div>
+
+<div style="text-align:center;color:#ffd700;font-size:20px;">↓</div>
+
+<div id="step-6" style="opacity:0.3;transition:opacity 0.5s;margin:10px 0;padding:12px;background:#252526;border:1px solid #3e3e42;border-radius:8px;">
+<strong style="color:#4ec9b0;">Bước 6:</strong> Server sử dụng kết quả — trả về cho user
+<div id="step-6-detail" style="display:none;margin-top:10px;">
+<div class="card card-green" style="margin:0;">
+<strong>Kết quả cuối cùng:</strong> "Văn bản nói về việc sử dụng sampling trong MCP để shift cost từ server sang client..."
+</div>
+</div>
+</div>
+
+</div>
+
+<div id="demo-step-label" style="margin-top:16px;padding:12px;background:#1a1a2e;border:1px solid #007acc;border-radius:6px;text-align:center;color:#4fc1ff;font-weight:600;">
+Nhấn "Bắt đầu" để xem từng bước
+</div>
+
+</div>
+
+<!-- QUIZ TAB -->
+<div id="tab-quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức — Sampling</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu bài.</p>
+<div id="quiz-container"></div>
+<div id="quiz-feedback" class="feedback"></div>
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="background:#3e3e42;margin-left:8px;">Làm lại</button>
+<div id="quiz-score" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+<a href="lesson-15-building-mcp-client.html" class="nav-btn">← Bài 15</a>
+<a href="lesson-17-notifications.html" class="nav-btn">Bài 17 →</a>
+</div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Demo
+let demoStep = 0;
+function resetDemo() {
+  demoStep = 0;
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById('step-' + i).style.opacity = '0.3';
+    document.getElementById('step-' + i).style.borderColor = '#3e3e42';
+    document.getElementById('step-' + i + '-detail').style.display = 'none';
+  }
+  document.getElementById('demo-step-label').textContent = 'Nhấn "Bắt đầu" để xem từng bước';
+}
+
+function advanceStep() {
+  if (demoStep >= 6) return;
+  demoStep++;
+  const el = document.getElementById('step-' + demoStep);
+  el.style.opacity = '1';
+  el.style.borderColor = '#007acc';
+  document.getElementById('step-' + demoStep + '-detail').style.display = 'block';
+  document.getElementById('demo-step-label').textContent = 'Bước ' + demoStep + ' / 6 — Nhấn "Bắt đầu" để tiếp tục';
+  if (demoStep < 6) {
+    setTimeout(advanceStep, 1200);
+  } else {
+    document.getElementById('demo-step-label').textContent = 'Hoàn thành! Sampling flow kết thúc.';
+  }
+}
+
+// Quiz
+const quizData = [
+  {
+    q: "Sampling cho phép server làm gì?",
+    opts: ["Tự gọi Claude API trực tiếp", "Nhờ client gọi LLM thay mình", "Tạo ra AI model riêng", "Bỏ qua client và gọi API"],
+    ans: 1
+  },
+  {
+    q: "API nào dùng trên server để initiate sampling?",
+    opts: ["ctx.session.call_claude()", "ctx.session.create_message()", "ctx.session.sampling_request()", "ctx.session.invoke_llm()"],
+    ans: 1
+  },
+  {
+    q: "Client cần cung cấp gì cho sampling?",
+    opts: ["API key cho server", "sampling_callback cho ClientSession", "Custom HTTP endpoint", "Direct database connection"],
+    ans: 1
+  },
+  {
+    q: "Tại sao sampling hữu ích cho public servers?",
+    opts: ["Tăng tốc độ response", "Shift cost và auth đến client", "Giảm số lượng code", "Tăng bảo mật cho API key"],
+    ans: 1
+  },
+  {
+    q: "Sampling có hoạt động với stateless_http=True không?",
+    opts: ["Có, hoàn toàn bình thường", "Có nhưng chậm hơn", "Không, cần server-to-client request", "Chỉ hoạt động với stdio"],
+    ans: 2
+  }
+];
+
+let userAnswers = {};
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizData.forEach((item, qi) => {
+    let html = '<div class="card" style="margin:16px 0;"><h3>Câu ' + (qi + 1) + ': ' + item.q + '</h3>';
+    item.opts.forEach((opt, oi) => {
+      html += '<div class="quiz-option" data-q="' + qi + '" data-o="' + oi + '" onclick="pick(' + qi + ',' + oi + ')">' + opt + '</div>';
+    });
+    html += '</div>';
+    container.innerHTML += html;
+  });
+}
+
+function pick(qi, oi) {
+  userAnswers[qi] = oi;
+  document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="' + qi + '"][data-o="' + oi + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  let score = 0;
+  quizData.forEach((item, qi) => {
+    document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+      el.classList.remove('correct', 'wrong');
+    });
+    if (userAnswers[qi] !== undefined) {
+      if (userAnswers[qi] === item.ans) {
+        score++;
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      } else {
+        document.querySelector('[data-q="' + qi + '"][data-o="' + userAnswers[qi] + '"]').classList.add('wrong');
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      }
+    } else {
+      document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+    }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.classList.add('show');
+  if (score === quizData.length) {
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Tuyệt vời! Bạn đã trả lời đúng tất cả ' + score + '/' + quizData.length + ' câu!';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Bạn được ' + score + '/' + quizData.length + '. Xem lại phần lý thuyết và thử lại!';
+  }
+  document.getElementById('quiz-score').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  userAnswers = {};
+  buildQuiz();
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-score').textContent = '';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

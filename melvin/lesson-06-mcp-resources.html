@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 06: MCP Resources - Dua du lieu vao ung dung</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.resource-item{background:#2d2d30;border:1px solid #3e3e42;border-radius:6px;padding:14px 18px;margin:8px 0;cursor:pointer;transition:all 0.2s;display:flex;justify-content:space-between;align-items:center;}
+.resource-item:hover{border-color:#007acc;background:#2a3a4a;}
+.resource-item.selected{border-color:#4ec9b0;background:#1a3a2a;}
+.resource-uri{font-family:'Courier New',monospace;color:#9cdcfe;font-size:13px;}
+.resource-type{font-size:12px;padding:2px 8px;border-radius:4px;font-weight:600;}
+.type-direct{background:#007acc;color:white;}
+.type-templated{background:#6a9955;color:white;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 06: MCP Resources — Đưa dữ liệu vào ứng dụng</h1>
+<p class="subtitle">Resources là endpoints đọc dữ liệu — app-controlled, hiệu quả hơn Tools cho read-only data</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ==================== LÝ THUYẾT ==================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Resources là gì?</h2>
+<p><span class="highlight">Resources</span> là primitive được điều khiển bởi ứng dụng (<strong>app-controlled</strong>). Ứng dụng của bạn quyết định khi nào fetch data — không phải Claude, cũng không phải người dùng.</p>
+
+<div class="card card-blue">
+<p><strong>Đặc điểm chính của Resources:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li>Được điều khiển bởi <strong>ứng dụng (app code)</strong></li>
+<li>Giống như <strong>GET endpoints</strong> trong HTTP — chỉ đọc data</li>
+<li>Data được inject trực tiếp vào prompt — <strong>không cần tool call round-trip</strong></li>
+<li>Hiệu quả hơn Tools cho read-only data</li>
+</ul>
+</div>
+
+<div class="analogy">
+Nếu Tools là "hành động" (POST/PUT), thì Resources là "đọc dữ liệu" (GET). Trong giao diện Claude, tính năng "Add from Google Drive" chính là Resource — ứng dụng fetch nội dung file và inject vào conversation.
+</div>
+
+<h2>2. Direct Resources vs Templated Resources</h2>
+
+<h3>Direct Resources (Static URI)</h3>
+<p>URI cố định, trả về cùng một loại data mỗi khi gọi.</p>
+<pre><code>@mcp.resource("docs://documents", mime_type="application/json")
+def list_docs() -> list[str]:
+    """Trả về danh sách tất cả tài liệu."""
+    return list(docs.keys())</code></pre>
+
+<h3>Templated Resources (Parameterized URI)</h3>
+<p>URI chứa tham số trong ngoặc nhọn <code>{param}</code>, cho phép fetch data cụ thể.</p>
+<pre><code>@mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
+def read_doc(doc_id: str) -> str:
+    """Trả về nội dung tài liệu theo ID."""
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+
+<div class="card card-green">
+<p><strong>So sánh:</strong></p>
+<table>
+<tr><th></th><th>Direct Resource</th><th>Templated Resource</th></tr>
+<tr><td>URI</td><td><code>docs://documents</code></td><td><code>docs://documents/{doc_id}</code></td></tr>
+<tr><td>Tham số</td><td>Không có</td><td>Có <code>{doc_id}</code></td></tr>
+<tr><td>Trả về</td><td>Danh sách tất cả docs</td><td>Nội dung 1 doc cụ thể</td></tr>
+<tr><td>MIME type</td><td>application/json</td><td>text/plain</td></tr>
+</table>
+</div>
+
+<h2>3. MIME Types</h2>
+<p>Server chỉ định <span class="highlight">MIME type</span> cho mỗi resource, giúp client biết cách xử lý data.</p>
+
+<table>
+<tr><th>MIME Type</th><th>Dùng cho</th><th>Ví dụ</th></tr>
+<tr><td><code>application/json</code></td><td>Dữ liệu có cấu trúc</td><td>Danh sách documents, metadata</td></tr>
+<tr><td><code>text/plain</code></td><td>Văn bản thông thường</td><td>Nội dung tài liệu</td></tr>
+<tr><td><code>application/pdf</code></td><td>File PDF</td><td>Báo cáo PDF</td></tr>
+</table>
+
+<div class="card card-yellow">
+<p>SDK xử lý serialization tự động — bạn chỉ cần return data, SDK lo phần còn lại.</p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li>Resource trả về <code>list</code> hoặc <code>dict</code> với <code>mime_type="application/json"</code> sẽ được tự động chuyển thành JSON string</li>
+<li>Resource trả về <code>str</code> với <code>mime_type="text/plain"</code> sẽ giữ nguyên</li>
+</ul>
+</div>
+
+<h2>4. resources/list và resources/read</h2>
+
+<div class="card card-yellow">
+<p><strong>resources/list — Liệt kê tất cả resources</strong></p>
+<pre><code>// Request
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "resources/list"
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "resources": [
+      {
+        "uri": "docs://documents",
+        "name": "list_docs",
+        "mimeType": "application/json"
+      }
+    ],
+    "resourceTemplates": [
+      {
+        "uriTemplate": "docs://documents/{doc_id}",
+        "name": "read_doc",
+        "mimeType": "text/plain"
+      }
+    ]
+  }
+}</code></pre>
+</div>
+
+<div class="card card-yellow">
+<p><strong>resources/read — Đọc nội dung resource theo URI</strong></p>
+<pre><code>// Request
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "resources/read",
+  "params": {
+    "uri": "docs://documents/report.pdf"
+  }
+}
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "contents": [
+      {
+        "uri": "docs://documents/report.pdf",
+        "mimeType": "text/plain",
+        "text": "The report details the state of a 20m condenser tower."
+      }
+    ]
+  }
+}</code></pre>
+</div>
+
+<h2>5. Tại sao Resources hiệu quả hơn Tools cho read-only data?</h2>
+
+<div class="diagram">
+<strong style="color:#f44747;">Cách 1: Dùng Tool (chậm hơn)</strong>
+<br>
+<span class="box">User hỏi về document</span>
+<span class="arrow">→</span>
+<span class="box">Claude quyết định gọi tool</span>
+<span class="arrow">→</span>
+<span class="box">tools/call round-trip</span>
+<span class="arrow">→</span>
+<span class="box">Claude nhận kết quả</span>
+<span class="arrow">→</span>
+<span class="box">Trả lời user</span>
+<br><br>
+<strong style="color:#4ec9b0;">Cách 2: Dùng Resource (nhanh hơn)</strong>
+<br>
+<span class="box">User hỏi về document</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#4ec9b0;">App fetch resource trực tiếp</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#4ec9b0;">Inject vào prompt</span>
+<span class="arrow">→</span>
+<span class="box" style="border-color:#4ec9b0;">Claude trả lời ngay</span>
+</div>
+
+<div class="card card-green">
+<p><strong>Lợi ích của Resources so với Tools cho read-only data:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li><strong>Không cần tool call round-trip</strong> — nội dung được inject trực tiếp vào prompt ban đầu</li>
+<li><strong>Tiết kiệm tokens</strong> — không cần Claude hỏi rồi mới lấy data</li>
+<li><strong>Giảm latency</strong> — user nhận được câu trả lời nhanh hơn vì không cần vòng lặp tool use</li>
+<li><strong>Claude có context ngay từ đầu</strong> — trả lời chính xác hơn</li>
+</ul>
+</div>
+
+<h2>6. @mention Pattern</h2>
+<p>Trong CLI apps, người dùng có thể gõ <span class="highlight">@</span> để reference một resource. Ứng dụng tự động fetch nội dung và inject vào prompt.</p>
+
+<pre><code># Trong CLI app
+async def _extract_resources(self, query: str) -> str:
+    """Trích xuất @mentions từ query và fetch nội dung."""
+    mentions = [word[1:] for word in query.split() if word.startswith("@")]
+    doc_ids = await self.list_docs_ids()
+    mentioned_docs = []
+
+    for doc_id in doc_ids:
+        if doc_id in mentions:
+            content = await self.get_doc_content(doc_id)
+            mentioned_docs.append((doc_id, content))
+
+    return "".join(
+        f'\n&lt;document id="{doc_id}"&gt;\n{content}\n&lt;/document&gt;\n'
+        for doc_id, content in mentioned_docs
+    )</code></pre>
+
+<div class="card card-blue">
+<p><strong>Ví dụ workflow:</strong></p>
+<ol style="margin-left:20px;margin-top:8px;">
+<li>User gõ: <code>"Hãy tóm tắt @report.pdf"</code></li>
+<li>App nhận diện <code>@report.pdf</code> là resource reference</li>
+<li>App gửi <code>resources/read</code> với URI <code>docs://documents/report.pdf</code></li>
+<li>App inject nội dung vào prompt: <code>&lt;document id="report.pdf"&gt;...&lt;/document&gt;</code></li>
+<li>Claude nhận được prompt kèm nội dung document → trả lời ngay lập tức</li>
+</ol>
+</div>
+
+</div>
+
+<!-- ==================== DEMO ==================== -->
+<div id="demo" class="tab-content">
+
+<h2>Resource Browser Simulator</h2>
+<p>Khám phá resources của DocumentMCP server. Click vào resource để xem request/response JSON.</p>
+
+<h3 style="margin-top:24px;">Danh sách Resources</h3>
+<div id="resource-list">
+  <div class="resource-item" onclick="selectResource('direct')" id="res-direct">
+    <div>
+      <strong>list_docs</strong>
+      <div class="resource-uri" style="margin-top:4px;">docs://documents</div>
+    </div>
+    <span class="resource-type type-direct">Direct</span>
+  </div>
+  <div class="resource-item" onclick="selectResource('templated')" id="res-templated">
+    <div>
+      <strong>read_doc</strong>
+      <div class="resource-uri" style="margin-top:4px;">docs://documents/{doc_id}</div>
+    </div>
+    <span class="resource-type type-templated">Templated</span>
+  </div>
+</div>
+
+<div id="templated-input" style="display:none;margin-top:16px;">
+  <label style="color:#9cdcfe;font-weight:600;">Nhập doc_id: </label>
+  <input id="doc-id-input" type="text" value="report.pdf" style="padding:6px 10px;background:#2d2d2d;color:#d4d4d4;border:1px solid #3e3e42;border-radius:4px;font-size:14px;width:200px;">
+  <button class="btn" onclick="fetchResource()" style="margin-left:10px;">Fetch Resource</button>
+</div>
+
+<div id="direct-btn" style="margin-top:16px;">
+  <button class="btn" onclick="fetchResource()">Fetch Resource</button>
+</div>
+
+<div id="resource-result" style="margin-top:24px;display:none;">
+  <h3 id="result-title"></h3>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:280px;">
+      <p><strong>Request (resources/read):</strong></p>
+      <pre><code id="res-request"></code></pre>
+    </div>
+    <div style="flex:1;min-width:280px;">
+      <p><strong>Response:</strong></p>
+      <pre><code id="res-response"></code></pre>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiểm tra kiến thức — MCP Resources</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu biết của bạn về MCP Resources.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="margin-left:10px;background:#3e3e42;">Làm lại</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- ==================== NAVIGATION ==================== -->
+<div class="nav-bar">
+  <a href="lesson-05-mcp-tools.html" class="nav-btn">&larr; Bài 05: MCP Tools</a>
+  <a href="lesson-07-mcp-prompts.html" class="nav-btn">Bài 07: MCP Prompts &rarr;</a>
+</div>
+</div>
+
+<script>
+// === Tab Switching ===
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// === Demo Data ===
+var fakeDocs = {
+  "deposition.md": "This deposition covers the testimony of Angela Smith, P.E.",
+  "report.pdf": "The report details the state of a 20m condenser tower.",
+  "financials.docx": "These financials outline the project's budget and expenditures.",
+  "outlook.pdf": "This document presents the projected future performance of the system.",
+  "plan.md": "The plan outlines the steps for the project's implementation.",
+  "spec.txt": "These specifications define the technical requirements for the equipment."
+};
+
+var selectedResourceType = 'direct';
+
+function selectResource(type) {
+  selectedResourceType = type;
+  document.querySelectorAll('.resource-item').forEach(function(el) { el.classList.remove('selected'); });
+  if (type === 'direct') {
+    document.getElementById('res-direct').classList.add('selected');
+    document.getElementById('templated-input').style.display = 'none';
+    document.getElementById('direct-btn').style.display = 'block';
+  } else {
+    document.getElementById('res-templated').classList.add('selected');
+    document.getElementById('templated-input').style.display = 'block';
+    document.getElementById('direct-btn').style.display = 'none';
+  }
+}
+
+function fetchResource() {
+  document.getElementById('resource-result').style.display = 'block';
+
+  if (selectedResourceType === 'direct') {
+    document.getElementById('result-title').textContent = 'Direct Resource: docs://documents';
+    document.getElementById('res-request').textContent = JSON.stringify({
+      "jsonrpc": "2.0", "id": 1, "method": "resources/read",
+      "params": { "uri": "docs://documents" }
+    }, null, 2);
+    document.getElementById('res-response').textContent = JSON.stringify({
+      "jsonrpc": "2.0", "id": 1,
+      "result": {
+        "contents": [{
+          "uri": "docs://documents",
+          "mimeType": "application/json",
+          "text": JSON.stringify(Object.keys(fakeDocs))
+        }]
+      }
+    }, null, 2);
+  } else {
+    var docId = document.getElementById('doc-id-input').value || 'report.pdf';
+    var uri = "docs://documents/" + docId;
+    document.getElementById('result-title').textContent = 'Templated Resource: ' + uri;
+    document.getElementById('res-request').textContent = JSON.stringify({
+      "jsonrpc": "2.0", "id": 2, "method": "resources/read",
+      "params": { "uri": uri }
+    }, null, 2);
+
+    if (fakeDocs[docId]) {
+      document.getElementById('res-response').textContent = JSON.stringify({
+        "jsonrpc": "2.0", "id": 2,
+        "result": {
+          "contents": [{
+            "uri": uri,
+            "mimeType": "text/plain",
+            "text": fakeDocs[docId]
+          }]
+        }
+      }, null, 2);
+    } else {
+      document.getElementById('res-response').textContent = JSON.stringify({
+        "jsonrpc": "2.0", "id": 2,
+        "error": { "code": -32603, "message": "Doc with id " + docId + " not found" }
+      }, null, 2);
+    }
+  }
+}
+
+// === Quiz System ===
+var quizData = [
+  {
+    q: "Ai quyết định khi nào fetch Resource trong MCP?",
+    options: ["Claude (model-controlled)", "Ứng dụng (app-controlled)", "Người dùng (user-controlled)", "MCP Server"],
+    correct: 1
+  },
+  {
+    q: "Templated Resource khác Direct Resource ở điểm nào?",
+    options: ["Templated trả về JSON, Direct trả về text", "Templated có tham số trong URI ({doc_id}), Direct có URI cố định", "Direct dùng @mention, Templated dùng slash command", "Không có khác biệt"],
+    correct: 1
+  },
+  {
+    q: "resources/read cần tham số gì để đọc nội dung resource?",
+    options: ["name của resource", "URI của resource", "description của resource", "mimeType của resource"],
+    correct: 1
+  },
+  {
+    q: "Tại sao Resources hiệu quả hơn Tools cho read-only data?",
+    options: ["Resources chạy nhanh hơn vì không cần server", "Resources inject trực tiếp vào prompt, không cần tool call round-trip", "Tools không thể đọc data", "Resources dùng ít bộ nhớ hơn"],
+    correct: 1
+  },
+  {
+    q: "MIME type mặc định cho text content là gì?",
+    options: ["application/json", "text/html", "text/plain", "application/octet-stream"],
+    correct: 2
+  }
+];
+
+function buildQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" id="q' + i + '">';
+    html += '<p><strong>Câu ' + (i + 1) + ':</strong> ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].options.length; j++) {
+      html += '<div class="quiz-option" data-q="' + i + '" data-a="' + j + '" onclick="pick(' + i + ',' + j + ')">';
+      html += String.fromCharCode(65 + j) + '. ' + quizData[i].options[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="fb' + i + '"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var answers = {};
+
+function pick(qi, ai) {
+  answers[qi] = ai;
+  var opts = document.querySelectorAll('[data-q="' + qi + '"]');
+  opts.forEach(function(el) { el.style.borderColor = '#3e3e42'; el.style.background = '#2d2d30'; });
+  var selected = document.querySelector('[data-q="' + qi + '"][data-a="' + ai + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('fb' + i);
+    fb.classList.add('show');
+    var opts = document.querySelectorAll('[data-q="' + i + '"]');
+    if (answers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Đáp án đúng: ' + String.fromCharCode(65 + quizData[i].correct) + '. ' + quizData[i].options[quizData[i].correct];
+      if (answers[i] !== undefined) {
+        opts.forEach(function(el) {
+          if (parseInt(el.getAttribute('data-a')) === answers[i]) {
+            el.classList.add('wrong');
+          }
+        });
+      }
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    }
+  }
+  document.getElementById('score-display').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  answers = {};
+  document.getElementById('score-display').textContent = '';
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 15: Xay dung MCP Client</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.lifecycle-step{background:#2d2d30;border:1px solid #3e3e42;border-radius:8px;padding:16px;margin:10px 0;cursor:pointer;transition:all 0.3s;}
+.lifecycle-step:hover{border-color:#007acc;}
+.lifecycle-step.active{border-color:#4ec9b0;background:#1a2a3a;}
+.lifecycle-step .step-code{display:none;margin-top:12px;padding:12px;background:#1e1e1e;border-radius:6px;}
+.lifecycle-step.active .step-code{display:block;}
+.lifecycle-step .step-rpc{display:none;margin-top:8px;padding:10px;background:#1a1a2e;border-radius:6px;font-size:12px;}
+.lifecycle-step.active .step-rpc{display:block;}
+.rpc-label{color:#ffd700;font-size:11px;font-weight:700;text-transform:uppercase;margin-bottom:4px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>&#128279; Bai 15: Xay dung MCP Client -- Cau noi giao tiep</h1>
+<p class="subtitle">Hieu client architecture va cach ket noi den MCP Server</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Ly thuyet</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ===================== THEORY TAB ===================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Client Architecture -- Kien truc Client</h2>
+
+<p>MCP Client la <span class="highlight">cau noi giao tiep</span> giua ung dung cua ban va MCP Server. No quan ly message exchange va protocol details de ung dung khong can lam viec do.</p>
+
+<div class="diagram">
+  <div style="margin-bottom:10px;color:#ffd700;font-weight:700;">Client Architecture</div>
+  <div>
+    <span class="box">Your App</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box" style="border-color:#4ec9b0;">MCPClient</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box" style="border-color:#ffc107;">ClientSession</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box" style="border-color:#f44747;">MCP Server</span>
+  </div>
+  <div style="margin-top:8px;color:#858585;font-size:12px;">
+    (custom class) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (MCP SDK) &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp; (external)
+  </div>
+</div>
+
+<div class="card card-green">
+<h3>Hai thanh phan chinh</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">MCPClient</span> -- Lop custom ma chung ta tao de su dung session de dang hon. Wrapper giup code sach va de dung.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">ClientSession</span> -- Ket noi thuc te den server, la mot phan cua MCP Python SDK. Xu ly JSON-RPC message exchange.</div>
+</div>
+</div>
+
+<div class="analogy">
+Nghep cua MCP Client nhu mot "thong dich vien" -- ung dung cua ban noi mot ngon ngu, MCP Server noi ngon ngu khac. Client dich chinh xac cac yeu cau va phan hoi qua giao thuc JSON-RPC.
+</div>
+
+<h2>2. Connection Lifecycle -- Vong doi Ket noi</h2>
+
+<p>Client su dung <span class="highlight">AsyncExitStack</span> de quan ly lifecycle cua nhieu async resources -- dam bao cleanup dung cach khi ket thuc.</p>
+
+<div class="card card-blue">
+<h3>Quy trinh ket noi</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">StdioServerParameters</span> -- Dinh nghia cach khoi dong server (command, args, env).</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">stdio_client()</span> -- Tao stdio transport, khoi dong server nhu subprocess.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">ClientSession(stdio, write)</span> -- Tao session qua read/write streams.</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div><span class="highlight">session.initialize()</span> -- Gui initialize request, hoan tat handshake voi server.</div>
+</div>
+</div>
+
+<pre><code>class MCPClient:
+    def __init__(self, command: str, args: list[str], env: Optional[dict] = None):
+        self._command = command
+        self._args = args
+        self._env = env
+        self._session: Optional[ClientSession] = None
+        self._exit_stack: AsyncExitStack = AsyncExitStack()
+
+    async def connect(self):
+        server_params = StdioServerParameters(
+            command=self._command,
+            args=self._args,
+            env=self._env,
+        )
+        stdio_transport = await self._exit_stack.enter_async_context(
+            stdio_client(server_params)
+        )
+        _stdio, _write = stdio_transport
+        self._session = await self._exit_stack.enter_async_context(
+            ClientSession(_stdio, _write)
+        )
+        await self._session.initialize()</code></pre>
+
+<h2>3. Core Methods -- Cac phuong thuc chinh</h2>
+
+<p>Client cung cap 5 phuong thuc de tuong tac voi MCP Server:</p>
+
+<div class="card card-green">
+<h3>Bang tong hop cac Core Methods</h3>
+<table>
+  <tr><th>Method</th><th>Tham so</th><th>Tra ve</th><th>JSON-RPC Method</th></tr>
+  <tr><td><code>list_tools()</code></td><td>--</td><td><code>list[Tool]</code></td><td><code>tools/list</code></td></tr>
+  <tr><td><code>call_tool(name, args)</code></td><td>name, arguments</td><td><code>CallToolResult</code></td><td><code>tools/call</code></td></tr>
+  <tr><td><code>list_prompts()</code></td><td>--</td><td><code>list[Prompt]</code></td><td><code>prompts/list</code></td></tr>
+  <tr><td><code>get_prompt(name, args)</code></td><td>name, arguments</td><td><code>list[Message]</code></td><td><code>prompts/get</code></td></tr>
+  <tr><td><code>read_resource(uri)</code></td><td>URI string</td><td><code>Any</code></td><td><code>resources/read</code></td></tr>
+</table>
+</div>
+
+<h3>list_tools() va call_tool()</h3>
+<pre><code>async def list_tools(self) -> list[types.Tool]:
+    result = await self.session().list_tools()
+    return result.tools
+
+async def call_tool(self, tool_name: str, tool_input) -> types.CallToolResult | None:
+    return await self.session().call_tool(tool_name, tool_input)</code></pre>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:14px 0;">
+  <div style="color:#ffd700;font-size:11px;font-weight:700;margin-bottom:4px;">JSON-RPC: LIST TOOLS</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>// Request
+{ "jsonrpc": "2.0", "method": "tools/list", "params": {} }
+
+// Response
+{ "tools": [
+    { "name": "read_doc_contents", "description": "Read...", "inputSchema": {...} },
+    { "name": "edit_document", "description": "Edit...", "inputSchema": {...} }
+]}</code></pre>
+</div>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:14px 0;">
+  <div style="color:#ffd700;font-size:11px;font-weight:700;margin-bottom:4px;">JSON-RPC: CALL TOOL</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>// Request
+{ "jsonrpc": "2.0", "method": "tools/call",
+  "params": { "name": "read_doc_contents", "arguments": { "doc_id": "report.pdf" } }
+}
+
+// Response
+{ "content": [{ "type": "text", "text": "The report details the state of a 20m condenser tower." }] }</code></pre>
+</div>
+
+<h3>list_prompts(), get_prompt(), read_resource()</h3>
+<pre><code>async def list_prompts(self) -> list[types.Prompt]:
+    result = await self.session().list_prompts()
+    return result.prompts
+
+async def get_prompt(self, prompt_name, args: dict[str, str]):
+    result = await self.session().get_prompt(prompt_name, args)
+    return result.messages
+
+async def read_resource(self, uri: str) -> Any:
+    result = await self.session().read_resource(AnyUrl(uri))
+    resource = result.contents[0]
+
+    if isinstance(resource, types.TextResourceContents):
+        if resource.mimeType == "application/json":
+            return json.loads(resource.text)
+
+    return resource.text</code></pre>
+
+<div class="card card-yellow">
+<h3>Luu y ve read_resource()</h3>
+<p>Phuong thuc nay kiem tra MIME type: <span class="highlight">JSON duoc parse thanh Python objects</span>, con lai tra ve raw text. Day la vi du ve logic xu ly ma client can tu viet.</p>
+</div>
+
+<h2>4. Complete Client Code -- Toan bo mcp_client.py</h2>
+
+<pre><code>import sys
+import asyncio
+import json
+from typing import Optional, Any
+from contextlib import AsyncExitStack
+from mcp import ClientSession, StdioServerParameters, types
+from mcp.client.stdio import stdio_client
+from pydantic import AnyUrl
+
+
+class MCPClient:
+    def __init__(
+        self,
+        command: str,
+        args: list[str],
+        env: Optional[dict] = None,
+    ):
+        self._command = command
+        self._args = args
+        self._env = env
+        self._session: Optional[ClientSession] = None
+        self._exit_stack: AsyncExitStack = AsyncExitStack()
+
+    async def connect(self):
+        server_params = StdioServerParameters(
+            command=self._command,
+            args=self._args,
+            env=self._env,
+        )
+        stdio_transport = await self._exit_stack.enter_async_context(
+            stdio_client(server_params)
+        )
+        _stdio, _write = stdio_transport
+        self._session = await self._exit_stack.enter_async_context(
+            ClientSession(_stdio, _write)
+        )
+        await self._session.initialize()
+
+    def session(self) -> ClientSession:
+        if self._session is None:
+            raise ConnectionError(
+                "Client session not initialized. Call connect first."
+            )
+        return self._session
+
+    async def list_tools(self) -> list[types.Tool]:
+        result = await self.session().list_tools()
+        return result.tools
+
+    async def call_tool(
+        self, tool_name: str, tool_input
+    ) -> types.CallToolResult | None:
+        return await self.session().call_tool(tool_name, tool_input)
+
+    async def list_prompts(self) -> list[types.Prompt]:
+        result = await self.session().list_prompts()
+        return result.prompts
+
+    async def get_prompt(self, prompt_name, args: dict[str, str]):
+        result = await self.session().get_prompt(prompt_name, args)
+        return result.messages
+
+    async def read_resource(self, uri: str) -> Any:
+        result = await self.session().read_resource(AnyUrl(uri))
+        resource = result.contents[0]
+
+        if isinstance(resource, types.TextResourceContents):
+            if resource.mimeType == "application/json":
+                return json.loads(resource.text)
+
+            return resource.text
+
+    async def cleanup(self):
+        await self._exit_stack.aclose()
+        self._session = None
+
+    async def __aenter__(self):
+        await self.connect()
+        return self
+
+    async def __aexit__(self, exc_type, exc_val, exc_tb):
+        await self.cleanup()</code></pre>
+
+<h2>5. AsyncExitStack Pattern</h2>
+
+<p><span class="highlight">AsyncExitStack</span> la mot context manager dac biet cho phep quan ly <strong>nhieu async resources</strong> cung luc.</p>
+
+<div class="card card-blue">
+<h3>Tai sao can AsyncExitStack?</h3>
+<p>Client can mo nhieu resources theo thu tu: stdio transport, ClientSession. Moi resource can duoc cleanup dung cach khi ket thuc. <code>AsyncExitStack</code> dam bao tat ca duoc dong dung thu tu.</p>
+</div>
+
+<pre><code># Trong connect():
+self._exit_stack = AsyncExitStack()
+
+# Them tung resource vao stack
+stdio_transport = await self._exit_stack.enter_async_context(
+    stdio_client(server_params)     # Resource 1: stdio transport
+)
+self._session = await self._exit_stack.enter_async_context(
+    ClientSession(_stdio, _write)   # Resource 2: ClientSession
+)
+
+# Cleanup tat ca khi thoat
+async def cleanup(self):
+    await self._exit_stack.aclose()  # Dong tat ca resources theo thu tu nguoc
+    self._session = None</code></pre>
+
+<div class="card card-green">
+<h3>__aenter__ va __aexit__ -- Async Context Manager</h3>
+<p>Lop MCPClient ho tro <code>async with</code> syntax:</p>
+<pre><code>async with MCPClient(command="uv", args=["run", "mcp_server.py"]) as client:
+    tools = await client.list_tools()
+    # ... su dung client
+# Tu dong cleanup khi thoat khoi block</code></pre>
+<p>Khi vao block: <code>__aenter__</code> goi <code>connect()</code>. Khi ra khoi block: <code>__aexit__</code> goi <code>cleanup()</code>. Khong can nho goi cleanup thu cong.</p>
+</div>
+
+<h2>6. Using the Client -- main.py</h2>
+
+<p>Trong ung dung thuc te, <code>main.py</code> la noi ket noi moi thu lai:</p>
+
+<div class="card card-yellow">
+<h3>Quy trinh trong main.py</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">Load .env config</span> -- Doc API key va model tu file moi truong.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Tao Claude service</span> -- Khoi tao Anthropic client.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Mo MCPClient ket noi</span> -- <code>async with MCPClient(...)</code> ket noi den document server.</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div><span class="highlight">Ho tro nhieu MCP servers</span> -- Nhap them server URLs qua command-line arguments.</div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div><span class="highlight">Chay CLI loop</span> -- CliChat va CliApp dieu hanh tuong tac nguoi dung.</div>
+</div>
+</div>
+
+<pre><code># Vi du: ho tro nhieu MCP servers
+async with MCPClient(command="uv", args=["run", "mcp_server.py"]) as doc_client:
+    clients = {"document_server": doc_client}
+
+    # Them servers tu CLI args
+    for server_config in additional_servers:
+        client = MCPClient(command=server_config["command"], args=server_config["args"])
+        await client.connect()
+        clients[server_config["name"]] = client
+
+    # Tat ca tools tu tat ca servers gui den Claude
+    all_tools = await ToolManager.get_all_tools(clients)</code></pre>
+
+<div class="diagram">
+  <div style="margin-bottom:10px;color:#ffd700;font-weight:700;">Multi-Server Architecture</div>
+  <div>
+    <span class="box">Your App</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box" style="border-color:#4ec9b0;">ToolManager</span>
+  </div>
+  <div style="display:flex;justify-content:center;gap:24px;margin-top:10px;">
+    <div>
+      <span class="box">MCPClient 1</span><br>
+      <span style="color:#858585;font-size:11px;">Document Server</span>
+    </div>
+    <div>
+      <span class="box">MCPClient 2</span><br>
+      <span style="color:#858585;font-size:11px;">GitHub Server</span>
+    </div>
+    <div>
+      <span class="box">MCPClient N</span><br>
+      <span style="color:#858585;font-size:11px;">Any Server</span>
+    </div>
+  </div>
+</div>
+
+<div class="card card-green">
+<h3>Testing Client</h3>
+<pre><code># Test client doc lap
+uv run mcp_client.py
+
+# Test toan bo ung dung
+uv run main.py</code></pre>
+<p>Sau do thu hoi: <em>"What is the contents of the report.pdf document?"</em></p>
+<p>Behind the scenes: Client gets tools -- gui den Claude -- Claude quyet dinh goi tool -- Client thuc thi tool -- Ket qua tra ve cho Claude.</p>
+</div>
+
+</div>
+
+<!-- ===================== DEMO TAB ===================== -->
+<div id="demo" class="tab-content">
+
+<h2>Client Lifecycle Animation</h2>
+<p>Nhan vao tung buoc de xem code va JSON-RPC messages tuong ung.</p>
+
+<div style="margin-bottom:20px;">
+  <button class="btn" onclick="resetLifecycle()" style="margin-right:10px;">Reset</button>
+  <button class="btn" onclick="autoPlayLifecycle()" id="auto-btn" style="background:#4ec9b0;color:#1e1e1e;">Auto Play</button>
+</div>
+
+<!-- Step 1: Create -->
+<div class="lifecycle-step" id="ls1" onclick="activateStep(1)">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="step-num">1</div>
+    <div>
+      <h4 style="color:#4fc1ff;">Create -- Khoi tao MCPClient</h4>
+      <p style="color:#858585;font-size:13px;margin:0;">Truyen command va args de dinh nghia cach khoi dong server.</p>
+    </div>
+  </div>
+  <div class="step-code">
+    <pre style="margin:0;border:none;padding:0;background:transparent;"><code>client = MCPClient(
+    command="uv",
+    args=["run", "mcp_server.py"],
+)
+# _session = None, _exit_stack = AsyncExitStack()</code></pre>
+  </div>
+</div>
+
+<!-- Step 2: Connect -->
+<div class="lifecycle-step" id="ls2" onclick="activateStep(2)">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="step-num">2</div>
+    <div>
+      <h4 style="color:#4fc1ff;">Connect -- Tao transport</h4>
+      <p style="color:#858585;font-size:13px;margin:0;">Khoi dong server nhu subprocess qua stdio.</p>
+    </div>
+  </div>
+  <div class="step-code">
+    <pre style="margin:0;border:none;padding:0;background:transparent;"><code>server_params = StdioServerParameters(
+    command="uv",
+    args=["run", "mcp_server.py"],
+)
+stdio_transport = await self._exit_stack.enter_async_context(
+    stdio_client(server_params)
+)
+_stdio, _write = stdio_transport</code></pre>
+    <div class="step-rpc">
+      <div class="rpc-label">Behind the scenes</div>
+      <p style="color:#858585;font-size:12px;margin:0;">Khoi dong <code>mcp_server.py</code> nhu mot subprocess. Tao read/write streams qua stdin/stdout cua subprocess do.</p>
+    </div>
+  </div>
+</div>
+
+<!-- Step 3: Initialize -->
+<div class="lifecycle-step" id="ls3" onclick="activateStep(3)">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="step-num">3</div>
+    <div>
+      <h4 style="color:#4fc1ff;">Initialize -- Handshake voi Server</h4>
+      <p style="color:#858585;font-size:13px;margin:0;">Tao ClientSession va gui initialize request.</p>
+    </div>
+  </div>
+  <div class="step-code">
+    <pre style="margin:0;border:none;padding:0;background:transparent;"><code>self._session = await self._exit_stack.enter_async_context(
+    ClientSession(_stdio, _write)
+)
+await self._session.initialize()</code></pre>
+    <div class="step-rpc">
+      <div class="rpc-label">JSON-RPC: Initialize</div>
+      <pre style="margin:0;border:none;padding:0;background:transparent;"><code style="font-size:11px;">// Client gui:
+{ "jsonrpc": "2.0", "method": "initialize",
+  "params": { "protocolVersion": "2024-11-05",
+              "capabilities": {}, "clientInfo": {"name": "my-app"} } }
+
+// Server phan hoi:
+{ "protocolVersion": "2024-11-05",
+  "capabilities": { "tools": {}, "resources": {}, "prompts": {} },
+  "serverInfo": {"name": "DocumentMCP"} }</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Step 4: List Tools -->
+<div class="lifecycle-step" id="ls4" onclick="activateStep(4)">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="step-num">4</div>
+    <div>
+      <h4 style="color:#4fc1ff;">List Tools -- Lay danh sach Tools</h4>
+      <p style="color:#858585;font-size:13px;margin:0;">Hoi server cung cap nhung tools nao.</p>
+    </div>
+  </div>
+  <div class="step-code">
+    <pre style="margin:0;border:none;padding:0;background:transparent;"><code>tools = await client.list_tools()
+# Tra ve: [Tool("read_doc_contents"), Tool("edit_document")]</code></pre>
+    <div class="step-rpc">
+      <div class="rpc-label">JSON-RPC: List Tools</div>
+      <pre style="margin:0;border:none;padding:0;background:transparent;"><code style="font-size:11px;">// Client gui:
+{ "jsonrpc": "2.0", "method": "tools/list", "params": {} }
+
+// Server phan hoi:
+{ "tools": [
+    { "name": "read_doc_contents",
+      "description": "Read the contents of a document...",
+      "inputSchema": { "type": "object", "properties": {"doc_id": {"type": "string"}} } },
+    { "name": "edit_document",
+      "description": "Edit a document by replacing...",
+      "inputSchema": { "type": "object", "properties": {...} } }
+]}</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Step 5: Call Tool -->
+<div class="lifecycle-step" id="ls5" onclick="activateStep(5)">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="step-num">5</div>
+    <div>
+      <h4 style="color:#4fc1ff;">Call Tool -- Thuc thi Tool</h4>
+      <p style="color:#858585;font-size:13px;margin:0;">Claude quyet dinh goi tool, client thuc thi va tra ket qua ve.</p>
+    </div>
+  </div>
+  <div class="step-code">
+    <pre style="margin:0;border:none;padding:0;background:transparent;"><code>result = await client.call_tool("read_doc_contents", {"doc_id": "report.pdf"})
+# Tra ve: CallToolResult(content=[TextContent(text="The report details...")])</code></pre>
+    <div class="step-rpc">
+      <div class="rpc-label">JSON-RPC: Call Tool</div>
+      <pre style="margin:0;border:none;padding:0;background:transparent;"><code style="font-size:11px;">// Client gui:
+{ "jsonrpc": "2.0", "method": "tools/call",
+  "params": { "name": "read_doc_contents",
+              "arguments": { "doc_id": "report.pdf" } } }
+
+// Server phan hoi:
+{ "content": [{ "type": "text",
+                "text": "The report details the state of a 20m condenser tower." }] }</code></pre>
+    </div>
+  </div>
+</div>
+
+<!-- Step 6: Cleanup -->
+<div class="lifecycle-step" id="ls6" onclick="activateStep(6)">
+  <div style="display:flex;align-items:center;gap:12px;">
+    <div class="step-num">6</div>
+    <div>
+      <h4 style="color:#4fc1ff;">Cleanup -- Don dep Resources</h4>
+      <p style="color:#858585;font-size:13px;margin:0;">Dong tat ca async resources theo thu tu nguoc.</p>
+    </div>
+  </div>
+  <div class="step-code">
+    <pre style="margin:0;border:none;padding:0;background:transparent;"><code>async def cleanup(self):
+    await self._exit_stack.aclose()  # Dong ClientSession, roi stdio transport
+    self._session = None
+
+# Hoac tu dong khi thoat khoi "async with" block:
+# __aexit__ tu dong goi cleanup()</code></pre>
+    <div class="step-rpc">
+      <div class="rpc-label">Behind the scenes</div>
+      <p style="color:#858585;font-size:12px;margin:0;"><code>AsyncExitStack.aclose()</code> dong cac resources theo thu tu nguoc voi thu tu da dang ky: ClientSession truoc, stdio_transport sau. Server subprocess cung duoc terminated.</p>
+    </div>
+  </div>
+</div>
+
+<div class="diagram" style="margin-top:24px;">
+  <div style="margin-bottom:10px;color:#ffd700;font-weight:700;">Complete Client Lifecycle</div>
+  <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:6px;align-items:center;">
+    <span class="box">Create</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Connect</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Initialize</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">List Tools</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Call Tool</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box" style="border-color:#f44747;">Cleanup</span>
+  </div>
+</div>
+
+</div>
+
+<!-- ===================== QUIZ TAB ===================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiem tra kien thuc -- Bai 15</h2>
+<p>Tra loi 5 cau hoi de kiem tra hieu cua ban ve xay dung MCP Client.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkQuiz()" id="check-btn">Kiem tra dap an</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+  <a href="lesson-14-mcp-inspector.html" class="nav-btn">&larr; Bai 14</a>
+  <a href="lesson-16-sampling.html" class="nav-btn">Bai 16 &rarr;</a>
+</div>
+
+</div>
+
+<script>
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Lifecycle demo
+let currentStep = 0;
+
+function activateStep(num) {
+  currentStep = num;
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById('ls' + i).classList.remove('active');
+  }
+  document.getElementById('ls' + num).classList.add('active');
+}
+
+function resetLifecycle() {
+  currentStep = 0;
+  for (let i = 1; i <= 6; i++) {
+    document.getElementById('ls' + i).classList.remove('active');
+  }
+  if (autoPlayInterval) {
+    clearInterval(autoPlayInterval);
+    autoPlayInterval = null;
+    document.getElementById('auto-btn').textContent = 'Auto Play';
+  }
+}
+
+let autoPlayInterval = null;
+
+function autoPlayLifecycle() {
+  if (autoPlayInterval) {
+    clearInterval(autoPlayInterval);
+    autoPlayInterval = null;
+    document.getElementById('auto-btn').textContent = 'Auto Play';
+    return;
+  }
+  document.getElementById('auto-btn').textContent = 'Stop';
+  currentStep = 0;
+  autoPlayInterval = setInterval(() => {
+    currentStep++;
+    if (currentStep > 6) {
+      clearInterval(autoPlayInterval);
+      autoPlayInterval = null;
+      document.getElementById('auto-btn').textContent = 'Auto Play';
+      return;
+    }
+    activateStep(currentStep);
+  }, 2000);
+}
+
+// Quiz data
+const quizData = [
+  {
+    q: "ClientSession la gi?",
+    options: [
+      "Mot lop custom ma developer tu viet",
+      "Doi tuong ket noi thuc te tu MCP Python SDK",
+      "Mot HTTP client de goi API",
+      "Mot decorator de dinh nghia tools"
+    ],
+    correct: 1
+  },
+  {
+    q: "AsyncExitStack dung de lam gi?",
+    options: [
+      "Tao async HTTP requests",
+      "Quan ly lifecycle cua nhieu async resources",
+      "Chay nhieu servers cung luc",
+      "Serialize JSON-RPC messages"
+    ],
+    correct: 1
+  },
+  {
+    q: "call_tool() can tham so gi?",
+    options: [
+      "Chi can tool name",
+      "Tool name va arguments",
+      "Tool name, arguments va API key",
+      "Chi can arguments"
+    ],
+    correct: 1
+  },
+  {
+    q: "read_resource() can tham so gi?",
+    options: [
+      "Resource name va arguments",
+      "URI cua resource",
+      "Resource ID va MIME type",
+      "File path va encoding"
+    ],
+    correct: 1
+  },
+  {
+    q: "Mot ung dung co the ket noi nhieu MCP servers khong?",
+    options: [
+      "Khong, chi ho tro mot server duy nhat",
+      "Co, qua nhieu MCPClient instances",
+      "Chi khi su dung HTTP transport",
+      "Co, nhung chi voi cung mot loai server"
+    ],
+    correct: 1
+  }
+];
+
+// Render quiz
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((item, i) => {
+    html += `<div class="card" id="q${i}">
+      <h3 style="color:#4fc1ff;">Cau ${i+1}: ${item.q}</h3>`;
+    item.options.forEach((opt, j) => {
+      html += `<div class="quiz-option" data-q="${i}" data-a="${j}" onclick="selectAnswer(${i},${j})">${opt}</div>`;
+    });
+    html += `<div class="feedback" id="fb${i}"></div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+let answers = {};
+
+function selectAnswer(q, a) {
+  answers[q] = a;
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(el => {
+    el.style.background = '#2d2d30';
+    el.style.borderColor = '#3e3e42';
+  });
+  const selected = document.querySelector(`[data-q="${q}"][data-a="${a}"]`);
+  selected.style.background = '#2a3a4a';
+  selected.style.borderColor = '#007acc';
+}
+
+function checkQuiz() {
+  let score = 0;
+  quizData.forEach((item, i) => {
+    const fb = document.getElementById('fb' + i);
+    const options = document.querySelectorAll(`[data-q="${i}"]`);
+    options.forEach((el, j) => {
+      el.classList.remove('correct','wrong');
+      if (j === item.correct) el.classList.add('correct');
+      else if (answers[i] === j) el.classList.add('wrong');
+    });
+    if (answers[i] === item.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chinh xac!';
+    } else if (answers[i] !== undefined) {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Dap an dung la: ' + item.options[item.correct];
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Ban chua chon dap an. Dap an dung la: ' + item.options[item.correct];
+    }
+  });
+  document.getElementById('score-display').textContent = `Diem: ${score}/${quizData.length}`;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,458 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>MCP Tổng quan — Model Context Protocol</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.btn:disabled{background:#3e3e42;cursor:not-allowed;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.kw{color:#c586c0;} .str{color:#ce9178;} .cm{color:#6a9955;} .fn{color:#dcdcaa;} .num{color:#b5cea8;}
+.flow-container{display:flex;flex-wrap:wrap;gap:8px;align-items:center;justify-content:center;margin:20px 0;}
+.flow-node{background:#252526;border:2px solid #007acc;border-radius:8px;padding:10px 16px;text-align:center;font-weight:600;min-width:100px;transition:all 0.4s;}
+.flow-node.active{border-color:#ffd700;background:#2a3a4a;box-shadow:0 0 12px rgba(255,215,0,0.3);}
+.flow-arrow{color:#ffd700;font-size:20px;font-weight:700;}
+.log-panel{background:#0d1117;border:1px solid #3e3e42;border-radius:8px;padding:16px;margin-top:16px;font-family:'Courier New',monospace;font-size:13px;max-height:350px;overflow-y:auto;line-height:1.8;}
+.log-entry{padding:4px 0;border-bottom:1px solid #1e1e1e;}
+.log-entry .prefix{color:#6a9955;font-weight:700;}
+.log-entry .method{color:#4fc1ff;}
+.log-entry .data{color:#ce9178;}
+.log-entry .note{color:#858585;font-style:italic;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Bài 03: MCP Tổng quan — Model Context Protocol</h1>
+  <p class="subtitle">Hiểu MCP là gì, tại sao cần nó, và kiến trúc tổng thể</p>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+  </div>
+
+  <!-- ==================== THEORY TAB ==================== -->
+  <div id="tab-theory" class="tab-content active">
+
+    <!-- Section 1 -->
+    <h2>1. MCP là gì?</h2>
+    <p><strong>Model Context Protocol (MCP)</strong> là một giao thức chuẩn hóa để cung cấp context và tools cho AI models (như Claude) mà không cần viết integration code phức tạp. MCP chuyển gánh nặng định nghĩa và thực thi tools từ ứng dụng của bạn sang các MCP server chuyên biệt.</p>
+    <div class="card card-blue">
+      <p>Ở cốt lõi, MCP định nghĩa một kiến trúc chuẩn:</p>
+      <ul style="margin-left:20px;margin-top:8px;">
+        <li>Một <strong>MCP Client</strong> (trong ứng dụng của bạn) kết nối đến một hoặc nhiều <strong>MCP Server</strong></li>
+        <li>Mỗi MCP Server chứa <strong>tools</strong>, <strong>prompts</strong>, và <strong>resources</strong></li>
+        <li>Mỗi MCP Server đóng vai trò là interface đến một dịch vụ bên ngoài</li>
+      </ul>
+    </div>
+
+    <!-- Section 2 -->
+    <h2>2. Vấn đề MCP giải quyết</h2>
+    <p>Hãy tưởng tượng bạn xây dựng một giao diện chat nơi người dùng hỏi Claude về dữ liệu GitHub của họ. GitHub có rất nhiều chức năng — repositories, pull requests, issues, projects, và nhiều hơn nữa.</p>
+
+    <div class="card card-red">
+      <h3>Không có MCP — Vấn đề N x M</h3>
+      <p>Bạn cần tạo một số lượng khổng lồ tool schemas và functions — viết, kiểm thử, và bảo trì tất cả integration code đó. Nếu có N ứng dụng cần tích hợp với M services, bạn cần <span class="highlight">N x M custom integrations</span>.</p>
+    </div>
+
+    <div class="card card-green">
+      <h3>Có MCP — Giải pháp N + M</h3>
+      <p>Một MCP Server cho GitHub xử lý tất cả. Nó bao bọc nhiều chức năng và expose chúng dưới dạng một tập tools chuẩn hóa. Ứng dụng của bạn kết nối đến MCP server thay vì tự triển khai mọi thứ. Kết quả: chỉ cần <span class="highlight">N + M implementations</span> (N clients + M servers).</p>
+    </div>
+
+    <div class="analogy">
+      Giống như cổng USB-C. Trước đây, mỗi thiết bị cần một loại cáp riêng. USB-C chuẩn hóa kết nối — mọi thiết bị dùng chung một cổng. MCP làm điều tương tự cho kết nối giữa AI và dịch vụ bên ngoài.
+    </div>
+
+    <!-- Section 3 -->
+    <h2>3. Kiến trúc tổng thể</h2>
+    <p>MCP có kiến trúc 4 thành phần chính:</p>
+
+    <div class="diagram">
+      <span class="box">Host</span>
+      <span class="arrow"> &rarr; </span>
+      <span class="box">MCP Client</span>
+      <span class="arrow"> &rarr; </span>
+      <span class="box">MCP Server</span>
+      <span class="arrow"> &rarr; </span>
+      <span class="box">External API</span>
+    </div>
+
+    <div class="step">
+      <div class="step-num">H</div>
+      <div><strong>Host</strong> — Ứng dụng chính mà người dùng tương tác. Ví dụ: Claude Desktop, VS Code, hoặc một web app. Host chứa MCP Client và gửi yêu cầu thay mặt người dùng.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">C</div>
+      <div><strong>MCP Client</strong> — Cầu nối giao tiếp giữa Host và MCP Server. Client xử lý giao thức, transport, và message exchange. Client có thể kết nối nhiều server cùng lúc.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">S</div>
+      <div><strong>MCP Server</strong> — Interface đến dịch vụ bên ngoài. Server expose tools, resources, và prompts theo format chuẩn. Ví dụ: GitHub MCP Server, Database MCP Server.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">E</div>
+      <div><strong>External API</strong> — Dịch vụ thực tế mà MCP Server kết nối đến. GitHub API, database, file system, etc.</div>
+    </div>
+
+    <!-- Section 4 -->
+    <h2>4. Luồng truy vấn hoàn chỉnh</h2>
+    <p>Khi người dùng hỏi <em>"Tôi có những repositories nào?"</em>, đây là luồng xử lý:</p>
+
+    <div class="step">
+      <div class="step-num">1</div>
+      <div><strong>User Query</strong> — Người dùng gửi câu hỏi đến Host (ứng dụng của bạn).</div>
+    </div>
+    <div class="step">
+      <div class="step-num">2</div>
+      <div><strong>Tool Discovery</strong> — Host cần biết có tools nào sẵn sàng để Claude sử dụng.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">3</div>
+      <div><strong>List Tools Exchange</strong> — Host hỏi MCP Client cho danh sách tools; Client gửi <code>ListToolsRequest</code> đến MCP Server, nhận <code>ListToolsResult</code>.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">4</div>
+      <div><strong>Claude Request</strong> — Host gửi câu hỏi + danh sách tools đến Claude.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">5</div>
+      <div><strong>Tool Use Decision</strong> — Claude quyết định cần gọi một tool để trả lời câu hỏi.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">6</div>
+      <div><strong>Tool Execution</strong> — Host yêu cầu MCP Client chạy tool Claude đã chọn. Client gửi <code>CallToolRequest</code> đến MCP Server.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">7</div>
+      <div><strong>External API Call</strong> — MCP Server gọi GitHub API thực tế.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">8</div>
+      <div><strong>Results Flow Back</strong> — API phản hồi; dữ liệu chảy ngược qua MCP Server thành <code>CallToolResult</code>.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">9</div>
+      <div><strong>Tool Result to Claude</strong> — Host gửi kết quả tool quay lại Claude.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">10</div>
+      <div><strong>Final Response</strong> — Claude tổng hợp câu trả lời cuối cùng bằng dữ liệu nhận được.</div>
+    </div>
+    <div class="step">
+      <div class="step-num">11</div>
+      <div><strong>User Gets Answer</strong> — Host hiển thị câu trả lời cho người dùng.</div>
+    </div>
+
+    <!-- Section 5 -->
+    <h2>5. MCP Servers — Ba Primitives</h2>
+    <p>MCP Server expose ba loại primitives theo cách chuẩn hóa:</p>
+
+    <div class="card card-green">
+      <table>
+        <tr><th>Primitive</th><th>Được điều khiển bởi</th><th>Mục đích</th><th>Ví dụ</th></tr>
+        <tr><td><strong>Tools</strong></td><td>Claude (AI model)</td><td>Cho Claude khả năng mới để tự chủ thực thi</td><td>Chạy code, tính toán, tìm kiếm</td></tr>
+        <tr><td><strong>Resources</strong></td><td>Ứng dụng (app code)</td><td>Fetch dữ liệu vào ứng dụng cho UI hoặc context</td><td>Danh sách autocomplete, nội dung tài liệu</td></tr>
+        <tr><td><strong>Prompts</strong></td><td>Người dùng</td><td>Template hướng dẫn sẵn để người dùng kích hoạt</td><td>Slash commands, workflow buttons</td></tr>
+      </table>
+    </div>
+
+    <p>Ví dụ: <strong>GitHub MCP Server</strong> chứa tools như <code>get_repos()</code> và kết nối trực tiếp đến GitHub API. Ứng dụng của bạn giao tiếp với MCP server, server xử lý tất cả chi tiết đặc thù của GitHub.</p>
+
+    <!-- Section 6 -->
+    <h2>6. MCP Clients</h2>
+    <p>MCP Client là cầu nối giao tiếp giữa Host và MCP Servers. Nó xử lý message exchange và chi tiết giao thức.</p>
+
+    <div class="card card-blue">
+      <h3>Các loại message chính</h3>
+      <table>
+        <tr><th>Request</th><th>Response</th><th>Mục đích</th></tr>
+        <tr><td><code>ListToolsRequest</code></td><td><code>ListToolsResult</code></td><td>Hỏi "bạn cung cấp tools gì?"</td></tr>
+        <tr><td><code>CallToolRequest</code></td><td><code>CallToolResult</code></td><td>Yêu cầu server chạy một tool</td></tr>
+        <tr><td><code>ReadResourceRequest</code></td><td><code>ReadResourceResult</code></td><td>Fetch dữ liệu resource theo URI</td></tr>
+        <tr><td><code>ListPromptsRequest</code></td><td><code>ListPromptsResult</code></td><td>Liệt kê các prompt templates</td></tr>
+        <tr><td><code>GetPromptRequest</code></td><td><code>GetPromptResult</code></td><td>Lấy một prompt cụ thể với arguments</td></tr>
+      </table>
+    </div>
+
+    <!-- Section 7 -->
+    <h2>7. Transport Agnostic</h2>
+    <p>MCP là <strong>transport-agnostic</strong> — client và server có thể giao tiếp qua nhiều giao thức khác nhau:</p>
+    <div class="card card-yellow">
+      <table>
+        <tr><th>Transport</th><th>Mô tả</th><th>Trường hợp sử dụng</th></tr>
+        <tr><td><strong>Standard I/O (stdio)</strong></td><td>Client và server chạy trên cùng một máy, giao tiếp qua stdin/stdout</td><td>Phát triển local, phổ biến nhất</td></tr>
+        <tr><td><strong>HTTP / StreamableHTTP</strong></td><td>Kết nối đến remote server qua HTTP</td><td>Server public, triển khai production</td></tr>
+        <tr><td><strong>WebSockets</strong></td><td>Kết nối song song hai chiều real-time</td><td>Ứng dụng web real-time</td></tr>
+      </table>
+      <p style="margin-top:12px;"><span class="highlight">Lưu ý:</span> MCP là giao thức bidirectional — cả client và server đều có thể khởi tạo giao tiếp. Điều này quan trọng khi chọn transport, vì HTTP có hạn chế server-to-client communication.</p>
+    </div>
+
+  </div>
+
+  <!-- ==================== DEMO TAB ==================== -->
+  <div id="tab-demo" class="tab-content">
+    <h2>Mô phỏng luồng truy vấn MCP</h2>
+    <p>Nhấn "Gui cau hoi" để xem luồng xử lý hoàn chỉnh khi người dùng hỏi: <em>"Tôi có những repositories nào?"</em></p>
+
+    <div class="flow-container">
+      <div class="flow-node" id="node-user">User</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node" id="node-host">Host</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node" id="node-client">MCP Client</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node" id="node-server">MCP Server</div>
+      <div class="flow-arrow">&rarr;</div>
+      <div class="flow-node" id="node-api">GitHub API</div>
+    </div>
+
+    <button class="btn" id="startFlow" onclick="runFlow()">Gui cau hoi</button>
+    <button class="btn" id="resetFlow" style="display:none;background:#6a9955;" onclick="resetFlow()">Lam moi</button>
+
+    <div class="log-panel" id="logPanel">
+      <div class="log-entry"><span class="note">// Nhan "Gui cau hoi" de bat dau mo phong...</span></div>
+    </div>
+
+    <div class="card card-blue" style="margin-top:20px;">
+      <p><strong>Luồng mô phỏng:</strong> Người dùng hỏi về repositories &rarr; Host phát hiện cần tools &rarr; Client/Server trao đổi JSON-RPC &rarr; Claude quyết định dùng tool &rarr; MCP Server gọi GitHub API &rarr; Kết quả chảy ngược &rarr; Claude tổng hợp câu trả lời.</p>
+    </div>
+  </div>
+
+  <!-- ==================== QUIZ TAB ==================== -->
+  <div id="tab-quiz" class="tab-content">
+    <h2>Kiểm tra kiến thức MCP Tổng quan</h2>
+    <p>Trả lời 5 câu hỏi để kiểm tra hiểu bài của bạn.</p>
+
+    <div id="quiz-container"></div>
+
+    <button class="btn" id="submitQuiz" onclick="submitQuiz()">Nop bai</button>
+    <div class="score-box" id="scoreBox" style="display:none;"></div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="nav-bar">
+    <a class="nav-btn" href="lesson-02-json-rpc-basics.html">&larr; Bai truoc</a>
+    <a class="nav-btn" href="lesson-04-mcp-initialize.html">Bai tiep &rarr;</a>
+  </div>
+</div>
+
+<script>
+// ========== Tab switching ==========
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  var tabs = ['theory','demo','quiz'];
+  var idx = tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ========== DEMO: Flow Simulation ==========
+var flowRunning = false;
+var flowSteps = [
+  { nodes: ['node-user'], log: '<span class="prefix">[User]</span> Gui cau hoi: <span class="data">"Toi co nhung repositories nao?"</span>' },
+  { nodes: ['node-user','node-host'], log: '<span class="prefix">[Host]</span> Nhan cau hoi. Can tim kiem tools cho Claude.' },
+  { nodes: ['node-host'], log: '<span class="prefix">[Host]</span> Yeu cau MCP Client liet ke tools...' },
+  { nodes: ['node-host','node-client'], log: '<span class="prefix">[Client]</span> Gui <span class="method">ListToolsRequest</span> den MCP Server' },
+  { nodes: ['node-client','node-server'], log: '<span class="method">tools/list</span> { "jsonrpc": "2.0", "id": 1, "method": "tools/list", "params": {} }' },
+  { nodes: ['node-server'], log: '<span class="prefix">[Server]</span> Tra ve danh sach tools: <span class="data">["list_repos", "get_repo_details", "create_issue"]</span>' },
+  { nodes: ['node-client'], log: '<span class="prefix">[Client]</span> Nhan <span class="method">ListToolsResult</span> — co 3 tools' },
+  { nodes: ['node-host'], log: '<span class="prefix">[Host]</span> Gui cau hoi + tools den <span class="method">Claude</span>' },
+  { nodes: ['node-host'], log: '<span class="prefix">[Claude]</span> Phan tich... Quyet dinh dung tool: <span class="data">"list_repos"</span>' },
+  { nodes: ['node-host','node-client'], log: '<span class="prefix">[Host]</span> Yeu cau Client chay tool <span class="method">list_repos</span>' },
+  { nodes: ['node-client','node-server'], log: '<span class="method">tools/call</span> { "jsonrpc": "2.0", "id": 2, "method": "tools/call", "params": { "name": "list_repos" } }' },
+  { nodes: ['node-server','node-api'], log: '<span class="prefix">[Server]</span> Goi <span class="method">GitHub API</span>: GET /user/repos' },
+  { nodes: ['node-api'], log: '<span class="prefix">[GitHub API]</span> Tra ve danh sach repositories' },
+  { nodes: ['node-server'], log: '<span class="prefix">[Server]</span> Tra ve <span class="method">CallToolResult</span> voi du lieu repos' },
+  { nodes: ['node-client'], log: '<span class="prefix">[Client]</span> Nhan ket qua tool, chuyen ve Host' },
+  { nodes: ['node-host'], log: '<span class="prefix">[Host]</span> Gui ket qua tool quay lai <span class="method">Claude</span>' },
+  { nodes: ['node-host'], log: '<span class="prefix">[Claude]</span> Tong hop cau tra loi tu du lieu repositories...' },
+  { nodes: ['node-host','node-user'], log: '<span class="prefix">[Host]</span> <span class="data">"Ban co 5 repositories: my-project, api-server, frontend, docs, utils"</span>' },
+];
+
+function runFlow() {
+  if (flowRunning) return;
+  flowRunning = true;
+  document.getElementById('startFlow').disabled = true;
+  document.getElementById('resetFlow').style.display = 'inline-block';
+  document.getElementById('logPanel').innerHTML = '';
+
+  var i = 0;
+  function next() {
+    if (i >= flowSteps.length) {
+      addLog('<span class="note">// Luong hoan tat! Cau tra loi da duoc gui den nguoi dung.</span>');
+      flowRunning = false;
+      return;
+    }
+    var step = flowSteps[i];
+    // Reset all nodes
+    document.querySelectorAll('.flow-node').forEach(function(n){ n.classList.remove('active'); });
+    // Activate step nodes
+    step.nodes.forEach(function(id) {
+      document.getElementById(id).classList.add('active');
+    });
+    addLog(step.log);
+    i++;
+    setTimeout(next, 900);
+  }
+  next();
+}
+
+function addLog(html) {
+  var panel = document.getElementById('logPanel');
+  var entry = document.createElement('div');
+  entry.className = 'log-entry';
+  entry.innerHTML = html;
+  panel.appendChild(entry);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function resetFlow() {
+  flowRunning = false;
+  document.querySelectorAll('.flow-node').forEach(function(n){ n.classList.remove('active'); });
+  document.getElementById('logPanel').innerHTML = '<div class="log-entry"><span class="note">// Nhan "Gui cau hoi" de bat dau mo phong...</span></div>';
+  document.getElementById('startFlow').disabled = false;
+  document.getElementById('resetFlow').style.display = 'none';
+}
+
+// ========== QUIZ ==========
+var quizData = [
+  {
+    q: "MCP giai quyet van de gi?",
+    opts: ["Toc do xu ly cua AI model", "N×M integration thanh N+M", "Luu tru du lieu cho AI", "Quan ly tai nguyen he thong"],
+    correct: 1,
+    explain: "MCP chuan hoa cach ket noi AI voi dich vu ben ngoai, giam N×M custom integrations xuong con N+M."
+  },
+  {
+    q: "Trong kien truc MCP, ai ket noi den External API?",
+    opts: ["Host", "MCP Client", "MCP Server", "Claude"],
+    correct: 2,
+    explain: "MCP Server la interface den dich vu ben ngoai — no goi External API va expose ket qua qua tools/resources/prompts."
+  },
+  {
+    q: "Ba primitives cua MCP Server la gi?",
+    opts: ["APIs, Endpoints, Routes", "Functions, Variables, Classes", "Tools, Resources, Prompts", "Requests, Responses, Errors"],
+    correct: 2,
+    explain: "MCP Server expose 3 primitives: Tools (Claude goi), Resources (app fetch), Prompts (user trigger)."
+  },
+  {
+    q: "MCP Client co vai tro gi?",
+    opts: ["Chay AI model", "Cau noi giao tiep giua Host va MCP Server", "Luu tru du lieu nguoi dung", "Quan ly xac thuc"],
+    correct: 1,
+    explain: "MCP Client la communication bridge — no xu ly giao thuc, transport, va message exchange giua Host va MCP Servers."
+  },
+  {
+    q: "MCP chi hoat dong qua stdio dung khong?",
+    opts: ["Dung, stdio la transport duy nhat", "Sai, MCP transport-agnostic (stdio, HTTP, WebSockets...)", "Dung, nhung se ho tro HTTP trong tuong lai", "Dung, vi MCP chi chay tren cung mot may"],
+    correct: 1,
+    explain: "MCP la transport-agnostic — co the giao tiep qua stdio, HTTP (StreamableHTTP), WebSockets, va nhieu giao thuc khac."
+  }
+];
+
+function renderQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" style="margin:20px 0;">';
+    html += '<p style="font-weight:700;margin-bottom:12px;">Cau ' + (i+1) + ': ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].opts.length; j++) {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">';
+      html += String.fromCharCode(65+j) + '. ' + quizData[i].opts[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="feedback-'+i+'"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var userAnswers = {};
+function selectAnswer(q, a) {
+  userAnswers[q] = a;
+  var opts = document.querySelectorAll('[data-q="'+q+'"]');
+  opts.forEach(function(el) { el.classList.remove('correct','wrong'); });
+}
+
+function submitQuiz() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('feedback-'+i);
+    var opts = document.querySelectorAll('[data-q="'+i+'"]');
+    opts.forEach(function(el) {
+      el.classList.remove('correct','wrong');
+      var a = parseInt(el.getAttribute('data-a'));
+      if (a === quizData[i].correct) el.classList.add('correct');
+      else if (userAnswers[i] === a) el.classList.add('wrong');
+    });
+
+    if (userAnswers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chinh xac! ' + quizData[i].explain;
+    } else if (userAnswers[i] !== undefined) {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. ' + quizData[i].explain;
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Ban chua chon cau tra loi. ' + quizData[i].explain;
+    }
+  }
+
+  var scoreBox = document.getElementById('scoreBox');
+  scoreBox.style.display = 'block';
+  scoreBox.textContent = 'Ket qua: ' + score + '/' + quizData.length + ' cau dung';
+  document.getElementById('submitQuiz').disabled = true;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

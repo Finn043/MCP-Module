@@ -1,0 +1,522 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 12: StreamableHTTP Sau hon</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 12: StreamableHTTP Sâu hơn — Dual SSE & State Management</h1>
+<p class="subtitle">Hiểu dual SSE connections và khi nào dùng stateless mode</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- LÝ THUYẾT -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Dual SSE Connections — Hai kết nối đồng thời</h2>
+<p>Khi client gọi một tool qua StreamableHTTP, hệ thống tạo <span class="highlight">HAI SSE connections cùng lúc</span>. Mỗi connection có vai trò khác nhau:</p>
+
+<div class="diagram">
+<strong style="color:#ffd700;">Primary SSE (GET request)</strong><br>
+<span class="box" style="border-color:#4ec9b0;">Client GET /mcp</span> <span class="arrow">→</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<span style="color:#858585;">Stays open indefinitely — server-initiated messages</span><br><br>
+<strong style="color:#ffd700;">Tool-specific SSE (POST response)</strong><br>
+<span class="box" style="border-color:#4ec9b0;">Client POST /mcp</span> <span class="arrow">→</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<span style="color:#858585;">Đóng sau khi tool result sent</span>
+</div>
+
+<div class="card card-blue">
+<h3>Primary SSE Connection (GET)</h3>
+<ul style="margin-left:20px;">
+<li>Client mở bằng <strong>GET request</strong> đến server</li>
+<li>Connection <strong>stays open indefinitely</strong></li>
+<li>Server dùng channel này để gửi <strong>server-initiated messages</strong></li>
+<li>Cho phép: sampling requests, progress notifications, resource subscriptions</li>
+</ul>
+</div>
+
+<div class="card card-blue">
+<h3>Tool-specific SSE Connection (POST response)</h3>
+<ul style="margin-left:20px;">
+<li>Tạo khi client gửi <strong>POST request</strong> để gọi tool</li>
+<li>Server response là một <strong>SSE stream</strong></li>
+<li>Cho phép: logging messages, tool results, intermediate progress</li>
+<li><strong>Đóng</strong> sau khi tool result đã được gửi xong</li>
+</ul>
+</div>
+
+<h2>2. Message Routing — Message đi qua channel nào?</h2>
+<p>Khác loại message được route qua khác SSE connection. Hiểu routing là key để debug StreamableHTTP:</p>
+
+<table>
+<tr><th>Loại Message</th><th>Đi qua channel nào</th><th>Lý do</th></tr>
+<tr><td>Progress notifications</td><td style="color:#4ec9b0;">Primary SSE (GET)</td><td>Server-initiated, không gắn với tool call cụ thể</td></tr>
+<tr><td>Logging messages</td><td style="color:#ffd700;">Tool-specific SSE (POST)</td><td>Gắn với tool call đang thực thi</td></tr>
+<tr><td>Tool results</td><td style="color:#ffd700;">Tool-specific SSE (POST)</td><td>Phản hồi cho tool call cụ thể</td></tr>
+<tr><td>Server-initiated requests (sampling)</td><td style="color:#4ec9b0;">Primary SSE (GET)</td><td>Server cần initiate bất cứ lúc nào</td></tr>
+</table>
+
+<div class="analogy">
+Hãy tưởng tượng hai đường điện thoại: một đường "hotline" luôn mở (Primary SSE) cho server gọi cho client bất cứ lúc nào, và một đường "task line" (Tool SSE) chỉ mở khi cần thực hiện một công việc cụ thể rồi đóng lại sau.
+</div>
+
+<h2>3. stateless_http=True — Tại sao cần?</h2>
+<h3>Vấn đề: Horizontal Scaling</h3>
+<p>Khi MCP server trở nên phổ biến, bạn cần chạy <span class="highlight">nhiều server instances</span> phía sau load balancer. Nhưng đây là vấn đề:</p>
+
+<div class="diagram">
+<span class="box" style="border-color:#4ec9b0;">Client A</span> <span class="arrow">── GET SSE ──→</span> <span class="box" style="border-color:#ffa500;">Load Balancer</span> <span class="arrow">→</span> <span class="box" style="border-color:#f44747;">Server 1</span><br>
+<span class="box" style="border-color:#4ec9b0;">Client A</span> <span class="arrow">── POST ──→</span> <span class="box" style="border-color:#ffa500;">Load Balancer</span> <span class="arrow">→</span> <span class="box" style="border-color:#f44747;">Server 2</span><br><br>
+<strong style="color:#f44747;">COORDINATION PROBLEM!</strong><br>
+<span style="color:#858585;">GET SSE và POST có thể đi đến khác server instances</span>
+</div>
+
+<p>Nếu POST đến Server 2, nhưng Primary SSE mở với Server 1, Server 2 không thể gửi message qua SSE connection của Server 1.</p>
+
+<div class="card card-yellow">
+<h3>Solution: stateless_http=True</h3>
+<p>Bỏ hoàn toàn server-to-client communication:</p>
+<ul style="margin-left:20px;">
+<li>Client không nhận session ID — server không tracking ai</li>
+<li>GET SSE pathway không còn — không server-initiated messages</li>
+<li>Mỗi POST request là independent — không cần coordination</li>
+<li><strong>Nhưng mất:</strong> Sampling, progress, logging, subscriptions</li>
+</ul>
+</div>
+
+<div class="card card-red">
+<h3>Trade-off</h3>
+<table>
+<tr><th>Được</th><th>Mất</th></tr>
+<tr><td>Horizontal scaling</td><td>Sampling (server-initiated)</td></tr>
+<tr><td>Load balancer compatible</td><td>Progress notifications</td></tr>
+<tr><td>Không cần sticky sessions</td><td>Logging messages</td></tr>
+<tr><td>Mỗi request independent</td><td>Resource subscriptions</td></tr>
+<tr><td></td><td>Initialized notifications tracking</td></tr>
+</table>
+</div>
+
+<h2>4. json_response=True — Disable Streaming</h2>
+<p><code>json_response</code> đơn giản hơn — chỉ tắt streaming cho POST request responses.</p>
+
+<table>
+<tr><th>Setting</th><th>Response Format</th><th>Intermediate Messages</th></tr>
+<tr><td><code>json_response=False</code> (mặc định)</td><td>SSE stream</td><td>Progress, logs, rồi final result</td></tr>
+<tr><td><code>json_response=True</code></td><td>Plain JSON</td><td>Chỉ final tool result</td></tr>
+</table>
+
+<div class="card card-blue">
+<p>Khi <code>json_response=True</code>: không có intermediate progress messages, không có log statements trong khi tool chạy. Client chỉ nhận một JSON response duy nhất — kết quả cuối cùng.</p>
+</div>
+
+<pre><code>mcp = FastMCP(
+    "mcp-server",
+    stateless_http=True,   # Bỏ server-to-client
+    json_response=True,    # Tắt streaming
+)
+# ctx.info() và ctx.report_progress() sẽ SILENTLY FAIL!</code></pre>
+
+<h2>5. Decision Guide — Khi nào dùng gì?</h2>
+
+<div class="card card-green">
+<h3>Quyết định chọn transport và config</h3>
+</div>
+
+<table>
+<tr><th>Kịch bản</th><th>Transport</th><th>Config</th></tr>
+<tr><td>Development / Testing</td><td style="color:#4ec9b0;font-weight:600;">stdio</td><td>Mặc định — full features</td></tr>
+<tr><td>Production, single server, cần full features</td><td style="color:#ffd700;font-weight:600;">StreamableHTTP</td><td>stateless=False, json_response=False</td></tr>
+<tr><td>Production, load balancer, horizontal scaling</td><td style="color:#ffd700;font-weight:600;">StreamableHTTP</td><td>stateless=True</td></tr>
+<tr><td>Production, cần simple JSON responses</td><td style="color:#ffd700;font-weight:600;">StreamableHTTP</td><td>json_response=True</td></tr>
+</table>
+
+<div class="card card-red" style="margin-top:20px;">
+<h3>Quy tắc vàng</h3>
+<p style="font-size:16px;"><strong>Luôn test với production transport!</strong> Nếu bạn develop với stdio nhưng deploy với HTTP, behavior có thể khác đáng kể. Catch issues during development, not after deployment.</p>
+</div>
+
+<div class="card card-yellow">
+<h3>Warning</h3>
+<p>Với <code>stateless_http=True</code> và <code>json_response=True</code>, các lệnh <code>ctx.info()</code> và <code>ctx.report_progress()</code> sẽ <strong>silently fail</strong> — client không bao giờ nhận được chúng. Không có error, chỉ là messages biến mất.</p>
+</div>
+
+</div>
+
+<!-- DEMO -->
+<div id="demo" class="tab-content">
+
+<h2>🎮 Dual Connection Visualizer</h2>
+<p>Xem cách messages flow qua hai SSE connections. Nhấn các nút để trigger actions và quan sát routing.</p>
+
+<!-- Config Toggles -->
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin-bottom:20px;">
+<div class="card card-yellow" style="flex:1;min-width:200px;margin:0;">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+<input type="checkbox" id="demo-stateless" onchange="updateDemoView()"> <code>stateless_http</code>
+</label>
+</div>
+<div class="card card-yellow" style="flex:1;min-width:200px;margin:0;">
+<label style="display:flex;align-items:center;gap:8px;cursor:pointer;">
+<input type="checkbox" id="demo-json" onchange="updateDemoView()"> <code>json_response</code>
+</label>
+</div>
+</div>
+
+<!-- Primary SSE Channel -->
+<div id="primary-channel" style="background:#1a1a2e;border:2px solid #4ec9b0;border-radius:10px;padding:16px;margin:12px 0;">
+<h3 style="color:#4ec9b0;margin-bottom:8px;">Primary SSE (GET) — Server-initiated messages</h3>
+<div id="primary-log" style="background:#1e1e1e;border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:12px;min-height:60px;max-height:150px;overflow-y:auto;">
+<p style="color:#858585;">Channel mở, chờ server messages...</p>
+</div>
+</div>
+
+<!-- Tool SSE Channel -->
+<div id="tool-channel" style="background:#1a1a2e;border:2px solid #ffd700;border-radius:10px;padding:16px;margin:12px 0;">
+<h3 style="color:#ffd700;margin-bottom:8px;">Tool-specific SSE (POST) — Tool results & logging</h3>
+<div id="tool-log" style="background:#1e1e1e;border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:12px;min-height:60px;max-height:150px;overflow-y:auto;">
+<p style="color:#858585;">Channel idle, chờ tool call...</p>
+</div>
+</div>
+
+<!-- Status Indicators -->
+<div id="feature-indicators" style="display:flex;flex-wrap:wrap;gap:10px;margin:16px 0;">
+<div id="ind-sampling" style="background:#252526;border:1px solid #3e3e42;border-radius:6px;padding:8px 14px;font-size:13px;">
+<span style="color:#4ec9b0;">OK</span> Sampling
+</div>
+<div id="ind-progress" style="background:#252526;border:1px solid #3e3e42;border-radius:6px;padding:8px 14px;font-size:13px;">
+<span style="color:#4ec9b0;">OK</span> Progress
+</div>
+<div id="ind-logging" style="background:#252526;border:1px solid #3e3e42;border-radius:6px;padding:8px 14px;font-size:13px;">
+<span style="color:#4ec9b0;">OK</span> Logging
+</div>
+<div id="ind-streaming" style="background:#252526;border:1px solid #3e3e42;border-radius:6px;padding:8px 14px;font-size:13px;">
+<span style="color:#4ec9b0;">OK</span> Streaming
+</div>
+<div id="ind-tools" style="background:#252526;border:1px solid #3e3e42;border-radius:6px;padding:8px 14px;font-size:13px;">
+<span style="color:#4ec9b0;">OK</span> Tool Results
+</div>
+</div>
+
+<!-- Action Buttons -->
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+<button class="btn" onclick="triggerToolCall()">Gọi Tool (add 5+3)</button>
+<button class="btn" onclick="triggerProgress()">Progress Update</button>
+<button class="btn" onclick="triggerLog()">Log Message</button>
+<button class="btn" onclick="triggerSampling()">Sampling Request</button>
+<button class="btn" onclick="clearLogs()" style="background:#3e3e42;">Clear Logs</button>
+</div>
+
+<div id="demo-msg" class="card card-blue" style="margin-top:16px;">
+<p id="demo-msg-text">Nhấn các nút trên để xem messages flow qua channels.</p>
+</div>
+
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức</h2>
+<p>Trả lời 5 câu hỏi về StreamableHTTP deep dive.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" id="submit-quiz" onclick="submitQuiz()">Nộp bài</button>
+<div id="quiz-result" style="display:none;margin-top:20px;"></div>
+
+<div class="nav-bar">
+<a href="lesson-11-streamable-http-transport.html" class="nav-btn">← Bài trước</a>
+<a href="lesson-13-building-mcp-server.html" class="nav-btn">Bài tiếp →</a>
+</div>
+</div>
+
+</div>
+
+<script>
+// ===== TAB SWITCHING =====
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== DEMO =====
+function isStateless() { return document.getElementById('demo-stateless').checked; }
+function isJsonResponse() { return document.getElementById('demo-json').checked; }
+
+function addChannelLog(logId, text, color) {
+  const log = document.getElementById(logId);
+  const firstP = log.querySelector('p');
+  if (firstP && firstP.style.color === 'rgb(133, 133, 133)') log.innerHTML = '';
+  const line = document.createElement('div');
+  line.style.color = color || '#d4d4d4';
+  line.style.marginBottom = '3px';
+  line.textContent = text;
+  log.appendChild(line);
+  log.scrollTop = log.scrollHeight;
+}
+
+function showMessage(text) {
+  document.getElementById('demo-msg-text').textContent = text;
+}
+
+function triggerToolCall() {
+  if (isStateless() || isJsonResponse()) {
+    showMessage('POST /mcp → Tool: add(5,3)');
+    if (isJsonResponse()) {
+      setTimeout(() => {
+        addChannelLog('tool-log', '→ Final JSON result: {"content":[{"text":"8"}]}', '#4ec9b0');
+        showMessage('json_response=True: Chỉ nhận final JSON, không có intermediate messages.');
+      }, 300);
+    } else {
+      setTimeout(() => {
+        addChannelLog('tool-log', '→ Tool result: {"content":[{"text":"8"}]}', '#4ec9b0');
+        showMessage('Tool call hoàn tất! Kết quả: 8');
+      }, 300);
+    }
+  } else {
+    showMessage('POST /mcp → Tool: add(5,3) — SSE stream response');
+    setTimeout(() => {
+      addChannelLog('tool-log', '→ [SSE] Tool result: {"content":[{"text":"8"}]}', '#4ec9b0');
+      showMessage('Tool call hoàn tất qua Tool SSE! Kết quả: 8');
+    }, 300);
+  }
+}
+
+function triggerProgress() {
+  if (isStateless()) {
+    showMessage('BROKEN! stateless_http=True — Progress notifications không hoạt động. Server không thể gửi messages đến client.');
+    return;
+  }
+  addChannelLog('primary-log', '→ Progress: 50/100 (50%)', '#4ec9b0');
+  showMessage('Progress notification gửi qua Primary SSE channel.');
+}
+
+function triggerLog() {
+  if (isStateless()) {
+    showMessage('BROKEN! stateless_http=True — Logging không hoạt động.');
+    return;
+  }
+  if (isJsonResponse()) {
+    showMessage('BROKEN! json_response=True — Không có intermediate log messages trong response.');
+    return;
+  }
+  addChannelLog('tool-log', '→ [INFO] Processing request...', '#ffa500');
+  showMessage('Log message gửi qua Tool-specific SSE channel.');
+}
+
+function triggerSampling() {
+  if (isStateless()) {
+    showMessage('BROKEN! stateless_http=True — Sampling không hoạt động. Server không thể initiate request đến client.');
+    return;
+  }
+  addChannelLog('primary-log', '→ CreateMessageRequest: "Tóm tắt đoạn văn..."', '#ffd700');
+  showMessage('Sampling request gửi qua Primary SSE — server nhờ client gọi LLM.');
+}
+
+function updateDemoView() {
+  const stateless = isStateless();
+  const jsonResponse = isJsonResponse();
+
+  // Primary channel
+  const primary = document.getElementById('primary-channel');
+  if (stateless) {
+    primary.style.borderColor = '#f44747';
+    primary.style.opacity = '0.5';
+    document.getElementById('primary-log').innerHTML = '<p style="color:#f44747;">BROKEN — stateless_http=True: Primary SSE không khả dụng</p>';
+  } else {
+    primary.style.borderColor = '#4ec9b0';
+    primary.style.opacity = '1';
+    document.getElementById('primary-log').innerHTML = '<p style="color:#858585;">Channel mở, chờ server messages...</p>';
+  }
+
+  // Tool channel
+  const tool = document.getElementById('tool-channel');
+  if (jsonResponse) {
+    tool.querySelector('h3').textContent = 'Tool Response (Plain JSON) — No streaming';
+    tool.style.borderColor = '#ffa500';
+  } else if (stateless) {
+    tool.querySelector('h3').textContent = 'Tool-specific SSE (POST) — Limited';
+    tool.style.borderColor = '#ffd700';
+  } else {
+    tool.querySelector('h3').textContent = 'Tool-specific SSE (POST) — Tool results & logging';
+    tool.style.borderColor = '#ffd700';
+  }
+
+  // Feature indicators
+  const features = [
+    { id: 'ind-sampling', broken: stateless },
+    { id: 'ind-progress', broken: stateless },
+    { id: 'ind-logging', broken: stateless || jsonResponse },
+    { id: 'ind-streaming', broken: jsonResponse },
+    { id: 'ind-tools', broken: false }
+  ];
+
+  features.forEach(f => {
+    const el = document.getElementById(f.id);
+    if (f.broken) {
+      el.querySelector('span').textContent = 'X';
+      el.querySelector('span').style.color = '#f44747';
+      el.style.opacity = '0.6';
+    } else {
+      el.querySelector('span').textContent = 'OK';
+      el.querySelector('span').style.color = '#4ec9b0';
+      el.style.opacity = '1';
+    }
+  });
+
+  showMessage(stateless ? 'stateless_http=True: Mất sampling, progress, logging, subscriptions.' :
+             jsonResponse ? 'json_response=True: Mất streaming, chỉ nhận final JSON.' :
+             'Full features enabled — cả hai SSE channels hoạt động.');
+}
+
+function clearLogs() {
+  document.getElementById('primary-log').innerHTML = '<p style="color:#858585;">Channel mở, chờ server messages...</p>';
+  document.getElementById('tool-log').innerHTML = '<p style="color:#858585;">Channel idle, chờ tool call...</p>';
+  if (isStateless()) {
+    document.getElementById('primary-log').innerHTML = '<p style="color:#f44747;">BROKEN — stateless_http=True</p>';
+  }
+  showMessage('Logs cleared.');
+}
+
+// ===== QUIZ =====
+const quizData = [
+  {
+    q: "Khi gọi tool qua StreamableHTTP, bao nhiêu SSE connections được tạo?",
+    options: ["1 — chỉ POST response", "2 — primary GET SSE + tool-specific POST SSE", "3 — GET, POST, và WebSocket", "0 — không cần SSE"],
+    correct: 1
+  },
+  {
+    q: "Primary SSE connection dùng cho loại message nào?",
+    options: ["Tool results", "Logging messages", "Server-initiated messages (sampling, progress)", "Client requests"],
+    correct: 2
+  },
+  {
+    q: "Tại sao cần stateless_http=True?",
+    options: ["Để tăng tốc độ", "Để hỗ trợ horizontal scaling với load balancers", "Để bật thêm features", "Để giảm memory usage"],
+    correct: 1
+  },
+  {
+    q: "json_response=True ảnh hưởng gì đến responses?",
+    options: ["Tăng tốc độ response", "Disable streaming — chỉ trả final JSON, không intermediate messages", "Cho phép gửi nhiều tool results cùng lúc", "Bật SSE streaming"],
+    correct: 1
+  },
+  {
+    q: "Điều quan trọng nhất khi deploy MCP server?",
+    options: ["Chỉ cần test với stdio", "Luôn test với production transport", "Không cần test", "Chỉ cần test với HTTP localhost"],
+    correct: 1
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((q, i) => {
+    html += '<div class="card card-blue" style="margin-bottom:16px;">';
+    html += '<p style="font-weight:600;color:#9cdcfe;margin-bottom:10px;">Câu ' + (i+1) + ': ' + q.q + '</p>';
+    q.options.forEach((opt, j) => {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">' + opt + '</div>';
+    });
+    html += '<div id="fb-'+i+'" class="feedback"></div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+let selectedAnswers = {};
+function selectAnswer(qi, ai) {
+  selectedAnswers[qi] = ai;
+  document.querySelectorAll('[data-q="'+qi+'"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="'+qi+'"][data-a="'+ai+'"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function submitQuiz() {
+  let score = 0;
+  quizData.forEach((q, i) => {
+    const fb = document.getElementById('fb-'+i);
+    const options = document.querySelectorAll('[data-q="'+i+'"]');
+    options.forEach(o => {
+      o.classList.remove('correct','wrong');
+      const a = parseInt(o.getAttribute('data-a'));
+      if (a === q.correct) o.classList.add('correct');
+      if (selectedAnswers[i] !== undefined && selectedAnswers[i] === a && a !== q.correct) o.classList.add('wrong');
+    });
+    if (selectedAnswers[i] === q.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai! Đáp án đúng: ' + q.options[q.correct];
+    }
+  });
+  const result = document.getElementById('quiz-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="score-box">Điểm: ' + score + '/' + quizData.length + '</div>';
+  document.getElementById('submit-quiz').style.display = 'none';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

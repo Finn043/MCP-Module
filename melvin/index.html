@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MCP Curriculum — Học Model Context Protocol</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.7;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: #252526;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.5);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #007acc 0%, #005a9e 100%);
+            padding: 40px 30px;
+            text-align: center;
+        }
+        .header h1 {
+            color: #fff;
+            font-size: 36px;
+            margin-bottom: 10px;
+        }
+        .header .subtitle {
+            color: rgba(255,255,255,0.9);
+            font-size: 16px;
+        }
+
+        .progress-section {
+            background: #2d2d30;
+            padding: 25px 30px;
+            border-bottom: 1px solid #333;
+        }
+        .progress-bar {
+            height: 8px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 10px;
+        }
+        .progress-fill {
+            height: 100%;
+            background: #4ec9b0;
+            width: 0%;
+            transition: width 0.3s ease;
+        }
+        .progress-text {
+            color: #4ec9b0;
+            font-size: 14px;
+            margin-top: 8px;
+        }
+
+        .content { padding: 30px; }
+
+        .phase-section {
+            margin: 30px 0;
+        }
+        .phase-title {
+            color: #007acc;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 15px;
+        }
+
+        .lesson-card {
+            background: #2d2d30;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+            position: relative;
+        }
+        .lesson-card:hover {
+            border-color: #007acc;
+            background: #1e3a5f;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(0,122,204,0.2);
+        }
+
+        .lesson-number {
+            color: #007acc;
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 5px;
+        }
+        .lesson-title {
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        .lesson-desc {
+            color: #888;
+            font-size: 13px;
+            line-height: 1.5;
+        }
+
+        .status-badge {
+            position: absolute;
+            top: 12px;
+            right: 12px;
+            display: inline-block;
+            padding: 2px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 600;
+            background: #1e3a5f;
+            color: #007acc;
+        }
+
+        .prereq-section {
+            margin: 30px 0;
+        }
+        .prereq-title {
+            color: #ffc107;
+            font-size: 20px;
+            margin-bottom: 20px;
+            padding-bottom: 10px;
+            border-bottom: 2px solid #333;
+        }
+
+        .start-btn {
+            display: inline-block;
+            margin-top: 30px;
+            padding: 12px 30px;
+            background: #007acc;
+            color: white;
+            text-decoration: none;
+            border-radius: 6px;
+            font-size: 16px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        .start-btn:hover {
+            background: #005a9e;
+            transform: translateY(-2px);
+        }
+
+        .footer {
+            background: #333;
+            padding: 20px 30px;
+            text-align: center;
+            color: #888;
+            font-size: 13px;
+        }
+
+        .phase-number {
+            display: inline-block;
+            background: #007acc;
+            color: #fff;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 13px;
+            font-weight: 700;
+            margin-right: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>MCP Curriculum</h1>
+            <p class="subtitle">Học Model Context Protocol từ nền tảng đến nâng cao — 21 bài học tương tác</p>
+        </div>
+
+        <div class="progress-section">
+            <div style="display: flex; justify-content: space-between; align-items: center;">
+                <span style="color: #fff; font-weight: 600;">Tiến độ học tập</span>
+                <span style="color: #888; font-size: 13px;">0/21 bài học (0%)</span>
+            </div>
+            <div class="progress-bar">
+                <div class="progress-fill" style="width: 0%;"></div>
+            </div>
+            <div class="progress-text">Bắt đầu hành trình học MCP ngay hôm nay!</div>
+        </div>
+
+        <div class="content">
+            <!-- Prerequisites -->
+            <div class="prereq-section">
+                <h2 class="prereq-title">Kiến thức cần trước</h2>
+                <div class="lesson-grid">
+                    <a href="../lesson-neg1-computer-basics.html" class="lesson-card">
+                        <div class="lesson-number">TIỀN ĐỀ</div>
+                        <div class="lesson-title">Máy tính hoạt động như thế nào?</div>
+                        <div class="lesson-desc">CPU, RAM, Storage, OS, Terminal — nền tảng trước khi học Process</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="../lesson-00-process.html" class="lesson-card">
+                        <div class="lesson-number">TIỀN ĐỀ</div>
+                        <div class="lesson-title">Process là gì?</div>
+                        <div class="lesson-desc">Process vs Program, PID, spawn process, MCP handshake</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="../lesson-01-stdin-stdout.html" class="lesson-card">
+                        <div class="lesson-number">TIỀN ĐỀ</div>
+                        <div class="lesson-title">stdin / stdout / stderr</div>
+                        <div class="lesson-desc">Standard streams, flush(), pipe, MCP server pattern</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="../lesson-01-file-descriptors.html" class="lesson-card">
+                        <div class="lesson-number">TIỀN ĐỀ</div>
+                        <div class="lesson-title">File Descriptors (FD)</div>
+                        <div class="lesson-desc">FD numbers, redirect, FD table, pipe mechanism</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 1: Nền tảng Protocol -->
+            <div class="phase-section">
+                <h2 class="phase-title"><span class="phase-number">1</span>Nền tảng Protocol</h2>
+                <div class="lesson-grid">
+                    <a href="lesson-02-json-rpc-basics.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 02</div>
+                        <div class="lesson-title">JSON-RPC 2.0 — Nền tảng giao tiếp của MCP</div>
+                        <div class="lesson-desc">Request/Response format, jsonrpc field, error codes</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-03-mcp-intro.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 03</div>
+                        <div class="lesson-title">MCP Tổng quan — Model Context Protocol</div>
+                        <div class="lesson-desc">Kiến trúc MCP, Client-Server model, lifecycle</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-04-mcp-initialize.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 04</div>
+                        <div class="lesson-title">MCP Initialize — Bắt tay 3 bước</div>
+                        <div class="lesson-desc">Initialize request/response, capabilities exchange, initialized notification</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 2: MCP Core Primitives -->
+            <div class="phase-section">
+                <h2 class="phase-title"><span class="phase-number">2</span>MCP Core Primitives</h2>
+                <div class="lesson-grid">
+                    <a href="lesson-05-mcp-tools.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 05</div>
+                        <div class="lesson-title">MCP Tools — Mở rộng khả năng cho Claude</div>
+                        <div class="lesson-desc">Tool definition, tools/list, tools/call, schema validation</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-06-mcp-resources.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 06</div>
+                        <div class="lesson-title">MCP Resources — Đưa dữ liệu vào ứng dụng</div>
+                        <div class="lesson-desc">Resource URIs, resources/list, resources/read, subscriptions</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-07-mcp-prompts.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 07</div>
+                        <div class="lesson-title">MCP Prompts — Template chỉ thị cho người dùng</div>
+                        <div class="lesson-desc">Prompt templates, prompts/list, prompts/get, arguments</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-08-primitive-comparison.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 08</div>
+                        <div class="lesson-title">Khi nào dùng gì? — So sánh 3 Primitives</div>
+                        <div class="lesson-desc">So sánh Tools vs Resources vs Prompts, use cases thực tế</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 3: Transport Layer -->
+            <div class="phase-section">
+                <h2 class="phase-title"><span class="phase-number">3</span>Transport Layer</h2>
+                <div class="lesson-grid">
+                    <a href="lesson-09-mcp-json-messages.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 09</div>
+                        <div class="lesson-title">Các loại tin nhắn MCP — Bidirectional</div>
+                        <div class="lesson-desc">Request, Response, Notification — message flow trong MCP</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-10-stdio-transport.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 10</div>
+                        <div class="lesson-title">stdio Transport — Giao tiếp qua Standard I/O</div>
+                        <div class="lesson-desc">Line-delimited JSON, subprocess, pipe, local communication</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-11-streamable-http-transport.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 11</div>
+                        <div class="lesson-title">StreamableHTTP Transport — Giao tiếp qua HTTP</div>
+                        <div class="lesson-desc">HTTP POST, SSE response, remote access, resumability</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-12-streamable-http-deep-dive.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 12</div>
+                        <div class="lesson-title">StreamableHTTP Sâu hơn — Dual SSE & State</div>
+                        <div class="lesson-desc">Dual SSE channels, session state, connection management</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 4: Xây dựng MCP Server & Client -->
+            <div class="phase-section">
+                <h2 class="phase-title"><span class="phase-number">4</span>Xây dựng MCP Server & Client</h2>
+                <div class="lesson-grid">
+                    <a href="lesson-13-building-mcp-server.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 13</div>
+                        <div class="lesson-title">Xây dựng MCP Server — Dự án Quản lý Tài liệu</div>
+                        <div class="lesson-desc">Tạo MCP Server hoàn chỉnh với Tools, Resources, Prompts</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-14-mcp-inspector.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 14</div>
+                        <div class="lesson-title">MCP Inspector — Kiểm thử Server trong Trình duyệt</div>
+                        <div class="lesson-desc">Dùng MCP Inspector để debug, test tools, inspect messages</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-15-building-mcp-client.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 15</div>
+                        <div class="lesson-title">Xây dựng MCP Client — Cầu nối giao tiếp</div>
+                        <div class="lesson-desc">Tạo Client kết nối đến Server, gọi tools, đọc resources</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 5: Tính năng Nâng cao -->
+            <div class="phase-section">
+                <h2 class="phase-title"><span class="phase-number">5</span>Tính năng Nâng cao</h2>
+                <div class="lesson-grid">
+                    <a href="lesson-16-sampling.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 16</div>
+                        <div class="lesson-title">Sampling — Server xin Client gọi LLM</div>
+                        <div class="lesson-desc">Server-initiated LLM requests, human-in-the-loop approval</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-17-notifications.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 17</div>
+                        <div class="lesson-title">Logging & Progress Notifications</div>
+                        <div class="lesson-desc">Gửi log từ Server, báo cáo tiến độ, notification patterns</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-18-roots.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 18</div>
+                        <div class="lesson-title">Roots — Quyền truy cập Hệ thống File</div>
+                        <div class="lesson-desc">Roots discovery, file system boundaries, security model</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Phase 6: Tổng hợp -->
+            <div class="phase-section">
+                <h2 class="phase-title"><span class="phase-number">6</span>Tổng hợp</h2>
+                <div class="lesson-grid">
+                    <a href="lesson-19-transport-comparison-error-handling.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 19</div>
+                        <div class="lesson-title">So sánh Transport & Xử lý Lỗi</div>
+                        <div class="lesson-desc">stdio vs StreamableHTTP so sánh, error handling patterns</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                    <a href="lesson-20-capstone-project.html" class="lesson-card">
+                        <div class="lesson-number">BÀI 20</div>
+                        <div class="lesson-title">Dự án Tổng hợp — Từ đầu đến cuối</div>
+                        <div class="lesson-desc">Xây dựng hệ thống MCP hoàn chỉnh, tổng hợp toàn bộ kiến thức</div>
+                        <span class="status-badge">Mới</span>
+                    </a>
+                </div>
+            </div>
+
+            <div style="text-align: center;">
+                <a href="lesson-02-json-rpc-basics.html" class="start-btn">Bắt đầu học ngay</a>
+            </div>
+        </div>
+
+        <div class="footer">
+            <p>MCP Curriculum — Học Model Context Protocol từ A đến Z</p>
+            <p style="margin-top: 5px;">21 Lessons &bull; Interactive Exercises &bull; Quizzes</p>
+        </div>
+    </div>
+</body>
+</html>

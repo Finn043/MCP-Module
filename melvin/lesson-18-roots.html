@@ -1,0 +1,426 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 18: Roots — Quyền truy cập Hệ thống File</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.file-tree{font-family:'Courier New',monospace;font-size:13px;line-height:1.8;margin:10px 0;}
+.file-tree .folder{color:#ffd700;}
+.file-tree .file{color:#9cdcfe;}
+.file-tree .allowed{color:#4ec9b0;}
+.file-tree .blocked{color:#f44747;text-decoration:line-through;}
+.path-input{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:10px 14px;color:#d4d4d4;font-family:'Courier New',monospace;font-size:14px;width:100%;margin:8px 0;}
+.path-input:focus{outline:none;border-color:#007acc;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📁 Bài 18: Roots — Quyền truy cập Hệ thống File</h1>
+<p class="subtitle">Cấp và giới hạn quyền truy cập file cho MCP Server</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- THEORY TAB -->
+<div id="tab-theory" class="tab-content active">
+
+<h2>1. Roots giải quyết vấn đề gì?</h2>
+<p>Imagine bạn có MCP server với tool convert video. User nói <em>"convert biking.mp4"</em> nhưng chỉ có filename, không có full path. Claude không biết tìm file ở đâu trong hệ thống file phức tạp của user.</p>
+
+<p>Roots giải quyết vấn đề này bằng cách đóng vai trò <span class="highlight">hệ thống permission + discovery mechanism</span>:</p>
+<ul style="margin:10px 0 10px 20px;">
+<li><strong>Permission:</strong> Chỉ cho phép server truy cập thư mục được approve</li>
+<li><strong>Discovery:</strong> Claude biết tìm file ở đâu — chỉ trong approved directories</li>
+</ul>
+
+<div class="analogy">
+Roots giống như bạn cho thợ sửa ống nước khóa của căn hộ mình, nhưng chỉ cho phòng bếp và phòng tắm. Thợ có thể tự do hoạt động trong hai phòng đó nhưng không thể vào phòng ngủ hay phòng làm việc. Đồng thời thợ biết chỉ cần tìm ở bếp và toilet, không cần lục toàn bộ nhà.
+</div>
+
+<h2>2. Roots Workflow</h2>
+<p>Khi roots được cấu hình, flow hoạt động như sau:</p>
+
+<div class="diagram">
+<span class="box">User: "convert biking.mp4"</span><br>
+<span class="arrow">↓</span><br>
+<span class="box">Claude → list_roots</span> <span class="arrow">→</span> <span class="box">Client trả về paths</span><br>
+<span class="arrow">↓</span><br>
+<span class="box">Claude tìm trong roots</span> <span class="arrow">→</span> <span class="box">Tìm thấy file!</span><br>
+<span class="arrow">↓</span><br>
+<span class="box">convert_video("/Users/me/Desktop/biking.mp4")</span>
+</div>
+
+<h2>3. Server-side Implementation</h2>
+<p>Server dùng <code>ctx.session.list_roots()</code> để discover accessible directories. Pattern phổ biến là tạo helper <code>is_path_allowed()</code> dùng <code>relative_to()</code>:</p>
+
+<pre><code># mcp_server.py
+from pathlib import Path
+from mcp.server.fastmcp import FastMCP, Context
+from pydantic import Field
+
+mcp = FastMCP("VidsMCP", log_level="ERROR")
+
+async def is_path_allowed(requested_path: Path, ctx: Context) -> bool:
+    """Check if path falls within approved roots."""
+    roots_result = await ctx.session.list_roots()
+    client_roots = roots_result.roots
+
+    if not requested_path.exists():
+        return False
+
+    if requested_path.is_file():
+        requested_path = requested_path.parent
+
+    for root in client_roots:
+        root_path = file_url_to_path(root.uri)
+        try:
+            requested_path.relative_to(root_path)
+            return True
+        except ValueError:
+            continue
+
+    return False
+
+@mcp.tool()
+async def convert_video(
+    input_path: str = Field(description="Path to the input MP4 file"),
+    format: str = Field(description="Output format (e.g. 'mov')"),
+    *, ctx: Context,
+):
+    """Convert an MP4 video to another format using ffmpeg"""
+    input_file = VideoConverter.validate_input(input_path)
+
+    if not await is_path_allowed(input_file, ctx):
+        raise ValueError(f"Access to path is not allowed: {input_path}")
+
+    return await VideoConverter.convert(input_path, format)
+
+@mcp.tool()
+async def read_dir(
+    path: str = Field(description="Path to a directory to read"),
+    *, ctx: Context,
+):
+    """Read dir contents. Path must be within roots."""
+    requested_path = Path(path).resolve()
+    if not await is_path_allowed(requested_path, ctx):
+        raise ValueError("Error: can only read directories within a root")
+    return [entry.name for entry in requested_path.iterdir()]</code></pre>
+
+<h2>4. Client-side Implementation</h2>
+<p>Client convert paths thành <code>Root</code> objects với <code>file://</code> URIs và cung cấp callback:</p>
+
+<pre><code># mcp_client.py
+from mcp.types import Root, ListRootsResult, ErrorData
+from mcp.shared.context import RequestContext
+from pydantic import FileUrl
+
+class MCPClient:
+    def __init__(self, command, args, env=None, roots=None):
+        self._roots = self._create_roots(roots) if roots else []
+
+    def _create_roots(self, root_paths: list[str]) -> list[Root]:
+        """Convert path strings to Root objects."""
+        roots = []
+        for path in root_paths:
+            p = Path(path).resolve()
+            file_url = FileUrl(f"file://{p}")
+            roots.append(Root(uri=file_url, name=p.name or "Root"))
+        return roots
+
+    async def _handle_list_roots(
+        self, context: RequestContext["ClientSession", None]
+    ) -> ListRootsResult | ErrorData:
+        """Callback for when server requests roots."""
+        return ListRootsResult(roots=self._roots)
+
+    async def connect(self):
+        self._session = await self._exit_stack.enter_async_context(
+            ClientSession(
+                _stdio, _write,
+                list_roots_callback=self._handle_list_roots
+                    if self._roots else None,
+            )
+        )</code></pre>
+
+<div class="card card-blue">
+<strong>Cách chạy:</strong> Roots được cung cấp qua CLI arguments:<br>
+<code>uv run main.py /Users/me/Desktop /Users/me/Movies</code>
+</div>
+
+<h2>5. MCP SDK KHÔNG tự động enforce restrictions</h2>
+
+<div class="card card-red">
+<strong>⚠️ CẢNH BÁO BẢO MẬT:</strong> MCP SDK <strong>không</strong> tự động giới hạn truy cập file. Bạn <strong>PHẢI</strong> tự implement <code>is_path_allowed()</code> và gọi nó trong <strong>mọi</strong> tool access file. Nếu không, server có thể truy cập bất kỳ file nào trên hệ thống.
+</div>
+
+<p>Pattern đúng: luôn check <code>is_path_allowed()</code> <strong>trước</strong> khi thực hiện bất kỳ file operation nào.</p>
+
+<h2>6. Security</h2>
+<p>Roots chỉ giới hạn directories được approve. Nếu chỉ cấp Desktop, server không thể access Documents:</p>
+
+<div class="card card-green">
+<strong>Lợi ích bảo mật:</strong>
+<ul style="margin:8px 0 0 20px;">
+<li>Users chỉ cấp quyền truy cập cần thiết</li>
+<li>Server không thể đọc sensitive files ngoài approved areas</li>
+<li>Clear boundary giữa zones được phép và không được phép</li>
+<li>Flexibility — có thể cấp/ thu hồi bất kỳ lúc nào</li>
+</ul>
+</div>
+
+</div>
+
+<!-- DEMO TAB -->
+<div id="tab-demo" class="tab-content">
+
+<h2>File System Permissions Visualizer</h2>
+<p>Xem directories nào được approve (xanh) và bị block (đỏ). Nhập path để kiểm tra quyền truy cập.</p>
+
+<h3>Directory Tree (Approved Roots: <span style="color:#4ec9b0;">Desktop</span>, <span style="color:#4ec9b0;">Movies</span>)</h3>
+<div class="card" style="background:#1a1a2e;">
+<div class="file-tree">
+<div><span class="folder">📁 /Users/melvin/</span></div>
+<div style="margin-left:20px;"><span class="allowed">📁 Desktop/ ✅ ROOT</span></div>
+<div style="margin-left:40px;"><span class="file">📄 homework.txt</span></div>
+<div style="margin-left:40px;"><span class="file">📄 biking.mp4</span></div>
+<div style="margin-left:40px;"><span class="folder">📁 Projects/</span></div>
+<div style="margin-left:20px;"><span class="allowed">📁 Movies/ ✅ ROOT</span></div>
+<div style="margin-left:40px;"><span class="file">🎬 vacation.mp4</span></div>
+<div style="margin-left:40px;"><span class="file">🎬 tutorial.mp4</span></div>
+<div style="margin-left:20px;"><span class="blocked">📁 Documents/ ❌ BLOCKED</span></div>
+<div style="margin-left:40px;"><span class="blocked">📄 bank_passwords.txt</span></div>
+<div style="margin-left:40px;"><span class="blocked">📄 taxes_2024.pdf</span></div>
+<div style="margin-left:20px;"><span class="blocked">📁 Downloads/ ❌ BLOCKED</span></div>
+<div style="margin-left:40px;"><span class="blocked">📄 suspicious_file.exe</span></div>
+</div>
+</div>
+
+<h3>Kiểm tra Path</h3>
+<input type="text" id="path-input" class="path-input" placeholder="Nhập path, ví dụ: /Users/melvin/Desktop/biking.mp4" value="/Users/melvin/Desktop/biking.mp4">
+<button class="btn" onclick="checkPath()">Kiểm tra quyền</button>
+<div id="path-result" style="margin-top:12px;"></div>
+
+<h3>list_roots Request/Response</h3>
+<div class="card" style="background:#1a1a2e;font-family:'Courier New',monospace;font-size:12px;">
+<strong style="color:#4fc1ff;">Request (Server → Client):</strong>
+<pre style="border:none;background:transparent;margin:6px 0;"><code>{
+  "jsonrpc": "2.0",
+  "method": "roots/list",
+  "id": 1
+}</code></pre>
+<strong style="color:#4ec9b0;">Response (Client → Server):</strong>
+<pre style="border:none;background:transparent;margin:6px 0;"><code>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "roots": [
+      {"uri": "file:///Users/melvin/Desktop", "name": "Desktop"},
+      {"uri": "file:///Users/melvin/Movies", "name": "Movies"}
+    ]
+  }
+}</code></pre>
+</div>
+
+</div>
+
+<!-- QUIZ TAB -->
+<div id="tab-quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức — Roots</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu bài.</p>
+<div id="quiz-container"></div>
+<div id="quiz-feedback" class="feedback"></div>
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="background:#3e3e42;margin-left:8px;">Làm lại</button>
+<div id="quiz-score" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+<a href="lesson-17-notifications.html" class="nav-btn">← Bài 17</a>
+<a href="lesson-19-transport-comparison-error-handling.html" class="nav-btn">Bài 19 →</a>
+</div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Demo
+const approvedRoots = ['/Users/melvin/Desktop', '/Users/melvin/Movies'];
+
+function checkPath() {
+  const input = document.getElementById('path-input').value.trim();
+  const result = document.getElementById('path-result');
+  if (!input) {
+    result.innerHTML = '<div class="card card-yellow">Vui lòng nhập path!</div>';
+    return;
+  }
+  let allowed = false;
+  for (const root of approvedRoots) {
+    if (input.startsWith(root)) {
+      allowed = true;
+      break;
+    }
+  }
+  if (allowed) {
+    result.innerHTML = '<div class="card card-green"><strong>✅ ALLOWED</strong> — Path nằm trong approved root.<br>Server có thể truy cập file này.</div>';
+  } else {
+    result.innerHTML = '<div class="card card-red"><strong>❌ DENIED</strong> — Path nằm ngoài approved roots.<br><code>is_path_allowed()</code> trả về <code>False</code>. Tool sẽ raise ValueError.</div>';
+  }
+}
+
+// Quiz
+const quizData = [
+  {
+    q: "Roots phục vụ hai mục đích gì?",
+    opts: ["Storage và caching", "Permission system và discovery mechanism", "Authentication và encryption", "Compression và backup"],
+    ans: 1
+  },
+  {
+    q: "Server-side API nào để discover roots?",
+    opts: ["ctx.get_roots()", "ctx.session.list_roots()", "ctx.discover_roots()", "ctx.session.fetch_roots()"],
+    ans: 1
+  },
+  {
+    q: "MCP SDK có tự động enforce root restrictions không?",
+    opts: ["Có, tự động", "Chỉ khi config enable", "KHÔNG, phải tự implement", "Chỉ trong production mode"],
+    ans: 2
+  },
+  {
+    q: "is_path_allowed() dùng Python method nào?",
+    opts: ["os.path.exists()", "relative_to() để check path", "pathlib.is_relative()", "shutil.check_access()"],
+    ans: 1
+  },
+  {
+    q: "Roots được cung cấp qua đâu?",
+    opts: ["Environment variables", "CLI arguments khi start client", "Config file JSON", "HTTP headers"],
+    ans: 1
+  }
+];
+
+let userAnswers = {};
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizData.forEach((item, qi) => {
+    let html = '<div class="card" style="margin:16px 0;"><h3>Câu ' + (qi + 1) + ': ' + item.q + '</h3>';
+    item.opts.forEach((opt, oi) => {
+      html += '<div class="quiz-option" data-q="' + qi + '" data-o="' + oi + '" onclick="pick(' + qi + ',' + oi + ')">' + opt + '</div>';
+    });
+    html += '</div>';
+    container.innerHTML += html;
+  });
+}
+
+function pick(qi, oi) {
+  userAnswers[qi] = oi;
+  document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="' + qi + '"][data-o="' + oi + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  let score = 0;
+  quizData.forEach((item, qi) => {
+    document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+      el.classList.remove('correct', 'wrong');
+    });
+    if (userAnswers[qi] !== undefined) {
+      if (userAnswers[qi] === item.ans) {
+        score++;
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      } else {
+        document.querySelector('[data-q="' + qi + '"][data-o="' + userAnswers[qi] + '"]').classList.add('wrong');
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      }
+    } else {
+      document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+    }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.classList.add('show');
+  if (score === quizData.length) {
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Tuyệt vời! Bạn đã trả lời đúng tất cả ' + score + '/' + quizData.length + ' câu!';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Bạn được ' + score + '/' + quizData.length + '. Xem lại phần lý thuyết và thử lại!';
+  }
+  document.getElementById('quiz-score').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  userAnswers = {};
+  buildQuiz();
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-score').textContent = '';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

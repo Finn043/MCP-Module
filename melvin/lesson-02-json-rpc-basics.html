@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>JSON-RPC 2.0 — Nền tảng giao tiếp của MCP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.btn:disabled{background:#3e3e42;cursor:not-allowed;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.kw{color:#c586c0;} .str{color:#ce9178;} .cm{color:#6a9955;} .fn{color:#dcdcaa;} .num{color:#b5cea8;}
+.builder-section{margin:16px 0;}
+.builder-section label{display:block;color:#9cdcfe;margin-bottom:6px;font-weight:600;}
+.builder-section select, .builder-section input{width:100%;padding:10px;background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;color:#d4d4d4;font-size:14px;margin-bottom:10px;}
+.builder-section select:focus, .builder-section input:focus{outline:none;border-color:#007acc;}
+.json-output{background:#1a1a2e;border:1px solid #007acc;border-radius:8px;padding:18px;font-family:'Courier New',monospace;font-size:14px;color:#9cdcfe;min-height:120px;white-space:pre-wrap;word-break:break-all;}
+.validate-result{margin-top:12px;padding:12px;border-radius:6px;font-weight:600;display:none;}
+.validate-result.show{display:block;}
+.validate-result.valid{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.validate-result.invalid{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Bài 02: JSON-RPC 2.0 — Nền tảng giao tiếp của MCP</h1>
+  <p class="subtitle">Hiểu protocol nền tảng mà MCP được xây dựng trên đó</p>
+
+  <!-- TABS -->
+  <div class="tabs">
+    <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+    <div class="tab" onclick="switchTab('demo')">Demo</div>
+    <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+  </div>
+
+  <!-- ==================== THEORY TAB ==================== -->
+  <div id="tab-theory" class="tab-content active">
+
+    <!-- Section 1 -->
+    <h2>1. JSON-RPC 2.0 là gì?</h2>
+    <p><strong>JSON-RPC 2.0</strong> là một giao thức Remote Procedure Call (RPC) sử dụng JSON để mã hóa dữ liệu. Nó cho phép một chương trình gửi yêu cầu thực thi một hàm trên một chương trình khác — có thể ở cùng máy hoặc qua mạng.</p>
+    <div class="card card-blue">
+      <p><span class="highlight">MCP được xây dựng hoàn toàn trên JSON-RPC 2.0.</span> Mọi tin nhắn MCP — từ <code>initialize</code> đến <code>tools/call</code> — đều là tin nhắn JSON-RPC 2.0 hợp lệ. Hiểu JSON-RPC là điều kiện tiên quyết để hiểu MCP.</p>
+    </div>
+    <div class="analogy">
+      JSON-RPC giống như gửi một bức thư yêu cầu ai đó làm giùm việc. Bạn ghi rõ tên việc (<code>method</code>), thông số (<code>params</code>), và số tham chiếu (<code>id</code>). Người nhận làm xong rồi gửi lại kết quả cùng số tham chiếu để bạn biết kết quả nào thuộc về yêu cầu nào.
+    </div>
+
+    <!-- Section 2 -->
+    <h2>2. Request Format</h2>
+    <p>Một <strong>Request</strong> trong JSON-RPC 2.0 phải chứa các trường sau:</p>
+    <div class="card card-green">
+      <table>
+        <tr><th>Trường</th><th>Kiểu</th><th>Mô tả</th></tr>
+        <tr><td><code>jsonrpc</code></td><td>string</td><td>Luôn là <code>"2.0"</code></td></tr>
+        <tr><td><code>id</code></td><td>number | string</td><td>Định danh request, dùng để match response</td></tr>
+        <tr><td><code>method</code></td><td>string</td><td>Tên phương thức cần gọi</td></tr>
+        <tr><td><code>params</code></td><td>object | array</td><td>Tham số truyền cho phương thức (có thể bỏ qua)</td></tr>
+      </table>
+    </div>
+    <p>Ví dụ thực tế — Client MCP yêu cầu danh sách tools:</p>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"method"</span>: <span class="str">"tools/list"</span>,
+  <span class="str">"params"</span>: {}
+}</code></pre>
+
+    <!-- Section 3 -->
+    <h2>3. Response Format</h2>
+    <p>Server trả về một trong hai dạng response:</p>
+
+    <h3>Response thành công (Success)</h3>
+    <p>Chứa trường <code>result</code> cùng <code>id</code> khớp với request:</p>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"result"</span>: {
+    <span class="str">"tools"</span>: [
+      { <span class="str">"name"</span>: <span class="str">"read_doc"</span>, <span class="str">"description"</span>: <span class="str">"Đọc tài liệu"</span> }
+    ]
+  }
+}</code></pre>
+
+    <h3>Response lỗi (Error)</h3>
+    <p>Chứa trường <code>error</code> thay vì <code>result</code>:</p>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"id"</span>: <span class="num">1</span>,
+  <span class="str">"error"</span>: {
+    <span class="str">"code"</span>: <span class="num">-32601</span>,
+    <span class="str">"message"</span>: <span class="str">"Method not found"</span>
+  }
+}</code></pre>
+
+    <!-- Section 4 -->
+    <h2>4. Error Codes</h2>
+    <p>JSON-RPC 2.0 định nghĩa các error code chuẩn:</p>
+    <div class="card card-red">
+      <table>
+        <tr><th>Code</th><th>Tên</th><th>Mô tả</th></tr>
+        <tr><td><code>-32700</code></td><td>Parse error</td><td>JSON không hợp lệ, server không parse được</td></tr>
+        <tr><td><code>-32600</code></td><td>Invalid Request</td><td>Request thiếu trường bắt buộc hoặc sai format</td></tr>
+        <tr><td><code>-32601</code></td><td>Method not found</td><td>Method không tồn tại trên server</td></tr>
+        <tr><td><code>-32602</code></td><td>Invalid params</td><td>Tham số không hợp lệ</td></tr>
+        <tr><td><code>-32603</code></td><td>Internal error</td><td>Lỗi nội bộ phía server</td></tr>
+      </table>
+    </div>
+    <p>Các error code từ <code>-32000</code> đến <code>-32099</code> được dành cho server-defined errors. MCP sử dụng khoảng này cho các lỗi riêng.</p>
+
+    <!-- Section 5 -->
+    <h2>5. Notification</h2>
+    <p><strong>Notification</strong> giống Request nhưng <span class="highlight">KHÔNG có trường <code>id</code></span>. Vì không có <code>id</code>, server không trả về response nào.</p>
+    <div class="card card-yellow">
+      <p>Notification dùng cho các thông báo một chiều (fire-and-forget). Ví dụ trong MCP: sau khi nhận Initialize Result, client gửi <code>notifications/initialized</code> để xác nhận — không mong đợi response.</p>
+    </div>
+    <pre><code>{
+  <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>,
+  <span class="str">"method"</span>: <span class="str">"notifications/initialized"</span>
+}</code></pre>
+    <p>Lưu ý: <code>params</code> trong notification là tùy chọn. Không có <code>id</code> = không có response.</p>
+
+    <!-- Section 6 -->
+    <h2>6. Batch Request</h2>
+    <p>JSON-RPC 2.0 cho phép gửi nhiều request cùng lúc trong một JSON array:</p>
+    <pre><code>[
+  { <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>, <span class="str">"id"</span>: <span class="num">1</span>, <span class="str">"method"</span>: <span class="str">"tools/list"</span>, <span class="str">"params"</span>: {} },
+  { <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>, <span class="str">"id"</span>: <span class="num">2</span>, <span class="str">"method"</span>: <span class="str">"resources/list"</span>, <span class="str">"params"</span>: {} },
+  { <span class="str">"jsonrpc"</span>: <span class="str">"2.0"</span>, <span class="str">"id"</span>: <span class="num">3</span>, <span class="str">"method"</span>: <span class="str">"prompts/list"</span>, <span class="str">"params"</span>: {} }
+]</code></pre>
+    <p>Server sẽ trả về một array các response theo cùng thứ tự (match theo <code>id</code>). Điều này giúp giảm số lượng round-trip khi cần gọi nhiều method.</p>
+
+    <!-- Section 7 -->
+    <h2>7. Kết nối với MCP</h2>
+    <div class="card card-green">
+      <p><span class="highlight">Mọi tin nhắn MCP đều là tin nhắn JSON-RPC 2.0.</span> Khi bạn thấy <code>tools/list</code>, <code>tools/call</code>, <code>initialize</code>, hay <code>notifications/initialized</code> — tất cả đều tuân theo format JSON-RPC 2.0.</p>
+      <p style="margin-top:10px;">Hiểu JSON-RPC giúp bạn:</p>
+      <ul style="margin-left:20px;margin-top:8px;">
+        <li>Debug bất kỳ giao tiếp MCP nào bằng cách đọc JSON thô</li>
+        <li>Hiểu tại sao một số message có response và một số thì không</li>
+        <li>Phân biệt request lỗi do format sai hay do logic</li>
+        <li>Tự viết MCP client/server bằng bất kỳ ngôn ngữ nào</li>
+      </ul>
+    </div>
+    <div class="diagram">
+      <span class="box">MCP Client</span>
+      <span class="arrow"> --- JSON-RPC 2.0 Request ---> </span>
+      <span class="box">MCP Server</span><br>
+      <span class="box">MCP Client</span>
+      <span class="arrow"> &lt;-- JSON-RPC 2.0 Response --- </span>
+      <span class="box">MCP Server</span><br>
+      <span class="box">MCP Client</span>
+      <span class="arrow"> --- JSON-RPC 2.0 Notification ---&gt; </span>
+      <span class="box">MCP Server</span>
+      <span style="color:#6a9955;font-size:12px;">(Không có response)</span>
+    </div>
+
+  </div>
+
+  <!-- ==================== DEMO TAB ==================== -->
+  <div id="tab-demo" class="tab-content">
+    <h2>JSON-RPC 2.0 Message Builder</h2>
+    <p>Chọn loại tin nhắn, điền các trường, và xem JSON-RPC 2.0 message được tạo ra.</p>
+
+    <div class="builder-section">
+      <label>Loại tin nhắn:</label>
+      <select id="msgType" onchange="updateFields()">
+        <option value="request">Request</option>
+        <option value="response-ok">Response (Success)</option>
+        <option value="response-error">Response (Error)</option>
+        <option value="notification">Notification</option>
+      </select>
+    </div>
+
+    <div id="field-id" class="builder-section">
+      <label>ID (số hoặc chuỗi):</label>
+      <input type="text" id="inputId" value="1" placeholder="Ví dụ: 1 hoặc 'abc'">
+    </div>
+
+    <div id="field-method" class="builder-section">
+      <label>Method:</label>
+      <input type="text" id="inputMethod" value="tools/list" placeholder="Ví dụ: tools/list, initialize, tools/call">
+    </div>
+
+    <div id="field-params" class="builder-section">
+      <label>Params (JSON object):</label>
+      <input type="text" id="inputParams" value="{}" placeholder='Ví dụ: {} hoặc {"name": "read_doc"}'>
+    </div>
+
+    <div id="field-result" class="builder-section" style="display:none;">
+      <label>Result (JSON):</label>
+      <input type="text" id="inputResult" value='{"tools": []}' placeholder='Kết quả trả về'>
+    </div>
+
+    <div id="field-error" class="builder-section" style="display:none;">
+      <label>Error Code:</label>
+      <select id="inputErrorCode">
+        <option value="-32700">-32700 — Parse error</option>
+        <option value="-32600">-32600 — Invalid Request</option>
+        <option value="-32601" selected>-32601 — Method not found</option>
+        <option value="-32602">-32602 — Invalid params</option>
+        <option value="-32603">-32603 — Internal error</option>
+      </select>
+      <label>Error Message:</label>
+      <input type="text" id="inputErrorMsg" value="Method not found">
+    </div>
+
+    <button class="btn" onclick="generateMessage()">Tạo tin nhắn</button>
+    <button class="btn" style="background:#4ec9b0;margin-left:10px;" onclick="validateMessage()">Validate</button>
+
+    <h3 style="margin-top:24px;">Kết quả:</h3>
+    <div class="json-output" id="jsonOutput">// Chọn loại tin nhắn và nhấn "Tạo tin nhắn"</div>
+
+    <div class="validate-result" id="validateResult"></div>
+
+    <div class="card card-blue" style="margin-top:20px;">
+      <p><strong>Hướng dẫn:</strong></p>
+      <ul style="margin-left:20px;">
+        <li><strong>Request</strong> — Cần <code>id</code>, <code>method</code>, và <code>params</code></li>
+        <li><strong>Response (Success)</strong> — Cần <code>id</code> và <code>result</code></li>
+        <li><strong>Response (Error)</strong> — Cần <code>id</code> và <code>error</code> (code + message)</li>
+        <li><strong>Notification</strong> — Chỉ cần <code>method</code> và <code>params</code>, không có <code>id</code></li>
+      </ul>
+    </div>
+  </div>
+
+  <!-- ==================== QUIZ TAB ==================== -->
+  <div id="tab-quiz" class="tab-content">
+    <h2>Kiểm tra kiến thức JSON-RPC 2.0</h2>
+    <p>Trả lời 5 câu hỏi để kiểm tra hiểu bài của bạn.</p>
+
+    <div id="quiz-container"></div>
+
+    <button class="btn" id="submitQuiz" onclick="submitQuiz()">Nộp bài</button>
+    <div class="score-box" id="scoreBox" style="display:none;"></div>
+  </div>
+
+  <!-- NAVIGATION -->
+  <div class="nav-bar">
+    <a class="nav-btn" href="../lesson-01-file-descriptors.html">&larr; Bài trước</a>
+    <a class="nav-btn" href="lesson-03-mcp-intro.html">Bài tiếp &rarr;</a>
+  </div>
+</div>
+
+<script>
+// ========== Tab switching ==========
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  var tabs = ['theory','demo','quiz'];
+  var idx = tabs.indexOf(name);
+  document.querySelectorAll('.tab')[idx].classList.add('active');
+  document.getElementById('tab-'+name).classList.add('active');
+}
+
+// ========== DEMO: Message Builder ==========
+function updateFields() {
+  var type = document.getElementById('msgType').value;
+  document.getElementById('field-id').style.display = (type === 'notification') ? 'none' : 'block';
+  document.getElementById('field-method').style.display = (type === 'response-ok' || type === 'response-error') ? 'none' : 'block';
+  document.getElementById('field-params').style.display = (type === 'response-ok' || type === 'response-error') ? 'none' : 'block';
+  document.getElementById('field-result').style.display = (type === 'response-ok') ? 'block' : 'none';
+  document.getElementById('field-error').style.display = (type === 'response-error') ? 'block' : 'none';
+}
+
+function generateMessage() {
+  var type = document.getElementById('msgType').value;
+  var msg = { jsonrpc: "2.0" };
+
+  if (type === 'request') {
+    var idVal = document.getElementById('inputId').value.trim();
+    msg.id = isNaN(idVal) ? idVal : Number(idVal);
+    msg.method = document.getElementById('inputMethod').value.trim();
+    try { msg.params = JSON.parse(document.getElementById('inputParams').value); } catch(e) { msg.params = {}; }
+  } else if (type === 'response-ok') {
+    var idVal = document.getElementById('inputId').value.trim();
+    msg.id = isNaN(idVal) ? idVal : Number(idVal);
+    try { msg.result = JSON.parse(document.getElementById('inputResult').value); } catch(e) { msg.result = {}; }
+  } else if (type === 'response-error') {
+    var idVal = document.getElementById('inputId').value.trim();
+    msg.id = isNaN(idVal) ? idVal : Number(idVal);
+    msg.error = {
+      code: Number(document.getElementById('inputErrorCode').value),
+      message: document.getElementById('inputErrorMsg').value.trim()
+    };
+  } else if (type === 'notification') {
+    msg.method = document.getElementById('inputMethod').value.trim();
+    try { msg.params = JSON.parse(document.getElementById('inputParams').value); } catch(e) { msg.params = {}; }
+  }
+
+  document.getElementById('jsonOutput').textContent = JSON.stringify(msg, null, 2);
+  document.getElementById('validateResult').className = 'validate-result';
+  document.getElementById('validateResult').style.display = 'none';
+}
+
+function validateMessage() {
+  var output = document.getElementById('jsonOutput').textContent;
+  var resultEl = document.getElementById('validateResult');
+  var errors = [];
+
+  // Try parse
+  var msg;
+  try {
+    msg = JSON.parse(output);
+  } catch(e) {
+    resultEl.textContent = 'JSON không hợp lệ: ' + e.message;
+    resultEl.className = 'validate-result show invalid';
+    return;
+  }
+
+  // Check jsonrpc version
+  if (msg.jsonrpc !== "2.0") {
+    errors.push('Thiếu hoặc sai trường "jsonrpc" — phải là "2.0"');
+  }
+
+  // Determine type
+  var hasId = msg.hasOwnProperty('id');
+  var hasMethod = msg.hasOwnProperty('method');
+  var hasResult = msg.hasOwnProperty('result');
+  var hasError = msg.hasOwnProperty('error');
+
+  if (hasMethod && !hasId && !hasResult && !hasError) {
+    // Notification
+    if (errors.length === 0) {
+      resultEl.textContent = 'Hop le! Day la mot Notification JSON-RPC 2.0.';
+      resultEl.className = 'validate-result show valid';
+    }
+  } else if (hasMethod && hasId && !hasResult && !hasError) {
+    // Request
+    if (typeof msg.method !== 'string') errors.push('"method" phai la string');
+    if (errors.length === 0) {
+      resultEl.textContent = 'Hop le! Day la mot Request JSON-RPC 2.0.';
+      resultEl.className = 'validate-result show valid';
+    }
+  } else if (hasId && hasResult && !hasMethod && !hasError) {
+    // Success response
+    if (errors.length === 0) {
+      resultEl.textContent = 'Hop le! Day la mot Success Response JSON-RPC 2.0.';
+      resultEl.className = 'validate-result show valid';
+    }
+  } else if (hasId && hasError && !hasMethod && !hasResult) {
+    // Error response
+    if (typeof msg.error !== 'object' || typeof msg.error.code !== 'number') {
+      errors.push('"error" phai la object chua "code" (number) va "message" (string)');
+    }
+    if (errors.length === 0) {
+      resultEl.textContent = 'Hop le! Day la mot Error Response JSON-RPC 2.0.';
+      resultEl.className = 'validate-result show valid';
+    }
+  } else {
+    errors.push('Ket hop truong khong hop le — khong phai Request, Response, hay Notification.');
+  }
+
+  if (errors.length > 0) {
+    resultEl.innerHTML = 'Loi:<br>' + errors.map(function(e){ return '- ' + e; }).join('<br>');
+    resultEl.className = 'validate-result show invalid';
+  }
+}
+
+// ========== QUIZ ==========
+var quizData = [
+  {
+    q: "Trường nào PHẢI có trong MỌI JSON-RPC 2.0 message?",
+    opts: ["id", "method", 'jsonrpc: "2.0"', "params"],
+    correct: 2,
+    explain: 'Mọi JSON-RPC 2.0 message đều phải có trường "jsonrpc" với giá trị "2.0". Các trường khác phụ thuộc vào loại message.'
+  },
+  {
+    q: "Điều gì phân biệt Request và Notification trong JSON-RPC 2.0?",
+    opts: ["Request có method, Notification không", "Request có id, Notification không có id", "Request có params, Notification không", "Request dùng JSON, Notification dùng text"],
+    correct: 1,
+    explain: "Request có trường id để nhận response. Notification không có id nên không mong đợi response (fire-and-forget)."
+  },
+  {
+    q: "Error code -32601 trong JSON-RPC 2.0 nghĩa là gì?",
+    opts: ["Parse error", "Invalid Request", "Method not found", "Internal error"],
+    correct: 2,
+    explain: "Error code -32601 là 'Method not found' — server không tìm thấy method được yêu cầu."
+  },
+  {
+    q: "Khi server trả về error, response chứa trường gì thay vì result?",
+    opts: ["exception", "fault", "error", "status"],
+    correct: 2,
+    explain: 'Error response thay "result" bằng "error" — một object chứa "code" (number) và "message" (string).'
+  },
+  {
+    q: "Batch request trong JSON-RPC 2.0 là gì?",
+    opts: ["Gửi cùng một request nhiều lần", "Gửi nhiều request trong một JSON array", "Gửi request với nhiều params", "Gửi request đến nhiều server"],
+    correct: 1,
+    explain: "Batch request cho phép gửi nhiều JSON-RPC request cùng lúc trong một JSON array, giúp giảm round-trip."
+  }
+];
+
+function renderQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" style="margin:20px 0;">';
+    html += '<p style="font-weight:700;margin-bottom:12px;">Câu ' + (i+1) + ': ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].opts.length; j++) {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">';
+      html += String.fromCharCode(65+j) + '. ' + quizData[i].opts[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="feedback-'+i+'"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var userAnswers = {};
+function selectAnswer(q, a) {
+  userAnswers[q] = a;
+  var opts = document.querySelectorAll('[data-q="'+q+'"]');
+  opts.forEach(function(el) { el.classList.remove('correct','wrong'); });
+}
+
+function submitQuiz() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('feedback-'+i);
+    var opts = document.querySelectorAll('[data-q="'+i+'"]');
+    opts.forEach(function(el) {
+      el.classList.remove('correct','wrong');
+      var a = parseInt(el.getAttribute('data-a'));
+      if (a === quizData[i].correct) el.classList.add('correct');
+      else if (userAnswers[i] === a) el.classList.add('wrong');
+    });
+
+    if (userAnswers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chinh xac! ' + quizData[i].explain;
+    } else if (userAnswers[i] !== undefined) {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. ' + quizData[i].explain;
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Ban chua chon cau tra loi. ' + quizData[i].explain;
+    }
+  }
+
+  var scoreBox = document.getElementById('scoreBox');
+  scoreBox.style.display = 'block';
+  scoreBox.textContent = 'Ket qua: ' + score + '/' + quizData.length + ' cau dung';
+  document.getElementById('submitQuiz').disabled = true;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

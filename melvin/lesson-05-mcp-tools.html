@@ -1,0 +1,649 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 05: MCP Tools - Mo rong kha nang cho Claude</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 05: MCP Tools — Mở rộng khả năng cho Claude</h1>
+<p class="subtitle">Tools là primitive phổ biến nhất — cho phép Claude thực hiện hành động</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ==================== LÝ THUYẾT ==================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Tools là gì?</h2>
+<p><span class="highlight">Tools</span> là primitive được điều khiển bởi model (<strong>model-controlled</strong>). Điều này có nghĩa là <strong>Claude tự quyết định</strong> khi nào gọi tool — không phải ứng dụng của bạn, cũng không phải người dùng.</p>
+
+<div class="card card-blue">
+<p><strong>Đặc điểm chính của Tools:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li>Được điều khiển bởi <strong>Claude (AI model)</strong></li>
+<li>Claude tự động quyết định khi nào cần gọi tool dựa trên ngữ cảnh</li>
+<li>Là primitive <strong>phổ biến nhất</strong> trong MCP</li>
+<li>Cho phép Claude thực hiện hành động: đọc file, gọi API, tính toán, chỉnh sửa dữ liệu...</li>
+</ul>
+</div>
+
+<div class="analogy">
+Hãy tưởng tượng Claude là một quản lý dự án. Tools chính là các "công cụ" trên bàn làm việc — bút, giấy, máy tính. Claude tự biết khi nào cần dùng công cụ nào để hoàn thành công việc.
+</div>
+
+<h2>2. Định nghĩa Tool với Python SDK</h2>
+<p>Python MCP SDK sử dụng <span class="highlight">decorator</span> và <span class="highlight">type hints</span> để định nghĩa tools — không cần viết JSON schema thủ công.</p>
+
+<pre><code>from mcp.server.fastmcp import FastMCP
+from pydantic import Field
+
+mcp = FastMCP("DocumentMCP")
+
+docs = {
+    "deposition.md": "This deposition covers the testimony of Angela Smith, P.E.",
+    "report.pdf": "The report details the state of a 20m condenser tower.",
+    "financials.docx": "These financials outline the project's budget and expenditures.",
+}
+
+@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document and return it as a string.",
+)
+def read_document(
+    doc_id: str = Field(description="Id of the document to read"),
+):
+    """Đọc nội dung tài liệu theo ID."""
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]
+
+@mcp.tool(
+    name="edit_document",
+    description="Edit a document by replacing a string in the document.",
+)
+def edit_document(
+    doc_id: str = Field(description="Id of the document to edit"),
+    old_str: str = Field(description="The text to replace"),
+    new_str: str = Field(description="The new text to insert"),
+):
+    """Chỉnh sửa tài liệu bằng cách thay thế text."""
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    docs[doc_id] = docs[doc_id].replace(old_str, new_str)</code></pre>
+
+<div class="card card-green">
+<p><strong>Cách SDK hoạt động:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li><code>@mcp.tool()</code> decorator đăng ký function tự động</li>
+<li><code>name</code> — tên tool (hiển thị cho Claude)</li>
+<li><code>description</code> — mô tả tool (giúp Claude hiểu chức năng)</li>
+<li><code>Field()</code> từ <strong>pydantic</strong> — mô tả từng parameter</li>
+<li>Type hints (<code>str</code>) tự động sinh JSON schema</li>
+</ul>
+</div>
+
+<h2>3. tools/list Request/Response</h2>
+<p>Khi client kết nối đến MCP server, nó gửi request <span class="highlight">tools/list</span> để khám phá tất cả tools có sẵn.</p>
+
+<div class="card card-yellow">
+<p><strong>Request (Client → Server):</strong></p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/list"
+}</code></pre>
+<p style="margin-top:14px;"><strong>Response (Server → Client):</strong></p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "result": {
+    "tools": [
+      {
+        "name": "read_doc_contents",
+        "description": "Read the contents of a document and return it as a string.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "doc_id": {
+              "type": "string",
+              "description": "Id of the document to read"
+            }
+          },
+          "required": ["doc_id"]
+        }
+      },
+      {
+        "name": "edit_document",
+        "description": "Edit a document by replacing a string in the document.",
+        "inputSchema": {
+          "type": "object",
+          "properties": {
+            "doc_id": {"type": "string", "description": "Id of the document to edit"},
+            "old_str": {"type": "string", "description": "The text to replace"},
+            "new_str": {"type": "string", "description": "The new text to insert"}
+          },
+          "required": ["doc_id", "old_str", "new_str"]
+        }
+      }
+    ]
+  }
+}</code></pre>
+</div>
+
+<p>Server trả về danh sách tools với <strong>name</strong>, <strong>description</strong>, và <strong>inputSchema</strong> — tất cả được tự động sinh từ Python code.</p>
+
+<h2>4. tools/call Request/Response</h2>
+<p>Khi Claude quyết định cần dùng tool, client gửi <span class="highlight">tools/call</span> với tên tool và arguments.</p>
+
+<div class="card card-yellow">
+<p><strong>Request (Client → Server):</strong></p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "method": "tools/call",
+  "params": {
+    "name": "read_doc_contents",
+    "arguments": {
+      "doc_id": "report.pdf"
+    }
+  }
+}</code></pre>
+<p style="margin-top:14px;"><strong>Response (Server → Client):</strong></p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "The report details the state of a 20m condenser tower."
+      }
+    ],
+    "isError": false
+  }
+}</code></pre>
+</div>
+
+<h2>5. Error Handling trong Tools</h2>
+<p>Khi tool gặp lỗi, MCP xử lý tự động thông qua <span class="highlight">isError flag</span>.</p>
+
+<div class="card card-red">
+<p><strong>Ví dụ: gọi tool với doc_id không tồn tại</strong></p>
+<pre><code># Python function raise ValueError
+def read_document(doc_id: str):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+<p style="margin-top:14px;"><strong>JSON Response khi có lỗi:</strong></p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Error: Doc with id nonexistent.pdf not found"
+      }
+    ],
+    "isError": true
+  }
+}</code></pre>
+<p>Lưu ý <code>"isError": true</code> — client và Claude biết rằng kết quả là lỗi, không phải dữ liệu hợp lệ.</p>
+</div>
+
+<h2>6. Claude's Tool Use Loop</h2>
+<p>Đây là quy trình <strong>agentic loop</strong> — vòng lặp mà Claude sử dụng tools để hoàn thành task.</p>
+
+<div class="diagram">
+<span class="box">User Query</span> <span class="arrow">→</span>
+<span class="box">Gửi query + tools cho Claude</span> <span class="arrow">→</span>
+<span class="box">Claude phản hồi</span>
+<br><br>
+<span class="arrow">↓</span> Nếu stop_reason = <strong>"tool_use"</strong>
+<br><br>
+<span class="box">Thực thi tool</span> <span class="arrow">→</span>
+<span class="box">Feed result lại cho Claude</span> <span class="arrow">→</span>
+<span class="box">Claude phản hồi tiếp</span>
+<br><br>
+<span class="arrow">↓</span> Lặp lại cho đến khi stop_reason = <strong>"end_turn"</strong>
+<br><br>
+<span class="box" style="border-color:#4ec9b0;">Trả về kết quả cuối cùng cho User</span>
+</div>
+
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>Gửi query + tools</strong> — Ứng dụng gửi câu hỏi của user kèm danh sách tools cho Claude.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>Claude quyết định</strong> — Nếu cần tool, stop_reason sẽ là <code>"tool_use"</code>. Nếu không, trả về text trực tiếp.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div><strong>Thực thi tool</strong> — Client gọi <code>tools/call</code> trên MCP server với arguments mà Claude cung cấp.</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div><strong>Feed result back</strong> — Kết quả tool được gửi lại cho Claude trong conversation tiếp theo.</div>
+</div>
+<div class="step">
+<div class="step-num">5</div>
+<div><strong>Lặp lại</strong> — Claude có thể gọi thêm tools hoặc trả về kết quả cuối cùng (<code>stop_reason = "end_turn"</code>).</div>
+</div>
+
+</div>
+
+<!-- ==================== DEMO ==================== -->
+<div id="demo" class="tab-content">
+
+<h2>Tool Definition Builder</h2>
+<p>Xem cách Python function chuyển thành JSON schema, và mô phỏng tools/list, tools/call requests.</p>
+
+<div style="display:flex;gap:20px;flex-wrap:wrap;margin-top:20px;">
+  <div style="flex:1;min-width:300px;">
+    <h3>Python Code (Server-side)</h3>
+    <pre style="height:320px;overflow-y:auto;"><code id="python-code">from mcp.server.fastmcp import FastMCP
+from pydantic import Field
+
+mcp = FastMCP("DocumentMCP")
+
+docs = {
+    "deposition.md": "This deposition covers...",
+    "report.pdf": "The report details...",
+    "financials.docx": "These financials outline...",
+    "plan.md": "The plan outlines...",
+}
+
+@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document.",
+)
+def read_document(
+    doc_id: str = Field(
+        description="Id of the document to read"
+    ),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc not found")
+    return docs[doc_id]
+
+@mcp.tool(
+    name="edit_document",
+    description="Edit a document by replacing text.",
+)
+def edit_document(
+    doc_id: str = Field(
+        description="Id of the document to edit"
+    ),
+    old_str: str = Field(
+        description="The text to replace"
+    ),
+    new_str: str = Field(
+        description="The new text to insert"
+    ),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc not found")
+    docs[doc_id] = docs[doc_id].replace(
+        old_str, new_str
+    )</code></pre>
+  </div>
+  <div style="flex:1;min-width:300px;">
+    <h3>Auto-generated JSON Schema</h3>
+    <pre style="height:320px;overflow-y:auto;"><code id="json-schema">{
+  "tools": [
+    {
+      "name": "read_doc_contents",
+      "description": "Read the contents of a document.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "doc_id": {
+            "type": "string",
+            "description": "Id of the document to read"
+          }
+        },
+        "required": ["doc_id"]
+      }
+    },
+    {
+      "name": "edit_document",
+      "description": "Edit a document by replacing text.",
+      "inputSchema": {
+        "type": "object",
+        "properties": {
+          "doc_id": {
+            "type": "string",
+            "description": "Id of the document to edit"
+          },
+          "old_str": {
+            "type": "string",
+            "description": "The text to replace"
+          },
+          "new_str": {
+            "type": "string",
+            "description": "The new text to insert"
+          }
+        },
+        "required": [
+          "doc_id", "old_str", "new_str"
+        ]
+      }
+    }
+  ]
+}</code></pre>
+  </div>
+</div>
+
+<div style="margin-top:24px;">
+  <button class="btn" onclick="simulateToolsList()">Gọi tools/list</button>
+  <button class="btn" onclick="simulateToolsCall()" style="margin-left:10px;">Gọi tools/call</button>
+</div>
+
+<div id="rpc-output" style="margin-top:20px;display:none;">
+  <h3 id="rpc-title"></h3>
+  <div style="display:flex;gap:20px;flex-wrap:wrap;">
+    <div style="flex:1;min-width:280px;">
+      <p><strong>Request:</strong></p>
+      <pre><code id="rpc-request"></code></pre>
+    </div>
+    <div style="flex:1;min-width:280px;">
+      <p><strong>Response:</strong></p>
+      <pre><code id="rpc-response"></code></pre>
+    </div>
+  </div>
+</div>
+
+<div style="margin-top:20px;">
+  <label style="color:#9cdcfe;font-weight:600;">Chọn tool để gọi:</label>
+  <select id="tool-select" style="margin-left:10px;padding:8px 12px;background:#2d2d2d;color:#d4d4d4;border:1px solid #3e3e42;border-radius:6px;font-size:14px;">
+    <option value="read_doc_contents">read_doc_contents</option>
+    <option value="edit_document">edit_document</option>
+  </select>
+  <div id="tool-params" style="margin-top:12px;">
+    <label style="color:#9cdcfe;">doc_id: </label>
+    <input id="param-doc-id" type="text" value="report.pdf" style="padding:6px 10px;background:#2d2d2d;color:#d4d4d4;border:1px solid #3e3e42;border-radius:4px;font-size:14px;width:200px;">
+  </div>
+</div>
+
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiểm tra kiến thức — MCP Tools</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu biết của bạn về MCP Tools.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="margin-left:10px;background:#3e3e42;">Làm lại</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- ==================== NAVIGATION ==================== -->
+<div class="nav-bar">
+  <a href="lesson-04-mcp-initialize.html" class="nav-btn">&larr; Bài 04: MCP Initialize</a>
+  <a href="lesson-06-mcp-resources.html" class="nav-btn">Bài 06: MCP Resources &rarr;</a>
+</div>
+</div>
+
+<script>
+// === Tab Switching ===
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// === Demo Functions ===
+function simulateToolsList() {
+  document.getElementById('rpc-output').style.display = 'block';
+  document.getElementById('rpc-title').textContent = 'tools/list — JSON-RPC Exchange';
+  document.getElementById('rpc-request').textContent = JSON.stringify({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "method": "tools/list"
+  }, null, 2);
+  document.getElementById('rpc-response').textContent = JSON.stringify({
+    "jsonrpc": "2.0",
+    "id": 1,
+    "result": {
+      "tools": [
+        {
+          "name": "read_doc_contents",
+          "description": "Read the contents of a document.",
+          "inputSchema": {
+            "type": "object",
+            "properties": { "doc_id": { "type": "string", "description": "Id of the document to read" } },
+            "required": ["doc_id"]
+          }
+        },
+        {
+          "name": "edit_document",
+          "description": "Edit a document by replacing text.",
+          "inputSchema": {
+            "type": "object",
+            "properties": {
+              "doc_id": { "type": "string", "description": "Id of the document to edit" },
+              "old_str": { "type": "string", "description": "The text to replace" },
+              "new_str": { "type": "string", "description": "The new text to insert" }
+            },
+            "required": ["doc_id", "old_str", "new_str"]
+          }
+        }
+      ]
+    }
+  }, null, 2);
+}
+
+function simulateToolsCall() {
+  var toolName = document.getElementById('tool-select').value;
+  var docId = document.getElementById('param-doc-id').value || 'report.pdf';
+  document.getElementById('rpc-output').style.display = 'block';
+  document.getElementById('rpc-title').textContent = 'tools/call — JSON-RPC Exchange';
+
+  var requestObj, responseObj;
+  var fakeDocs = {
+    "deposition.md": "This deposition covers the testimony of Angela Smith, P.E.",
+    "report.pdf": "The report details the state of a 20m condenser tower.",
+    "financials.docx": "These financials outline the project's budget and expenditures.",
+    "plan.md": "The plan outlines the steps for the project's implementation."
+  };
+
+  if (toolName === 'read_doc_contents') {
+    requestObj = {
+      "jsonrpc": "2.0", "id": 2, "method": "tools/call",
+      "params": { "name": "read_doc_contents", "arguments": { "doc_id": docId } }
+    };
+    if (fakeDocs[docId]) {
+      responseObj = {
+        "jsonrpc": "2.0", "id": 2,
+        "result": { "content": [{ "type": "text", "text": fakeDocs[docId] }], "isError": false }
+      };
+    } else {
+      responseObj = {
+        "jsonrpc": "2.0", "id": 2,
+        "result": { "content": [{ "type": "text", "text": "Error: Doc with id " + docId + " not found" }], "isError": true }
+      };
+    }
+  } else {
+    requestObj = {
+      "jsonrpc": "2.0", "id": 3, "method": "tools/call",
+      "params": { "name": "edit_document", "arguments": { "doc_id": docId, "old_str": "report", "new_str": "analysis" } }
+    };
+    if (fakeDocs[docId]) {
+      responseObj = {
+        "jsonrpc": "2.0", "id": 3,
+        "result": { "content": [{ "type": "text", "text": "Document edited successfully" }], "isError": false }
+      };
+    } else {
+      responseObj = {
+        "jsonrpc": "2.0", "id": 3,
+        "result": { "content": [{ "type": "text", "text": "Error: Doc with id " + docId + " not found" }], "isError": true }
+      };
+    }
+  }
+
+  document.getElementById('rpc-request').textContent = JSON.stringify(requestObj, null, 2);
+  document.getElementById('rpc-response').textContent = JSON.stringify(responseObj, null, 2);
+}
+
+// === Quiz System ===
+var quizData = [
+  {
+    q: "Ai quyết định khi nào gọi Tool trong MCP?",
+    options: ["Người dùng (user)", "Claude (model-controlled)", "Ứng dụng (app-controlled)", "MCP Server"],
+    correct: 1
+  },
+  {
+    q: "Decorator nào dùng để định nghĩa tool trong Python MCP SDK?",
+    options: ["@mcp.function()", "@mcp.tool()", "@tool.define()", "@mcp.handler()"],
+    correct: 1
+  },
+  {
+    q: "tools/list trả về gì?",
+    options: ["Kết quả thực thi tool", "Danh sách tools với name, description, inputSchema", "Mã lỗi nếu server không khả dụng", "Nội dung tài liệu"],
+    correct: 1
+  },
+  {
+    q: "Khi nào Claude gọi tool trong agentic loop?",
+    options: ["Khi người dùng yêu cầu trực tiếp", "Khi stop_reason là \"end_turn\"", "Khi stop_reason là \"tool_use\"", "Khi server gửi notification"],
+    correct: 2
+  },
+  {
+    q: "Field() từ thư viện nào dùng để mô tả parameter của tool?",
+    options: ["from typing import Field", "from mcp import Field", "from pydantic import Field", "from dataclasses import Field"],
+    correct: 2
+  }
+];
+
+function buildQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" id="q' + i + '">';
+    html += '<p><strong>Câu ' + (i + 1) + ':</strong> ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].options.length; j++) {
+      html += '<div class="quiz-option" data-q="' + i + '" data-a="' + j + '" onclick="pick(' + i + ',' + j + ')">';
+      html += String.fromCharCode(65 + j) + '. ' + quizData[i].options[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="fb' + i + '"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var answers = {};
+
+function pick(qi, ai) {
+  answers[qi] = ai;
+  var opts = document.querySelectorAll('[data-q="' + qi + '"]');
+  opts.forEach(function(el) { el.style.borderColor = '#3e3e42'; el.style.background = '#2d2d30'; });
+  var selected = document.querySelector('[data-q="' + qi + '"][data-a="' + ai + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('fb' + i);
+    fb.classList.add('show');
+    var opts = document.querySelectorAll('[data-q="' + i + '"]');
+    if (answers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Đáp án đúng: ' + String.fromCharCode(65 + quizData[i].correct) + '. ' + quizData[i].options[quizData[i].correct];
+      if (answers[i] !== undefined) {
+        opts.forEach(function(el) {
+          if (parseInt(el.getAttribute('data-a')) === answers[i]) {
+            el.classList.add('wrong');
+          }
+        });
+      }
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    }
+  }
+  document.getElementById('score-display').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  answers = {};
+  document.getElementById('score-display').textContent = '';
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

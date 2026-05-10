@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 08: Khi nao dung gi - So sanh Tools, Resources, Prompts</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.scenario-card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:24px;margin:18px 0;}
+.scenario-text{font-size:18px;color:#d4d4d4;margin-bottom:20px;line-height:1.6;}
+.choice-btn{padding:14px 24px;border:2px solid #3e3e42;border-radius:8px;cursor:pointer;font-size:15px;transition:all 0.2s;display:inline-block;margin:6px;min-width:140px;text-align:center;font-weight:600;}
+.choice-btn:hover{transform:translateY(-2px);}
+.choice-tool{background:#2d2d30;color:#f44747;border-color:#f44747;}
+.choice-tool:hover{background:#3a1a1a;border-color:#f44747;}
+.choice-resource{background:#2d2d30;color:#4ec9b0;border-color:#4ec9b0;}
+.choice-resource:hover{background:#1a3a2a;border-color:#4ec9b0;}
+.choice-prompt{background:#2d2d30;color:#ffc107;border-color:#ffc107;}
+.choice-prompt:hover{background:#3a3a1a;border-color:#ffc107;}
+.choice-btn.correct-choice{background:#1a3a2a !important;border-color:#4ec9b0 !important;color:#4ec9b0 !important;}
+.choice-btn.wrong-choice{background:#3a1a1a !important;border-color:#f44747 !important;color:#f44747 !important;}
+.progress-bar{background:#2d2d30;border-radius:8px;height:8px;margin:16px 0;overflow:hidden;}
+.progress-fill{height:100%;background:linear-gradient(90deg,#007acc,#4ec9b0);border-radius:8px;transition:width 0.3s;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 08: Khi nào dùng gì? — So sánh Tools, Resources, Prompts</h1>
+<p class="subtitle">Bài học quan trọng — biết chọn đúng primitive cho đúng tình huống</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ==================== LÝ THUYẾT ==================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Tổng quan 3 Primitives</h2>
+<p>Mỗi primitive được điều khiển bởi một phần khác nhau trong ứng dụng của bạn. Hiểu rõ sự khác biệt là chìa khóa để thiết kế MCP server tốt.</p>
+
+<table>
+<tr>
+<th></th>
+<th style="color:#f44747;">Tools</th>
+<th style="color:#4ec9b0;">Resources</th>
+<th style="color:#ffc107;">Prompts</th>
+</tr>
+<tr>
+<td><strong>Ai điều khiển?</strong></td>
+<td style="color:#f44747;">Claude (model)</td>
+<td style="color:#4ec9b0;">App (code)</td>
+<td style="color:#ffc107;">User (người dùng)</td>
+</tr>
+<tr>
+<td><strong>Mục đích</strong></td>
+<td>Thực hiện hành động</td>
+<td>Fetch read-only data</td>
+<td>Pre-defined workflows</td>
+</tr>
+<tr>
+<td><strong>API endpoints</strong></td>
+<td><code>tools/list</code><br><code>tools/call</code></td>
+<td><code>resources/list</code><br><code>resources/read</code></td>
+<td><code>prompts/list</code><br><code>prompts/get</code></td>
+</tr>
+<tr>
+<td><strong>Kiểu trả về</strong></td>
+<td>Action results</td>
+<td>Data (via URI)</td>
+<td>Message list</td>
+</tr>
+<tr>
+<td><strong>Ví dụ thực tế</strong></td>
+<td>Code execution, API calls, gửi email</td>
+<td>Database queries, file content, autocomplete</td>
+<td>Workflow templates, slash commands</td>
+</tr>
+<tr>
+<td><strong>Tương tự HTTP</strong></td>
+<td>POST/PUT/DELETE</td>
+<td>GET</td>
+<td>Bookmark/Shortcut</td>
+</tr>
+</table>
+
+<h2>2. Decision Guide</h2>
+<p>Hỏi mình 3 câu hỏi đơn giản để chọn đúng primitive:</p>
+
+<div class="diagram" style="text-align:left;font-size:14px;line-height:2.4;">
+<div style="margin-bottom:8px;">
+<span style="color:#ffd700;font-weight:700;">Câu hỏi 1:</span> Bạn cần Claude tự động thực hiện hành động (không cần user nhắc)?
+</div>
+<div style="margin-left:20px;margin-bottom:16px;">
+<span class="arrow">→</span> <span class="box" style="border-color:#f44747;color:#f44747;">Dùng TOOLS (model-controlled)</span>
+</div>
+
+<div style="margin-bottom:8px;">
+<span style="color:#ffd700;font-weight:700;">Câu hỏi 2:</span> Bạn cần fetch data vào ứng dụng (cho UI hoặc augment prompt)?
+</div>
+<div style="margin-left:20px;margin-bottom:16px;">
+<span class="arrow">→</span> <span class="box" style="border-color:#4ec9b0;color:#4ec9b0;">Dùng RESOURCES (app-controlled)</span>
+</div>
+
+<div style="margin-bottom:8px;">
+<span style="color:#ffd700;font-weight:700;">Câu hỏi 3:</span> Bạn muốn cung cấp predefined workflows cho user trigger?
+</div>
+<div style="margin-left:20px;">
+<span class="arrow">→</span> <span class="box" style="border-color:#ffc107;color:#ffc107;">Dùng PROMPTS (user-controlled)</span>
+</div>
+</div>
+
+<h2>3. Real-world Examples từ Claude's Interface</h2>
+<p>Nhìn vào giao diện Claude để hiểu rõ hơn cách 3 primitives được sử dụng.</p>
+
+<div class="card card-red">
+<p><strong style="color:#f44747;">Tools trong Claude:</strong></p>
+<p>Khi Claude <strong>tự động</strong> thực thi code, tìm kiếm web, hoặc thực hiện tính toán — đó là Tools. Claude quyết định khi nào cần dùng, không cần bạn yêu cầu.</p>
+<p>Ví dụ: Bạn hỏi "Tính căn bậc hai của 144" → Claude tự quyết định dùng code execution tool.</p>
+</div>
+
+<div class="card card-green">
+<p><strong style="color:#4ec9b0;">Resources trong Claude:</strong></p>
+<p>Tính năng <strong>"Add from Google Drive"</strong> — ứng dụng fetch nội dung file và inject vào conversation. Không phải Claude gọi, mà app quyết định.</p>
+<p>Ví dụ: Bạn chọn file từ Google Drive → App đọc nội dung → Inject vào prompt → Claude có context ngay.</p>
+</div>
+
+<div class="card card-yellow">
+<p><strong style="color:#ffc107;">Prompts trong Claude:</strong></p>
+<p>Các <strong>workflow buttons</strong> bên dưới chat input — predefined, optimized workflows. User click → trigger prompt → Claude thực hiện workflow đã được chuẩn bị.</p>
+<p>Ví dụ: Click "Summarize this document" → Prompt template được gửi cho Claude.</p>
+</div>
+
+<h2>4. Lỗi Thường Gặp</h2>
+
+<div class="card card-red">
+<p><strong>Lỗi phổ biến nhất: Dùng Tools khi Resources phù hợp hơn.</strong></p>
+<p>Nhiều developers định nghĩa tools để đọc data (như <code>read_document</code>), trong khi Resources sẽ hiệu quả hơn cho read-only operations.</p>
+</div>
+
+<p><strong>Tại sao Resources tốt hơn cho read-only data?</strong></p>
+
+<table>
+<tr><th>Tiêu chí</th><th>Dùng Tool</th><th>Dùng Resource</th></tr>
+<tr><td>Số lần gọi API</td><td>2+ lần (Claude hỏi → tool gọi → kết quả)</td><td>1 lần (inject trực tiếp vào prompt)</td></tr>
+<tr><td>Token usage</td><td>Nhiều hơn (cần tool call round-trip)</td><td>Ít hơn (context có sẵn từ đầu)</td></tr>
+<tr><td>Latency</td><td>Chậm hơn</td><td>Nhanh hơn</td></tr>
+<tr><td>Claude's context</td><td>Phải đợi tool result mới có data</td><td>Có data ngay từ prompt đầu tiên</td></tr>
+</table>
+
+<div class="card card-green">
+<p><strong>Nguyên tắc vàng:</strong></p>
+<ul style="margin-left:20px;margin-top:8px;">
+<li>Nếu chỉ <strong>đọc data</strong> → dùng <strong>Resource</strong></li>
+<li>Nếu cần <strong>thực hiện hành động</strong> (ghi, sửa, xóa, gọi API) → dùng <strong>Tool</strong></li>
+<li>Nếu cần <strong>pre-defined workflow</strong> cho user → dùng <strong>Prompt</strong></li>
+</ul>
+</div>
+
+<h2>5. Ba Primitives Hoạt Động Cùng Nhau</h2>
+<p>Trong thực tế, một MCP Server sử dụng <strong>tất cả ba primitives</strong> cùng lúc. Mỗi primitive phục vụ một mục đích khác nhau.</p>
+
+<div class="card card-blue">
+<p><strong>Ví dụ: Document Manager MCP Server</strong></p>
+
+<h3 style="color:#f44747;">Tools (model-controlled)</h3>
+<pre><code>@mcp.tool(name="read_doc_contents", ...)
+def read_document(doc_id: str): ...
+
+@mcp.tool(name="edit_document", ...)
+def edit_document(doc_id: str, old_str: str, new_str: str): ...</code></pre>
+<p>Claude tự quyết định khi nào đọc hoặc sửa document dựa trên user request.</p>
+
+<h3 style="color:#4ec9b0;margin-top:20px;">Resources (app-controlled)</h3>
+<pre><code>@mcp.resource("docs://documents", mime_type="application/json")
+def list_docs() -> list[str]: ...
+
+@mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
+def fetch_doc(doc_id: str) -> str: ...</code></pre>
+<p>App fetch danh sách docs cho autocomplete, hoặc inject nội dung khi user gõ <code>@report.pdf</code>.</p>
+
+<h3 style="color:#ffc107;margin-top:20px;">Prompts (user-controlled)</h3>
+<pre><code>@mcp.prompt(name="format", ...)
+def format_document(doc_id: str) -> list[base.Message]: ...</code></pre>
+<p>User gõ <code>/format plan.md</code> → Prompt được trigger → Claude format document.</p>
+</div>
+
+<div class="diagram">
+<strong>Document Manager — 3 Primitives hoạt động cùng nhau</strong>
+<br><br>
+<span class="box" style="border-color:#f44747;color:#f44747;">read_doc_contents (Tool)</span>
+<span class="box" style="border-color:#f44747;color:#f44747;">edit_document (Tool)</span>
+<br>
+<span class="arrow">↑</span> Claude tự gọi khi cần
+<br><br>
+<span class="box" style="border-color:#4ec9b0;color:#4ec9b0;">docs://documents (Resource)</span>
+<span class="box" style="border-color:#4ec9b0;color:#4ec9b0;">docs://documents/{id} (Resource)</span>
+<br>
+<span class="arrow">↑</span> App fetch khi cần (autocomplete, @mention)
+<br><br>
+<span class="box" style="border-color:#ffc107;color:#ffc107;">/format (Prompt)</span>
+<br>
+<span class="arrow">↑</span> User trigger qua slash command
+</div>
+
+</div>
+
+<!-- ==================== DEMO ==================== -->
+<div id="demo" class="tab-content">
+
+<h2>Interactive Scenario Matcher</h2>
+<p>Bạn sẽ được trình bày 10 tình huống thực tế. Hãy chọn primitive phù hợp nhất (Tool, Resource, hoặc Prompt).</p>
+
+<div id="scenario-area">
+  <div class="progress-bar">
+    <div class="progress-fill" id="progress" style="width:0%"></div>
+  </div>
+  <p style="color:#858585;margin-bottom:12px;" id="progress-text">Câu 0/10</p>
+
+  <div class="scenario-card" id="scenario-card">
+    <p class="scenario-text" id="scenario-text"></p>
+    <div style="text-align:center;">
+      <span class="choice-btn choice-tool" onclick="chooseAnswer('Tool')">Tool</span>
+      <span class="choice-btn choice-resource" onclick="chooseAnswer('Resource')">Resource</span>
+      <span class="choice-btn choice-prompt" onclick="chooseAnswer('Prompt')">Prompt</span>
+    </div>
+    <div id="scenario-feedback" style="margin-top:16px;display:none;" class="card card-green"></div>
+  </div>
+
+  <div id="final-score" style="display:none;" class="card card-green">
+    <h2 style="border:none;margin:0;padding:0;">Kết quả</h2>
+    <p id="final-score-text" class="score-box" style="font-size:24px;margin:12px 0;"></p>
+    <p id="final-message"></p>
+    <button class="btn" onclick="resetScenario()">Làm lại</button>
+  </div>
+</div>
+
+</div>
+
+<!-- ==================== QUIZ ==================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiểm tra kiến thức — Khi nào dùng gì?</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra khả năng chọn đúng primitive.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="margin-left:10px;background:#3e3e42;">Làm lại</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- ==================== NAVIGATION ==================== -->
+<div class="nav-bar">
+  <a href="lesson-07-mcp-prompts.html" class="nav-btn">&larr; Bài 07: MCP Prompts</a>
+  <a href="lesson-09-mcp-json-messages.html" class="nav-btn">Bài 09: MCP JSON Messages &rarr;</a>
+</div>
+</div>
+
+<script>
+// === Tab Switching ===
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// === Scenario Demo ===
+var scenarios = [
+  { text: "Tìm file trong Google Drive", answer: "Resource", explanation: "Chỉ cần fetch danh sách files — read-only data, app-controlled." },
+  { text: "Gửi email", answer: "Tool", explanation: "Thực hiện hành động (gửi email) — Claude quyết định khi nào gửi." },
+  { text: "Tự động format code khi user nhấn button", answer: "Prompt", explanation: "User trigger qua button — predefined workflow, user-controlled." },
+  { text: "Đọc nội dung database", answer: "Resource", explanation: "Chỉ đọc data — inject trực tiếp vào prompt, không cần tool call." },
+  { text: "Tạo PR trên GitHub", answer: "Tool", explanation: "Thực hiện hành động (tạo PR) — Claude tự quyết định khi nào tạo." },
+  { text: "Template \"tóm tắt meeting\" cho user", answer: "Prompt", explanation: "Pre-defined workflow template — user trigger khi cần tóm tắt." },
+  { text: "Lấy danh sách calendar events", answer: "Resource", explanation: "Fetch read-only data — app fetch và inject vào prompt." },
+  { text: "Xóa file", answer: "Tool", explanation: "Thực hiện hành động (xóa) — Claude quyết định khi nào xóa." },
+  { text: "Template \"review code\" cho user", answer: "Prompt", explanation: "Pre-defined workflow — user trigger qua button hoặc slash command." },
+  { text: "Tìm kiếm user trong database", answer: "Resource", explanation: "Read-only query — app fetch kết quả và hiển thị cho user." }
+];
+
+var currentScenario = 0;
+var scenarioScore = 0;
+var scenarioAnswered = false;
+
+function showScenario() {
+  if (currentScenario >= scenarios.length) {
+    document.getElementById('scenario-card').style.display = 'none';
+    document.getElementById('final-score').style.display = 'block';
+    document.getElementById('final-score-text').textContent = scenarioScore + '/' + scenarios.length;
+    var pct = scenarioScore / scenarios.length;
+    if (pct >= 0.8) {
+      document.getElementById('final-message').textContent = 'Xuất sắc! Bạn đã nắm vững cách chọn primitive.';
+    } else if (pct >= 0.6) {
+      document.getElementById('final-message').textContent = 'Khá tốt! Hãy xem lại lý thuyết để cải thiện.';
+    } else {
+      document.getElementById('final-message').textContent = 'Cần ôn lại! Hãy đọc kỹ phần Decision Guide ở tab Lý thuyết.';
+    }
+    return;
+  }
+
+  scenarioAnswered = false;
+  document.getElementById('scenario-text').textContent = 'Tình huống: "' + scenarios[currentScenario].text + '"';
+  document.getElementById('progress').style.width = (currentScenario / scenarios.length * 100) + '%';
+  document.getElementById('progress-text').textContent = 'Câu ' + (currentScenario + 1) + '/' + scenarios.length;
+  document.getElementById('scenario-feedback').style.display = 'none';
+
+  var btns = document.querySelectorAll('.choice-btn');
+  btns.forEach(function(btn) {
+    btn.classList.remove('correct-choice', 'wrong-choice');
+    btn.style.pointerEvents = 'auto';
+    btn.style.opacity = '1';
+  });
+}
+
+function chooseAnswer(choice) {
+  if (scenarioAnswered) return;
+  scenarioAnswered = true;
+
+  var correct = scenarios[currentScenario].answer;
+  var isCorrect = choice === correct;
+  if (isCorrect) scenarioScore++;
+
+  var btns = document.querySelectorAll('.choice-btn');
+  btns.forEach(function(btn) {
+    var btnText = btn.textContent.trim();
+    if (btnText === correct) {
+      btn.classList.add('correct-choice');
+    } else if (btnText === choice && !isCorrect) {
+      btn.classList.add('wrong-choice');
+    }
+    if (btnText !== choice && btnText !== correct) {
+      btn.style.opacity = '0.4';
+    }
+    btn.style.pointerEvents = 'none';
+  });
+
+  var fb = document.getElementById('scenario-feedback');
+  fb.style.display = 'block';
+  if (isCorrect) {
+    fb.className = 'card card-green';
+    fb.innerHTML = '<p style="color:#4ec9b0;font-weight:700;">Chính xác! ' + scenarios[currentScenario].explanation + '</p>';
+  } else {
+    fb.className = 'card card-red';
+    fb.innerHTML = '<p style="color:#f44747;font-weight:700;">Sai! Đáp án đúng là <strong>' + correct + '</strong>.</p><p>' + scenarios[currentScenario].explanation + '</p>';
+  }
+
+  setTimeout(function() {
+    currentScenario++;
+    showScenario();
+  }, 2500);
+}
+
+function resetScenario() {
+  currentScenario = 0;
+  scenarioScore = 0;
+  document.getElementById('scenario-card').style.display = 'block';
+  document.getElementById('final-score').style.display = 'none';
+  showScenario();
+}
+
+// Init scenario
+showScenario();
+
+// === Quiz System ===
+var quizData = [
+  {
+    q: "Khi cần Claude thực hiện hành động (gọi API, sửa data), dùng primitive nào?",
+    options: ["Resource", "Tool", "Prompt", "Không cần primitive"],
+    correct: 1
+  },
+  {
+    q: "Khi cần fetch read-only data vào app cho UI hoặc augment prompt?",
+    options: ["Tool", "Prompt", "Resource", "Tất cả đều được"],
+    correct: 2
+  },
+  {
+    q: "Khi cần pre-defined user workflow (như slash command)?",
+    options: ["Tool", "Resource", "Prompt", "Resource hoặc Tool"],
+    correct: 2
+  },
+  {
+    q: "Tại sao không nên dùng Tool cho read-only data?",
+    options: ["Tool không thể đọc data", "Tool chạy chậm hơn Resource", "Resource inject trực tiếp vào prompt, không cần round-trip, hiệu quả hơn", "Tool tốn nhiều tiền hơn"],
+    correct: 2
+  },
+  {
+    q: "Một MCP Server có thể có cả 3 primitives (Tools, Resources, Prompts) không?",
+    options: ["Không, chỉ được chọn 1", "Không, chỉ được tối đa 2", "Có, thường dùng cả ba trong thực tế", "Chỉ khi server rất lớn"],
+    correct: 2
+  }
+];
+
+function buildQuiz() {
+  var container = document.getElementById('quiz-container');
+  var html = '';
+  for (var i = 0; i < quizData.length; i++) {
+    html += '<div class="card" id="q' + i + '">';
+    html += '<p><strong>Câu ' + (i + 1) + ':</strong> ' + quizData[i].q + '</p>';
+    for (var j = 0; j < quizData[i].options.length; j++) {
+      html += '<div class="quiz-option" data-q="' + i + '" data-a="' + j + '" onclick="pick(' + i + ',' + j + ')">';
+      html += String.fromCharCode(65 + j) + '. ' + quizData[i].options[j];
+      html += '</div>';
+    }
+    html += '<div class="feedback" id="fb' + i + '"></div>';
+    html += '</div>';
+  }
+  container.innerHTML = html;
+}
+
+var answers = {};
+
+function pick(qi, ai) {
+  answers[qi] = ai;
+  var opts = document.querySelectorAll('[data-q="' + qi + '"]');
+  opts.forEach(function(el) { el.style.borderColor = '#3e3e42'; el.style.background = '#2d2d30'; });
+  var selected = document.querySelector('[data-q="' + qi + '"][data-a="' + ai + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  var score = 0;
+  for (var i = 0; i < quizData.length; i++) {
+    var fb = document.getElementById('fb' + i);
+    fb.classList.add('show');
+    var opts = document.querySelectorAll('[data-q="' + i + '"]');
+    if (answers[i] === quizData[i].correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Đáp án đúng: ' + String.fromCharCode(65 + quizData[i].correct) + '. ' + quizData[i].options[quizData[i].correct];
+      if (answers[i] !== undefined) {
+        opts.forEach(function(el) {
+          if (parseInt(el.getAttribute('data-a')) === answers[i]) {
+            el.classList.add('wrong');
+          }
+        });
+      }
+      opts.forEach(function(el) {
+        if (parseInt(el.getAttribute('data-a')) === quizData[i].correct) {
+          el.classList.add('correct');
+        }
+      });
+    }
+  }
+  document.getElementById('score-display').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  answers = {};
+  document.getElementById('score-display').textContent = '';
+  buildQuiz();
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

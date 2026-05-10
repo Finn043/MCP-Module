@@ -1,0 +1,515 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 19: So sánh Transport & Xử lý Lỗi</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.wizard-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:8px;padding:14px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.wizard-option:hover{border-color:#007acc;background:#2a3a4a;}
+.wizard-option.selected{border-color:#4ec9b0;background:#1a3a2a;}
+.error-card{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:14px;margin:10px 0;cursor:pointer;transition:all 0.2s;}
+.error-card:hover{border-color:#f44747;}
+.error-card .error-detail{display:none;margin-top:10px;}
+.error-card.open .error-detail{display:block;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>⚖️ Bài 19: So sánh Transport & Xử lý Lỗi</h1>
+<p class="subtitle">Chọn đúng transport cho đúng tình huống và handle errors đúng cách</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- THEORY TAB -->
+<div id="tab-theory" class="tab-content active">
+
+<h2>1. So sánh Transport</h2>
+<p>MCP hỗ trợ nhiều transport methods. Mỗi cái có trade-offs riêng:</p>
+
+<table>
+<tr>
+<th>Feature</th>
+<th>stdio</th>
+<th>StreamableHTTP (stateful)</th>
+<th>StreamableHTTP (stateless)</th>
+</tr>
+<tr>
+<td>Remote access</td>
+<td style="color:#f44747;">❌ Same machine only</td>
+<td style="color:#4ec9b0;">✅ Remote</td>
+<td style="color:#4ec9b0;">✅ Remote</td>
+</tr>
+<tr>
+<td>Bidirectional</td>
+<td style="color:#4ec9b0;">✅ Perfect</td>
+<td style="color:#4ec9b0;">✅ Via SSE</td>
+<td style="color:#f44747;">❌ No</td>
+</tr>
+<tr>
+<td>Sampling</td>
+<td style="color:#4ec9b0;">✅</td>
+<td style="color:#4ec9b0;">✅</td>
+<td style="color:#f44747;">❌</td>
+</tr>
+<tr>
+<td>Progress/Logging</td>
+<td style="color:#4ec9b0;">✅</td>
+<td style="color:#4ec9b0;">✅</td>
+<td style="color:#f44747;">❌</td>
+</tr>
+<tr>
+<td>Horizontal scaling</td>
+<td style="color:#f44747;">❌ Single process</td>
+<td style="color:#ffc107;">⚠️ Sticky sessions</td>
+<td style="color:#4ec9b0;">✅ Load balancer OK</td>
+</tr>
+<tr>
+<td>Setup complexity</td>
+<td style="color:#4ec9b0;">Low</td>
+<td style="color:#ffc107;">Medium</td>
+<td style="color:#ffc107;">Medium</td>
+</tr>
+<tr>
+<td>Use case</td>
+<td>Dev/Testing</td>
+<td>Production single server</td>
+<td>Production at scale</td>
+</tr>
+</table>
+
+<h2>2. Khi nào dùng Transport nào?</h2>
+<p>Decision flowchart để chọn transport phù hợp:</p>
+
+<div class="diagram">
+<strong style="color:#ffd700;">Cần kết nối từ máy khác?</strong><br>
+<span class="arrow">↓ Không →</span> <span class="box">stdio (Dev/Testing)</span><br>
+<span class="arrow">↓ Có →</span> <strong style="color:#ffd700;">Cần horizontal scaling?</strong><br>
+<span class="arrow">↓ Không →</span> <span class="box">StreamableHTTP stateful</span><br>
+<span class="arrow">↓ Có →</span> <strong style="color:#ffd700;">Cần sampling/notifications?</strong><br>
+<span class="arrow">↓ Có →</span> <span class="box" style="border-color:#f44747;">⚠️ Cần sticky sessions</span><br>
+<span class="arrow">↓ Không →</span> <span class="box">StreamableHTTP stateless</span>
+</div>
+
+<h2>3. Error Handling trong MCP</h2>
+<p>MCP sử dụng JSON-RPC 2.0 error codes:</p>
+
+<table>
+<tr><th>Error Code</th><th>Tên</th><th>Ý nghĩa</th></tr>
+<tr><td><code>-32700</code></td><td>Parse error</td><td>JSON không hợp lệ</td></tr>
+<tr><td><code>-32600</code></td><td>Invalid Request</td><td>Request structure sai</td></tr>
+<tr><td><code>-32601</code></td><td>Method not found</td><td>Method không tồn tại</td></tr>
+<tr><td><code>-32602</code></td><td>Invalid params</td><td>Tham số không hợp lệ</td></tr>
+<tr><td><code>-32603</code></td><td>Internal error</td><td>Lỗi nội bộ server</td></tr>
+</table>
+
+<div class="card card-yellow">
+<strong>Tool Execution Errors:</strong> Khi tool gặp lỗi, response có flag <code>isError: true</code>. Khác với JSON-RPC errors, đây là lỗi trong quá trình thực thi tool, không phải lỗi protocol.
+</div>
+
+<p>Ví dụ error response:</p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32601,
+    "message": "Method not found",
+    "data": { "method": "tools/unknown_method" }
+  }
+}</code></pre>
+
+<pre><code>// Tool execution error
+{
+  "jsonrpc": "2.0",
+  "id": 2,
+  "result": {
+    "content": [
+      {"type": "text", "text": "Error: File not found at /path/to/file"}
+    ],
+    "isError": true
+  }
+}</code></pre>
+
+<h2>4. Best Practices</h2>
+
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>Validate at boundaries</strong> — Kiểm tra inputs ngay khi nhận được từ client. Đừng trust data từ bên ngoài.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>Return meaningful errors</strong> — Thay vì generic "Error", cung cấp context: file nào, path nào, expected format gì.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div><strong>Test với production transport</strong> — Behavior khác nhau giữa stdio và HTTP. Luôn test với transport bạn sẽ deploy.</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div><strong>Handle transport errors gracefully</strong> — Connection drops, timeouts, network issues. Client nên có retry logic.</div>
+</div>
+
+<h2>5. Testing Advice</h2>
+
+<div class="card card-red">
+<strong>⚠️ QUAN TRỌNG:</strong> Luôn test với production transport của bạn. Behavior khác nhau đáng kể giữa:
+<ul style="margin:8px 0 0 20px;">
+<li><strong>stdio vs HTTP</strong> — stdio hỗ trợ full bidirectional, HTTP có limitations</li>
+<li><strong>stateful vs stateless</strong> — Notifications, sampling, progress chỉ hoạt động với stateful</li>
+<li><strong>json_response=True</strong> — Streaming disabled, chỉ nhận final result</li>
+</ul>
+<p style="margin-top:10px;">Tool chạy hoàn hảo với stdio nhưng có thể "im lặng" khi deploy với <code>stateless_http=True</code>. Đừng phát hiện vấn đề sau khi deploy!</p>
+</div>
+
+</div>
+
+<!-- DEMO TAB -->
+<div id="tab-demo" class="tab-content">
+
+<h2>Transport Decision Wizard</h2>
+<p>Trả lời các câu hỏi để xác định transport phù hợp nhất cho use case của bạn.</p>
+
+<div id="wizard-questions">
+<div class="wizard-option" onclick="wizardAnswer('remote', false, this)">
+<strong>Câu 1: Client và server chạy trên cùng một máy?</strong><br>
+<span style="color:#858585;">Chọn nếu đang phát triển local hoặc testing</span>
+</div>
+<div class="wizard-option" onclick="wizardAnswer('remote', true, this)">
+<strong>Câu 1: Client và server chạy trên khác máy (remote)?</strong><br>
+<span style="color:#858585;">Chọn nếu cần deploy lên server hoặc cho public access</span>
+</div>
+</div>
+
+<div id="wizard-q2" style="display:none;margin-top:16px;">
+<h3>Câu 2: Bạn có cần horizontal scaling (nhiều server instances)?</h3>
+<div class="wizard-option" onclick="wizardAnswer('scaling', false, this)">
+<strong>Không — Single server đủ dùng</strong>
+</div>
+<div class="wizard-option" onclick="wizardAnswer('scaling', true, this)">
+<strong>Có — Cần load balancer và nhiều instances</strong>
+</div>
+</div>
+
+<div id="wizard-q3" style="display:none;margin-top:16px;">
+<h3>Câu 3: Bạn cần sampling hoặc real-time notifications?</h3>
+<div class="wizard-option" onclick="wizardAnswer('features', true, this)">
+<strong>Có — Cần sampling, progress, logging</strong>
+</div>
+<div class="wizard-option" onclick="wizardAnswer('features', false, this)">
+<strong>Không — Chỉ cần basic tool calls</strong>
+</div>
+</div>
+
+<div id="wizard-result" style="display:none;margin-top:20px;"></div>
+
+<button class="btn" onclick="resetWizard()" style="background:#3e3e42;margin-top:16px;">↺ Bắt đầu lại</button>
+
+<h2 style="margin-top:30px;">Common Error Scenarios</h2>
+<p>Nhấn vào mỗi error scenario để xem JSON-RPC response tương ứng.</p>
+
+<div class="error-card" onclick="toggleError(this)">
+<strong style="color:#f44747;">-32700: Parse Error</strong> — Gửi JSON không hợp lệ
+<div class="error-detail">
+<pre><code>// Request
+{ "jsonrpc": "2.0", "method": "tools/list", INVALID }
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": null,
+  "error": {
+    "code": -32700,
+    "message": "Parse error"
+  }
+}</code></pre>
+</div>
+</div>
+
+<div class="error-card" onclick="toggleError(this)">
+<strong style="color:#f44747;">-32601: Method Not Found</strong> — Gọi method không tồn tại
+<div class="error-detail">
+<pre><code>// Request
+{ "jsonrpc": "2.0", "method": "tools/unknown", "id": 1 }
+
+// Response
+{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "error": {
+    "code": -32601,
+    "message": "Method not found"
+  }
+}</code></pre>
+</div>
+</div>
+
+<div class="error-card" onclick="toggleError(this)">
+<strong style="color:#ffc107;">isError: true</strong> — Tool execution error
+<div class="error-detail">
+<pre><code>// Tool call: convert_video("nonexistent.mp4")
+{
+  "jsonrpc": "2.0",
+  "id": 3,
+  "result": {
+    "content": [
+      {
+        "type": "text",
+        "text": "Error: Input file not found: nonexistent.mp4"
+      }
+    ],
+    "isError": true
+  }
+}</code></pre>
+</div>
+</div>
+
+<div class="error-card" onclick="toggleError(this)">
+<strong style="color:#ffc107;">-32602: Invalid Params</strong> — Tham số sai kiểu
+<div class="error-detail">
+<pre><code>// Request: add("abc", "xyz") thay vì add(1, 3)
+{
+  "jsonrpc": "2.0",
+  "id": 4,
+  "error": {
+    "code": -32602,
+    "message": "Invalid params",
+    "data": {
+      "field": "a",
+      "expected": "integer",
+      "received": "string"
+    }
+  }
+}</code></pre>
+</div>
+</div>
+
+</div>
+
+<!-- QUIZ TAB -->
+<div id="tab-quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức — Transport & Errors</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu bài.</p>
+<div id="quiz-container"></div>
+<div id="quiz-feedback" class="feedback"></div>
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="background:#3e3e42;margin-left:8px;">Làm lại</button>
+<div id="quiz-score" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+<a href="lesson-18-roots.html" class="nav-btn">← Bài 18</a>
+<a href="lesson-20-capstone-project.html" class="nav-btn">Bài 20 →</a>
+</div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Wizard
+let wizardState = {};
+
+function wizardAnswer(key, value, el) {
+  wizardState[key] = value;
+  el.parentElement.querySelectorAll('.wizard-option').forEach(o => o.classList.remove('selected'));
+  el.classList.add('selected');
+
+  if (key === 'remote') {
+    if (!value) {
+      showResult('stdio', 'Development / Local Testing', 'Full bidirectional, simplest setup, perfect for dev.');
+    } else {
+      document.getElementById('wizard-q2').style.display = 'block';
+    }
+  } else if (key === 'scaling') {
+    if (!value) {
+      document.getElementById('wizard-q3').style.display = 'block';
+    } else {
+      document.getElementById('wizard-q3').style.display = 'block';
+    }
+  } else if (key === 'features') {
+    if (wizardState.scaling && !value) {
+      showResult('StreamableHTTP (stateless)', 'Production at Scale', 'stateless_http=True, json_response=True. Load balancer friendly, no sticky sessions needed.');
+    } else if (wizardState.scaling && value) {
+      showResult('StreamableHTTP (stateful) + Sticky Sessions', 'Production at Scale with Full Features', 'stateless_http=False. Requires sticky sessions or single server. Full MCP functionality including sampling and notifications.');
+    } else if (!wizardState.scaling && value) {
+      showResult('StreamableHTTP (stateful)', 'Production Single Server', 'stateless_http=False. Full MCP functionality. Best for single-server production deployments.');
+    } else {
+      showResult('StreamableHTTP (stateless)', 'Simple Remote Server', 'stateless_http=True. Simple HTTP API, no session management overhead.');
+    }
+  }
+}
+
+function showResult(transport, useCase, description) {
+  const result = document.getElementById('wizard-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="card card-green"><h3>✅ Khuyến nghị: ' + transport + '</h3><p style="margin:8px 0 0;"><strong>Use case:</strong> ' + useCase + '</p><p style="margin:4px 0 0;">' + description + '</p></div>';
+}
+
+function resetWizard() {
+  wizardState = {};
+  document.getElementById('wizard-q2').style.display = 'none';
+  document.getElementById('wizard-q3').style.display = 'none';
+  document.getElementById('wizard-result').style.display = 'none';
+  document.querySelectorAll('.wizard-option').forEach(o => o.classList.remove('selected'));
+}
+
+function toggleError(el) {
+  el.classList.toggle('open');
+}
+
+// Quiz
+const quizData = [
+  {
+    q: "Transport nào phù hợp nhất cho development?",
+    opts: ["StreamableHTTP stateful", "stdio", "StreamableHTTP stateless", "WebSocket"],
+    ans: 1
+  },
+  {
+    q: "Khi cần horizontal scaling, dùng config nào?",
+    opts: ["stdio với multiple processes", "StreamableHTTP với stateless_http=True", "StreamableHTTP với stateless_http=False", "Nhiều stdio connections"],
+    ans: 1
+  },
+  {
+    q: "JSON-RPC error code -32601 nghĩa là gì?",
+    opts: ["Parse error", "Invalid params", "Method not found", "Internal error"],
+    ans: 2
+  },
+  {
+    q: "Tool execution error có flag gì?",
+    opts: ["error: true", "isError: true", "failed: true", "status: error"],
+    ans: 1
+  },
+  {
+    q: "Tại sao phải test với production transport?",
+    opts: ["Vì stdio nhanh hơn HTTP", "Behavior khác nhau giữa stdio và HTTP", "HTTP không hỗ trợ JSON-RPC", "stdio không hỗ trợ tools"],
+    ans: 1
+  }
+];
+
+let userAnswers = {};
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizData.forEach((item, qi) => {
+    let html = '<div class="card" style="margin:16px 0;"><h3>Câu ' + (qi + 1) + ': ' + item.q + '</h3>';
+    item.opts.forEach((opt, oi) => {
+      html += '<div class="quiz-option" data-q="' + qi + '" data-o="' + oi + '" onclick="pick(' + qi + ',' + oi + ')">' + opt + '</div>';
+    });
+    html += '</div>';
+    container.innerHTML += html;
+  });
+}
+
+function pick(qi, oi) {
+  userAnswers[qi] = oi;
+  document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="' + qi + '"][data-o="' + oi + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  let score = 0;
+  quizData.forEach((item, qi) => {
+    document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+      el.classList.remove('correct', 'wrong');
+    });
+    if (userAnswers[qi] !== undefined) {
+      if (userAnswers[qi] === item.ans) {
+        score++;
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      } else {
+        document.querySelector('[data-q="' + qi + '"][data-o="' + userAnswers[qi] + '"]').classList.add('wrong');
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      }
+    } else {
+      document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+    }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.classList.add('show');
+  if (score === quizData.length) {
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Tuyệt vời! Bạn đã trả lời đúng tất cả ' + score + '/' + quizData.length + ' câu!';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Bạn được ' + score + '/' + quizData.length + '. Xem lại phần lý thuyết và thử lại!';
+  }
+  document.getElementById('quiz-score').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  userAnswers = {};
+  buildQuiz();
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-score').textContent = '';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

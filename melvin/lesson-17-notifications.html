@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bài 17: Logging & Progress Notifications</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.progress-bar-container{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;height:28px;overflow:hidden;margin:8px 0;}
+.progress-bar-fill{height:100%;background:linear-gradient(90deg,#007acc,#4ec9b0);border-radius:6px;transition:width 0.4s;width:0%;}
+.log-panel{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:12px;min-height:120px;max-height:200px;overflow-y:auto;font-family:'Courier New',monospace;font-size:13px;margin:10px 0;}
+.log-entry{padding:4px 0;border-bottom:1px solid #2a2a2a;}
+.log-info{color:#4fc1ff;}
+.log-progress{color:#4ec9b0;}
+.log-result{color:#ffd700;}
+.toggle-container{display:flex;align-items:center;gap:10px;margin:12px 0;}
+.toggle{width:44px;height:24px;background:#3e3e42;border-radius:12px;position:relative;cursor:pointer;transition:background 0.3s;}
+.toggle.active{background:#f44747;}
+.toggle::after{content:'';position:absolute;top:2px;left:2px;width:20px;height:20px;background:white;border-radius:50%;transition:transform 0.3s;}
+.toggle.active::after{transform:translateX(20px);}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>📊 Bài 17: Logging & Progress Notifications — Cập nhật thời gian thực</h1>
+<p class="subtitle">Cung cấp feedback cho users trong lúc tool chạy — UX essential</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- THEORY TAB -->
+<div id="tab-theory" class="tab-content active">
+
+<h2>1. Tại sao cần Notifications?</h2>
+<p>Khi Claude gọi một tool chạy lâu — như research một topic hay process dữ liệu — users không thấy gì cho đến khi operation hoàn tất. Điều này gây bối rối vì họ không biết tool đang chạy hay đã bị treo.</p>
+
+<p>Logging và progress notifications cung cấp <span class="highlight">real-time feedback</span> cho users thấy chính xác những gì đang diễn ra phía sau. Thay vì đợi mù lòa, users thấy log messages và thanh progress cập nhật liên tục.</p>
+
+<div class="analogy">
+Bạn gọi món ăn tại nhà hàng. Nếu phục vụ bàn mang ra ngay thì ổn. Nhưng nếu món mất 20 phút mà không ai nói gì, bạn sẽ lo lắng. Logging giống như chef thỉnh thoảng báo "đang chuẩn bị nguyên liệu...", "đang nấu...", "sắp xong rồi!". Progress bar giống như màn hình hiển thị "% hoàn thành".
+</div>
+
+<h2>2. Context Object</h2>
+<p>Trong Python MCP SDK, logging và progress notifications hoạt động qua object <code>Context</code> — tự động available trong tool functions. Object này cung cấp các methods:</p>
+
+<table>
+<tr><th>Method</th><th>Mục đích</th></tr>
+<tr><td><code>ctx.info(msg)</code></td><td>Gửi informational log message</td></tr>
+<tr><td><code>ctx.warning(msg)</code></td><td>Gửi warning log message</td></tr>
+<tr><td><code>ctx.debug(msg)</code></td><td>Gửi debug log message</td></tr>
+<tr><td><code>ctx.error(msg)</code></td><td>Gửi error log message</td></tr>
+<tr><td><code>ctx.report_progress(current, total)</code></td><td>Cập nhật progress với current/total values</td></tr>
+</table>
+
+<div class="card card-blue">
+<strong>Import quan trọng:</strong> Context được import từ <code>mcp.server.fastmcp</code> và thêm vào tool function như parameter cuối cùng. SDK tự động inject giá trị.
+</div>
+
+<h2>3. Server-side Implementation</h2>
+<p>Đây là ví dụ thực tế từ file <code>notifications/server.py</code>:</p>
+
+<pre><code># server.py
+from mcp.server.fastmcp import FastMCP, Context
+import asyncio
+
+mcp = FastMCP(name="Demo Server")
+
+@mcp.tool()
+async def add(a: int, b: int, ctx: Context) -> int:
+    await ctx.info("Preparing to add...")
+    await ctx.report_progress(20, 100)
+
+    await asyncio.sleep(2)
+
+    await ctx.info("OK, adding...")
+    await ctx.report_progress(80, 100)
+
+    return a + b
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")</code></pre>
+
+<p>Tool <code>add</code> gửi log messages ở hai điểm: trước khi chuẩn bị và trước khi tính toán. Progress được report ở 20% và 80%. <code>asyncio.sleep(2)</code> simulate thời gian xử lý.</p>
+
+<h2>4. Client-side Implementation</h2>
+<p>Client cần cung cấp <strong>hai callbacks</strong> riêng biệt:</p>
+
+<pre><code># client.py
+from mcp import ClientSession, StdioServerParameters
+from mcp.client.stdio import stdio_client
+from mcp.types import LoggingMessageNotificationParams
+
+server_params = StdioServerParameters(
+    command="uv",
+    args=["run", "server.py"],
+)
+
+async def logging_callback(params: LoggingMessageNotificationParams):
+    print(params.data)
+
+async def print_progress_callback(
+    progress: float, total: float | None, message: str | None
+):
+    if total is not None:
+        percentage = (progress / total) * 100
+        print(f"Progress: {progress}/{total} ({percentage:.1f}%)")
+    else:
+        print(f"Progress: {progress}")
+
+async def run():
+    async with stdio_client(server_params) as (read, write):
+        async with ClientSession(
+            read, write, logging_callback=logging_callback
+        ) as session:
+            await session.initialize()
+
+            await session.call_tool(
+                name="add",
+                arguments={"a": 1, "b": 3},
+                progress_callback=print_progress_callback,
+            )</code></pre>
+
+<div class="card card-green">
+<strong>Hai callbacks khác nhau:</strong>
+<ul style="margin:8px 0 0 20px;">
+<li><code>logging_callback</code> — Pass vào <strong>ClientSession</strong> constructor. Xử lý tất cả log messages.</li>
+<li><code>progress_callback</code> — Pass vào <strong>call_tool()</strong> method. Xử lý progress updates cho từng tool call.</li>
+</ul>
+</div>
+
+<h2>5. Presentation Options</h2>
+<p>Cách hiển thị notifications phụ thuộc vào loại ứng dụng:</p>
+
+<table>
+<tr><th>Loại ứng dụng</th><th>Cách hiển thị</th></tr>
+<tr><td>CLI</td><td>Print messages và progress ra terminal</td></tr>
+<tr><td>Web</td><td>WebSockets, Server-Sent Events, hoặc polling</td></tr>
+<tr><td>Desktop</td><td>Cập nhật progress bars và status displays trong UI</td></tr>
+</table>
+
+<p>Notifications hoàn toàn <span class="highlight">optional</span>. Bạn có thể bỏ qua hoàn toàn, chỉ hiển thị một số loại, hoặc tùy chỉnh cách hiển thị. Chúng là UX enhancements, không phải requirements.</p>
+
+<h2>6. Cảnh báo với stateless_http=True</h2>
+
+<div class="card card-red">
+<strong>⚠️ QUAN TRỌNG:</strong> Với <code>stateless_http=True</code>, các methods <code>ctx.info()</code> và <code>ctx.report_progress()</code> sẽ <strong>silently fail</strong> — client không bao giờ nhận được chúng. Tool vẫn chạy bình thường nhưng users không thấy feedback gì.
+<p style="margin-top:10px;">Điều này xảy ra vì stateless mode loại bỏ server-to-client communication channel. Luôn test với production transport!</p>
+</div>
+
+</div>
+
+<!-- DEMO TAB -->
+<div id="tab-demo" class="tab-content">
+
+<h2>Progress Bar Simulator</h2>
+<p>Xem cách notifications hoạt động trong real-time. Toggle "stateless mode" để thấy sự khác biệt.</p>
+
+<div class="toggle-container">
+<strong>Stateless HTTP Mode:</strong>
+<div id="stateless-toggle" class="toggle" onclick="toggleStateless()"></div>
+<span id="stateless-label" style="color:#4ec9b0;">TẮT (Notifications hoạt động)</span>
+</div>
+
+<div style="display:flex;gap:8px;margin:16px 0;">
+<button class="btn" onclick="runTool()">▶ Chạy tool (add 5 + 3)</button>
+<button class="btn" onclick="resetDemo()" style="background:#3e3e42;">↺ Reset</button>
+</div>
+
+<h3>Progress Bar</h3>
+<div class="progress-bar-container">
+<div id="progress-bar" class="progress-bar-fill"></div>
+</div>
+<p id="progress-text" style="font-size:13px;color:#858585;">0 / 100</p>
+
+<h3>Log Messages</h3>
+<div id="log-panel" class="log-panel">
+<div style="color:#858585;font-style:italic;">Chờ tool chạy...</div>
+</div>
+
+<h3>Result</h3>
+<div id="demo-result" class="card card-green" style="display:none;">
+<strong>Kết quả:</strong> <span id="result-text"></span>
+</div>
+
+</div>
+
+<!-- QUIZ TAB -->
+<div id="tab-quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức — Notifications</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu bài.</p>
+<div id="quiz-container"></div>
+<div id="quiz-feedback" class="feedback"></div>
+<button class="btn" onclick="checkAll()">Kiểm tra đáp án</button>
+<button class="btn" onclick="resetQuiz()" style="background:#3e3e42;margin-left:8px;">Làm lại</button>
+<div id="quiz-score" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+<a href="lesson-16-sampling.html" class="nav-btn">← Bài 16</a>
+<a href="lesson-18-roots.html" class="nav-btn">Bài 18 →</a>
+</div>
+</div>
+
+<script>
+// Tab switching
+function switchTab(name) {
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
+  document.getElementById('tab-' + name).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Demo
+let stateless = false;
+let demoRunning = false;
+
+function toggleStateless() {
+  stateless = !stateless;
+  const toggle = document.getElementById('stateless-toggle');
+  const label = document.getElementById('stateless-label');
+  if (stateless) {
+    toggle.classList.add('active');
+    label.textContent = 'BẬT (Notifications silently fail)';
+    label.style.color = '#f44747';
+  } else {
+    toggle.classList.remove('active');
+    label.textContent = 'TẮT (Notifications hoạt động)';
+    label.style.color = '#4ec9b0';
+  }
+}
+
+function resetDemo() {
+  demoRunning = false;
+  document.getElementById('progress-bar').style.width = '0%';
+  document.getElementById('progress-text').textContent = '0 / 100';
+  document.getElementById('log-panel').innerHTML = '<div style="color:#858585;font-style:italic;">Chờ tool chạy...</div>';
+  document.getElementById('demo-result').style.display = 'none';
+}
+
+function addLog(text, type) {
+  const panel = document.getElementById('log-panel');
+  if (panel.querySelector('div[style*="italic"]')) panel.innerHTML = '';
+  const entry = document.createElement('div');
+  entry.className = 'log-entry log-' + type;
+  entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + text;
+  panel.appendChild(entry);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function setProgress(current, total) {
+  const pct = (current / total) * 100;
+  document.getElementById('progress-bar').style.width = pct + '%';
+  document.getElementById('progress-text').textContent = current + ' / ' + total + ' (' + pct.toFixed(0) + '%)';
+}
+
+async function runTool() {
+  if (demoRunning) return;
+  demoRunning = true;
+  resetDemo();
+
+  if (!stateless) {
+    await new Promise(r => setTimeout(r, 300));
+    addLog('ctx.info("Preparing to add...")', 'info');
+    setProgress(20, 100);
+    await new Promise(r => setTimeout(r, 800));
+    addLog('ctx.report_progress(20, 100)', 'progress');
+    await new Promise(r => setTimeout(r, 1200));
+    addLog('ctx.info("OK, adding...")', 'info');
+    setProgress(80, 100);
+    await new Promise(r => setTimeout(r, 500));
+    addLog('ctx.report_progress(80, 100)', 'progress');
+    await new Promise(r => setTimeout(r, 600));
+  } else {
+    await new Promise(r => setTimeout(r, 3000));
+    addLog('(stateless mode — ctx.info() silently failed)', 'info');
+    addLog('(stateless mode — ctx.report_progress() silently failed)', 'progress');
+  }
+
+  setProgress(100, 100);
+  addLog('Tool hoàn thành — result: 8', 'result');
+  document.getElementById('demo-result').style.display = 'block';
+  document.getElementById('result-text').textContent = 'add(5, 3) = 8';
+  demoRunning = false;
+}
+
+// Quiz
+const quizData = [
+  {
+    q: "ctx.report_progress() nhận tham số gì?",
+    opts: ["chỉ percentage", "current và total", "chỉ current", "message và percentage"],
+    ans: 1
+  },
+  {
+    q: "logging_callback được pass vào đâu?",
+    opts: ["call_tool() method", "ClientSession constructor", "FastMCP constructor", "stdio_client() function"],
+    ans: 1
+  },
+  {
+    q: "progress_callback được pass vào đâu?",
+    opts: ["ClientSession constructor", "FastMCP constructor", "call_tool() method", "server.run() method"],
+    ans: 2
+  },
+  {
+    q: "Callbacks có bắt buộc không?",
+    opts: ["Có, cả hai đều bắt buộc", "Chỉ logging_callback bắt buộc", "Không, hoàn toàn optional", "Chỉ progress_callback bắt buộc"],
+    ans: 2
+  },
+  {
+    q: "Notifications hoạt động với stateless_http=True không?",
+    opts: ["Có, bình thường", "Có nhưng chậm hơn", "Không, silently fail", "Chỉ logging hoạt động"],
+    ans: 2
+  }
+];
+
+let userAnswers = {};
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  container.innerHTML = '';
+  quizData.forEach((item, qi) => {
+    let html = '<div class="card" style="margin:16px 0;"><h3>Câu ' + (qi + 1) + ': ' + item.q + '</h3>';
+    item.opts.forEach((opt, oi) => {
+      html += '<div class="quiz-option" data-q="' + qi + '" data-o="' + oi + '" onclick="pick(' + qi + ',' + oi + ')">' + opt + '</div>';
+    });
+    html += '</div>';
+    container.innerHTML += html;
+  });
+}
+
+function pick(qi, oi) {
+  userAnswers[qi] = oi;
+  document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="' + qi + '"][data-o="' + oi + '"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function checkAll() {
+  let score = 0;
+  quizData.forEach((item, qi) => {
+    document.querySelectorAll('[data-q="' + qi + '"]').forEach(el => {
+      el.classList.remove('correct', 'wrong');
+    });
+    if (userAnswers[qi] !== undefined) {
+      if (userAnswers[qi] === item.ans) {
+        score++;
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      } else {
+        document.querySelector('[data-q="' + qi + '"][data-o="' + userAnswers[qi] + '"]').classList.add('wrong');
+        document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+      }
+    } else {
+      document.querySelector('[data-q="' + qi + '"][data-o="' + item.ans + '"]').classList.add('correct');
+    }
+  });
+  const fb = document.getElementById('quiz-feedback');
+  fb.classList.add('show');
+  if (score === quizData.length) {
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Tuyệt vời! Bạn đã trả lời đúng tất cả ' + score + '/' + quizData.length + ' câu!';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Bạn được ' + score + '/' + quizData.length + '. Xem lại phần lý thuyết và thử lại!';
+  }
+  document.getElementById('quiz-score').textContent = 'Điểm: ' + score + '/' + quizData.length;
+}
+
+function resetQuiz() {
+  userAnswers = {};
+  buildQuiz();
+  document.getElementById('quiz-feedback').className = 'feedback';
+  document.getElementById('quiz-feedback').textContent = '';
+  document.getElementById('quiz-score').textContent = '';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

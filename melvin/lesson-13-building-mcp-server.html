@@ -1,0 +1,782 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 13: Xay dung MCP Server</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.code-section{cursor:pointer;padding:12px;background:#2d2d30;border:1px solid #3e3e42;border-radius:6px;margin:10px 0;transition:all 0.2s;}
+.code-section:hover{border-color:#007acc;}
+.code-section.active{border-color:#4ec9b0;background:#1a2a3a;}
+.code-section h4{color:#9cdcfe;margin-bottom:6px;}
+.code-section .desc{color:#858585;font-size:13px;}
+.rpc-panel{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:16px;margin:14px 0;display:none;}
+.rpc-panel.show{display:block;}
+.rpc-label{color:#ffd700;font-size:12px;font-weight:700;text-transform:uppercase;margin-bottom:8px;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>&#9881; Bai 13: Xay dung MCP Server -- Du an Quan ly Tai lieu</h1>
+<p class="subtitle">Hands-on: xay dung MCP Server hoan chinh voi Tools, Resources, Prompts</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Ly thuyet</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ===================== THEORY TAB ===================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Project Setup -- Cau hinh du an</h2>
+
+<p>Truoc khi bat dau xay dung MCP Server, chung ta can thiet lap du an voi cac dependencies can thiet. Du an nay la mot CLI chat ung dung quan ly tai lieu su dung MCP.</p>
+
+<div class="card card-blue">
+<h3>Dependencies</h3>
+<pre><code># pyproject.toml
+dependencies = [
+    "anthropic>=0.51.0",
+    "mcp[cli]>=1.8.0",
+    "prompt-toolkit>=3.0.51",
+    "python-dotenv>=1.1.0",
+]</code></pre>
+<p><span class="highlight">mcp[cli]>=1.8.0</span> -- MCP Python SDK voi CLI tools (bao gom Inspector). <span class="highlight">anthropic>=0.51.0</span> -- Anthropic Python SDK de goi Claude.</p>
+</div>
+
+<div class="card card-green">
+<h3>Cau truc thu muc du an</h3>
+<pre><code>cli_project/
+├── .env                    # API keys va config
+├── main.py                 # Entry point -- ket noi moi thu
+├── mcp_server.py           # MCP server voi tools, resources, prompts
+├── mcp_client.py           # MCP client -- cau noi den MCP server
+├── pyproject.toml          # Dependencies
+├── core/
+│   ├── __init__.py
+│   ├── claude.py           # Claude API wrapper
+│   ├── chat.py             # Base chat logic voi tool-use loop
+│   ├── cli_chat.py         # CLI-specific chat (resources, prompts, @mentions)
+│   ├── cli.py              # CLI interface (autocomplete, keybindings)
+│   └── tools.py            # Tool discovery va execution manager</code></pre>
+</div>
+
+<div class="analogy">
+Nghep cua MCP Server nhu mot "nha hang" -- ban dinh nghia menu (tools, resources, prompts) va khach hang (MCP Client) co the goi mon qua giao thuc chuan hoa. Khong can biet bep hoat dong nhu the nao, chi can biet cach goi mon.
+</div>
+
+<h2>2. FastMCP Initialization -- Khoi tao Server</h2>
+
+<p><code>FastMCP</code> la lop chinh trong Python MCP SDK. Nó cho phep ban dinh nghia server chi bang decorator va type hints -- khong can viet JSON Schema thu cong.</p>
+
+<pre><code>from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("DocumentMCP", log_level="ERROR")
+
+docs = {
+    "deposition.md": "This deposition covers the testimony of Angela Smith, P.E.",
+    "report.pdf": "The report details the state of a 20m condenser tower.",
+    "financials.docx": "These financials outline the project's budget and expenditures.",
+    "outlook.pdf": "This document presents the projected future performance of the system.",
+    "plan.md": "The plan outlines the steps for the project's implementation.",
+    "spec.txt": "These specifications define the technical requirements for the equipment.",
+}</code></pre>
+
+<div class="card card-yellow">
+<h3>Giai thich</h3>
+<p><span class="highlight">FastMCP("DocumentMCP")</span> -- Khoi tao MCP Server voi ten <code>"DocumentMCP"</code>. Ten nay xuat hien khi client discovery.</p>
+<p><span class="highlight">log_level="ERROR"</span> -- Chi hien thi loi nghiêm trong. Giup terminal sach hon khi development.</p>
+<p><span class="highlight">docs</span> -- Dictionary luu tru tai lieu trong memory. Moi key la ten file, value la noi dung.</p>
+</div>
+
+<h2>3. Dinh nghia Tools -- Model-Controlled Primitives</h2>
+
+<p>Tools la nhung ham ma <span class="highlight">Claude tu quyet dinh khi goi</span>. SDK tu dong chuyen doi Python function thanh JSON Schema cho tool definition.</p>
+
+<h3>Tool 1: read_doc_contents</h3>
+<pre><code>from pydantic import Field
+
+@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document and return it as a string.",
+)
+def read_document(
+    doc_id: str = Field(description="Id of the document to read"),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+
+<h3>Tool 2: edit_document</h3>
+<pre><code>@mcp.tool(
+    name="edit_document",
+    description="Edit a document by replacing a string in the documents content with a new string",
+)
+def edit_document(
+    doc_id: str = Field(description="Id of the document that will be edited"),
+    old_str: str = Field(
+        description="The text to replace. Must match exactly, including whitespace"
+    ),
+    new_str: str = Field(
+        description="The new text to insert in place of the old text"
+    ),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    docs[doc_id] = docs[doc_id].replace(old_str, new_str)</code></pre>
+
+<div class="card card-green">
+<h3>Diem quan trong cua @mcp.tool()</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">name</span> -- Ten tool trong JSON Schema. Claude se thay ten nay khi discovery.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">description</span> -- Mo ta cho Claude hieu khi nao nen dung tool nay.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Field(description=...)</span> -- Mo ta tung tham so. Giup Claude hieu ro cach truyen doi so.</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div><span class="highlight">Type hints</span> -- SDK tu dong tao JSON Schema validation. <code>str</code> thanh <code>{"type": "string"}</code>.</div>
+</div>
+</div>
+
+<h2>4. Dinh nghia Resources -- App-Controlled Primitives</h2>
+
+<p>Resources la du lieu ma <span class="highlight">ung dung cua ban quyet dinh khi fetch</span>. Giong nhu GET endpoint trong HTTP server -- chi doc, khong thay doi du lieu.</p>
+
+<h3>Direct Resource (Static URI)</h3>
+<pre><code>@mcp.resource("docs://documents", mime_type="application/json")
+def list_docs() -> list[str]:
+    return list(docs.keys())</code></pre>
+
+<h3>Templated Resource (Parameterized URI)</h3>
+<pre><code>@mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
+def fetch_doc(doc_id: str) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+
+<div class="card card-blue">
+<h3>So sanh Direct vs Templated Resource</h3>
+<table>
+  <tr><th>Dac diem</th><th>Direct Resource</th><th>Templated Resource</th></tr>
+  <tr><td>URI</td><td><code>docs://documents</code> (co dinh)</td><td><code>docs://documents/{doc_id}</code> (co tham so)</td></tr>
+  <tr><td>MIME Type</td><td><code>application/json</code></td><td><code>text/plain</code></td></tr>
+  <tr><td>Use case</td><td>Danh sach tat ca tai lieu</td><td>Doc noi dung mot tai lieu cu the</td></tr>
+  <tr><td>Kieu tra ve</td><td><code>list[str]</code></td><td><code>str</code></td></tr>
+</table>
+</div>
+
+<div class="card card-yellow">
+<h3>MIME Types -- Kieu du lieu tra ve</h3>
+<table>
+  <tr><th>MIME Type</th><th>Su dung cho</th></tr>
+  <tr><td><code>"application/json"</code></td><td>Du lieu co cau truc (list, dict)</td></tr>
+  <tr><td><code>"text/plain"</code></td><td>Van ban thuong</td></tr>
+  <tr><td><code>"application/pdf"</code></td><td>File nhi phan</td></tr>
+</table>
+<p>SDK tu dong xu ly serialization -- ban chi can <code>return</code> du lieu, SDK lam phan con lai.</p>
+</div>
+
+<h2>5. Dinh nghia Prompts -- User-Controlled Primitives</h2>
+
+<p>Prompts la nhung instruction template <span class="highlight">nguoi dung kich hoat</span>. Tra ve danh sach <code>Message</code> objects de gui truc tiep den Claude.</p>
+
+<pre><code>from mcp.server.fastmcp.prompts import base
+
+@mcp.prompt(
+    name="format",
+    description="Rewrites the contents of the document in Markdown format.",
+)
+def format_document(
+    doc_id: str = Field(description="Id of the document to format"),
+) -> list[base.Message]:
+    prompt = f"""
+    Your goal is to reformat a document to be written with markdown syntax.
+
+    The id of the document you need to reformat is:
+    &lt;document_id&gt;
+    {doc_id}
+    &lt;/document_id&gt;
+
+    Add in headers, bullet points, tables, etc as necessary. Feel free to add
+    in extra text, but don't change the meaning of the report.
+    Use the 'edit_document' tool to edit the document. After the document has
+    been edited, respond with the final version of the doc. Don't explain your changes.
+    """
+    return [base.UserMessage(prompt)]</code></pre>
+
+<div class="card card-green">
+<h3>Diem quan trong cua Prompts</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">Tra ve list[base.Message]</span> -- Phai tra ve danh sach Message objects (UserMessage, AssistantMessage).</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Tham so dong</span> -- <code>doc_id</code> duoc truyen vao luc runtime, cho phep tao prompt dynamic.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Chat trong prompt</span> -- Prompt co the chi dan Claude su dung tools (vi du: <code>edit_document</code>).</div>
+</div>
+</div>
+
+<h2>6. Chay Server -- mcp.run()</h2>
+
+<pre><code>if __name__ == "__main__":
+    mcp.run(transport="stdio")</code></pre>
+
+<div class="card card-blue">
+<h3>transport="stdio" nghia la gi?</h3>
+<p>Server se <span class="highlight">lang nghe tren stdin/stdout</span> -- doc JSON-RPC messages tu standard input va ghi ket qua ra standard output. Day la transport pho bien nhat khi server va client chay cung mot may.</p>
+<p>Day la ly do ban khong the chay <code>python mcp_server.py</code> va tuong tac truc tiep -- server dang cho JSON-RPC messages, khong phai keyboard input.</p>
+</div>
+
+<div class="analogy">
+Nghep cua <code>mcp.run(transport="stdio")</code> nhu bat dau mot cuoc thoai qua walkie-talkie -- server luon trong trang thai "san sang", doi tin hieu tu client va phan hoi. Stdio la kenh giao tiep, giong nhu tan so cua walkie-talkie.
+</div>
+
+<h2>Complete Server Code -- Toan bo mcp_server.py</h2>
+
+<pre><code>from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP("DocumentMCP", log_level="ERROR")
+
+docs = {
+    "deposition.md": "This deposition covers the testimony of Angela Smith, P.E.",
+    "report.pdf": "The report details the state of a 20m condenser tower.",
+    "financials.docx": "These financials outline the project's budget and expenditures.",
+    "outlook.pdf": "This document presents the projected future performance of the system.",
+    "plan.md": "The plan outlines the steps for the project's implementation.",
+    "spec.txt": "These specifications define the technical requirements for the equipment.",
+}
+
+from pydantic import Field
+from mcp.server.fastmcp.prompts import base
+
+
+# --- TOOLS (model-controlled) ---
+
+@mcp.tool(
+    name="read_doc_contents",
+    description="Read the contents of a document and return it as a string.",
+)
+def read_document(
+    doc_id: str = Field(description="Id of the document to read"),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]
+
+
+@mcp.tool(
+    name="edit_document",
+    description="Edit a document by replacing a string in the documents content "
+                "with a new string",
+)
+def edit_document(
+    doc_id: str = Field(description="Id of the document that will be edited"),
+    old_str: str = Field(
+        description="The text to replace. Must match exactly, including whitespace"
+    ),
+    new_str: str = Field(
+        description="The new text to insert in place of the old text"
+    ),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    docs[doc_id] = docs[doc_id].replace(old_str, new_str)
+
+
+# --- RESOURCES (app-controlled) ---
+
+@mcp.resource("docs://documents", mime_type="application/json")
+def list_docs() -> list[str]:
+    return list(docs.keys())
+
+
+@mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
+def fetch_doc(doc_id: str) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]
+
+
+# --- PROMPTS (user-controlled) ---
+
+@mcp.prompt(
+    name="format",
+    description="Rewrites the contents of the document in Markdown format.",
+)
+def format_document(
+    doc_id: str = Field(description="Id of the document to format"),
+) -> list[base.Message]:
+    prompt = f"""
+    Your goal is to reformat a document to be written with markdown syntax.
+
+    The id of the document you need to reformat is:
+    &lt;document_id&gt;
+    {doc_id}
+    &lt;/document_id&gt;
+
+    Add in headers, bullet points, tables, etc as necessary. Feel free to add
+    in extra text, but don't change the meaning of the report.
+    Use the 'edit_document' tool to edit the document. After the document has
+    been edited, respond with the final version of the doc. Don't explain your changes.
+    """
+    return [base.UserMessage(prompt)]
+
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")</code></pre>
+
+<div class="card card-green">
+<h3>Tom tat -- 3 loai primitives trong Server</h3>
+<table>
+  <tr><th>Primitive</th><th>Decorator</th><th>Kiem soat boi</th><th>Tra ve</th></tr>
+  <tr><td><span class="highlight">Tools</span></td><td><code>@mcp.tool()</code></td><td>Claude (model)</td><td>String result</td></tr>
+  <tr><td><span class="highlight">Resources</span></td><td><code>@mcp.resource()</code></td><td>Ung dung (app)</td><td>Data (JSON/text)</td></tr>
+  <tr><td><span class="highlight">Prompts</span></td><td><code>@mcp.prompt()</code></td><td>Nguoi dung (user)</td><td>list[Message]</td></tr>
+</table>
+</div>
+
+</div>
+
+<!-- ===================== DEMO TAB ===================== -->
+<div id="demo" class="tab-content">
+
+<h2>Code Walkthrough -- Tim hieu Server qua tung phan</h2>
+
+<p>Nhan vao tung phan ben duoi de xem code chi tiet va JSON-RPC format tuong ung.</p>
+
+<!-- Section selector buttons -->
+<div style="display:flex;gap:10px;margin:20px 0;flex-wrap:wrap;">
+  <button class="btn" onclick="showDemoSection('tools')" id="btn-tools" style="background:#4ec9b0;color:#1e1e1e;">Tools</button>
+  <button class="btn" onclick="showDemoSection('resources')" id="btn-resources">Resources</button>
+  <button class="btn" onclick="showDemoSection('prompts')" id="btn-prompts">Prompts</button>
+</div>
+
+<!-- TOOLS section -->
+<div id="demo-tools" class="card card-green" style="display:block;">
+<h3>Tools -- Model-Controlled</h3>
+<p>Claude tu quyet dinh khi goi tools. Moi tool la mot Python function voi decorator <code>@mcp.tool()</code>.</p>
+
+<h4 style="color:#4ec9b0;margin-top:16px;">read_doc_contents</h4>
+<pre><code>@mcp.tool(name="read_doc_contents",
+          description="Read the contents of a document and return it as a string.")
+def read_document(doc_id: str = Field(description="Id of the document to read")):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Request (Client gui den Server):</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "read_doc_contents",
+    "arguments": { "doc_id": "report.pdf" }
+  }
+}</code></pre>
+</div>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Response (Server tra ve):</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "result": {
+    "content": [
+      { "type": "text", "text": "The report details the state of a 20m condenser tower." }
+    ]
+  }
+}</code></pre>
+</div>
+
+<h4 style="color:#4ec9b0;margin-top:20px;">edit_document</h4>
+<pre><code>@mcp.tool(name="edit_document",
+          description="Edit a document by replacing a string...")
+def edit_document(
+    doc_id: str = Field(description="Id of the document that will be edited"),
+    old_str: str = Field(description="The text to replace. Must match exactly"),
+    new_str: str = Field(description="The new text to insert"),
+):
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    docs[doc_id] = docs[doc_id].replace(old_str, new_str)</code></pre>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Request:</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "method": "tools/call",
+  "params": {
+    "name": "edit_document",
+    "arguments": {
+      "doc_id": "plan.md",
+      "old_str": "implementation",
+      "new_str": "execution"
+    }
+  }
+}</code></pre>
+</div>
+</div>
+
+<!-- RESOURCES section -->
+<div id="demo-resources" class="card card-blue" style="display:none;">
+<h3>Resources -- App-Controlled</h3>
+<p>Ung dung quyet dinh khi fetch resources. Giong nhu GET endpoint -- chi doc du lieu.</p>
+
+<h4 style="color:#007acc;margin-top:16px;">Direct Resource: docs://documents</h4>
+<pre><code>@mcp.resource("docs://documents", mime_type="application/json")
+def list_docs() -> list[str]:
+    return list(docs.keys())</code></pre>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Request (Read Resource):</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": { "uri": "docs://documents" }
+}</code></pre>
+</div>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Response:</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "result": {
+    "contents": [
+      {
+        "uri": "docs://documents",
+        "mimeType": "application/json",
+        "text": "[\"deposition.md\",\"report.pdf\",\"financials.docx\",\"outlook.pdf\",\"plan.md\",\"spec.txt\"]"
+      }
+    ]
+  }
+}</code></pre>
+</div>
+
+<h4 style="color:#007acc;margin-top:20px;">Templated Resource: docs://documents/{doc_id}</h4>
+<pre><code>@mcp.resource("docs://documents/{doc_id}", mime_type="text/plain")
+def fetch_doc(doc_id: str) -> str:
+    if doc_id not in docs:
+        raise ValueError(f"Doc with id {doc_id} not found")
+    return docs[doc_id]</code></pre>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Request (Templated):</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "method": "resources/read",
+  "params": { "uri": "docs://documents/report.pdf" }
+}</code></pre>
+</div>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Response:</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "result": {
+    "contents": [
+      {
+        "uri": "docs://documents/report.pdf",
+        "mimeType": "text/plain",
+        "text": "The report details the state of a 20m condenser tower."
+      }
+    ]
+  }
+}</code></pre>
+</div>
+</div>
+
+<!-- PROMPTS section -->
+<div id="demo-prompts" class="card card-yellow" style="display:none;">
+<h3>Prompts -- User-Controlled</h3>
+<p>Nguoi dung kich hoat prompts thong qua slash commands (vi du <code>/format plan.md</code>). Tra ve danh sach Message objects.</p>
+
+<h4 style="color:#ffc107;margin-top:16px;">format prompt</h4>
+<pre><code>@mcp.prompt(name="format",
+             description="Rewrites the contents of the document in Markdown format.")
+def format_document(
+    doc_id: str = Field(description="Id of the document to format"),
+) -> list[base.Message]:
+    prompt = f"""
+    Your goal is to reformat a document to be written with markdown syntax.
+
+    The id of the document you need to reformat is:
+    &lt;document_id&gt;
+    {doc_id}
+    &lt;/document_id&gt;
+
+    Add in headers, bullet points, tables, etc as necessary.
+    Use the 'edit_document' tool to edit the document.
+    """
+    return [base.UserMessage(prompt)]</code></pre>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Request (Get Prompt):</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "method": "prompts/get",
+  "params": {
+    "name": "format",
+    "arguments": { "doc_id": "plan.md" }
+  }
+}</code></pre>
+</div>
+
+<div style="background:#1a1a2e;border-radius:6px;padding:14px;margin:12px 0;">
+  <div class="rpc-label">JSON-RPC Response:</div>
+  <pre style="margin:0;border:none;padding:0;background:transparent;"><code>{
+  "jsonrpc": "2.0",
+  "result": {
+    "description": "Rewrites the contents of the document in Markdown format.",
+    "messages": [
+      {
+        "role": "user",
+        "content": {
+          "type": "text",
+          "text": "Your goal is to reformat a document to be written with markdown syntax.\n\nThe id of the document you need to reformat is:\n&lt;document_id&gt;\nplan.md\n&lt;/document_id&gt;\n\n..."
+        }
+      }
+    ]
+  }
+}</code></pre>
+</div>
+</div>
+
+<div class="diagram" style="margin-top:24px;">
+  <div style="margin-bottom:12px;color:#ffd700;font-weight:700;">Server Architecture -- 3 Primitives</div>
+  <div>
+    <span class="box">Client</span>
+    <span class="arrow"> --tools/call--&gt; </span>
+    <span class="box" style="border-color:#4ec9b0;">@mcp.tool()</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">docs dict</span>
+  </div>
+  <div style="margin-top:8px;">
+    <span class="box">Client</span>
+    <span class="arrow"> --resources/read--&gt; </span>
+    <span class="box" style="border-color:#007acc;">@mcp.resource()</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">docs dict</span>
+  </div>
+  <div style="margin-top:8px;">
+    <span class="box">Client</span>
+    <span class="arrow"> --prompts/get--&gt; </span>
+    <span class="box" style="border-color:#ffc107;">@mcp.prompt()</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">list[Message]</span>
+  </div>
+</div>
+
+</div>
+
+<!-- ===================== QUIZ TAB ===================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiem tra kien thuc -- Bai 13</h2>
+<p>Tra loi 5 cau hoi de kiem tra hieu cua ban ve xay dung MCP Server.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkQuiz()" id="check-btn">Kiem tra dap an</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+  <a href="lesson-12-streamable-http-deep-dive.html" class="nav-btn">&larr; Bai 12</a>
+  <a href="lesson-14-mcp-inspector.html" class="nav-btn">Bai 14 &rarr;</a>
+</div>
+
+</div>
+
+<script>
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Demo section switching
+function showDemoSection(section) {
+  ['tools','resources','prompts'].forEach(s => {
+    document.getElementById('demo-' + s).style.display = 'none';
+    document.getElementById('btn-' + s).style.background = '#007acc';
+    document.getElementById('btn-' + s).style.color = 'white';
+  });
+  document.getElementById('demo-' + section).style.display = 'block';
+  document.getElementById('btn-' + section).style.background = section === 'tools' ? '#4ec9b0' : section === 'resources' ? '#007acc' : '#ffc107';
+  document.getElementById('btn-' + section).style.color = section === 'prompts' ? '#1e1e1e' : '#1e1e1e';
+}
+
+// Quiz data
+const quizData = [
+  {
+    q: "FastMCP(\"DocumentMCP\") lam gi?",
+    options: [
+      "Khoi tao MCP Server voi ten cho truoc",
+      "Tao mot MCP Client moi",
+      "Dang ky server voi Anthropic API",
+      "Tao ket noi HTTP den Claude"
+    ],
+    correct: 0
+  },
+  {
+    q: "@mcp.tool() convert Python function thanh gi?",
+    options: [
+      "Mot REST API endpoint",
+      "JSON Schema cho tool definition",
+      "Mot HTML form",
+      "Mot WebSocket handler"
+    ],
+    correct: 1
+  },
+  {
+    q: "Direct resource khac templated resource o dau?",
+    options: [
+      "Direct tra ve file, templated tra ve JSON",
+      "Direct can authentication, templated khong can",
+      "Static URI vs parameterized URI",
+      "Direct chay dong bo, templated chay bat dong bo"
+    ],
+    correct: 2
+  },
+  {
+    q: "Prompt function phai tra ve kieu gi?",
+    options: [
+      "Mot dictionary",
+      "Mot string",
+      "list[Message] objects",
+      "Mot HTTP response"
+    ],
+    correct: 2
+  },
+  {
+    q: "mcp.run(transport=\"stdio\") lam gi?",
+    options: [
+      "Mo mot HTTP server tren port 8080",
+      "Start server listening tren stdin/stdout",
+      "Chay server trong Docker container",
+      "Ket noi den Anthropic API"
+    ],
+    correct: 1
+  }
+];
+
+// Render quiz
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((item, i) => {
+    html += `<div class="card" id="q${i}">
+      <h3 style="color:#4fc1ff;">Cau ${i+1}: ${item.q}</h3>`;
+    item.options.forEach((opt, j) => {
+      html += `<div class="quiz-option" data-q="${i}" data-a="${j}" onclick="selectAnswer(${i},${j})">${opt}</div>`;
+    });
+    html += `<div class="feedback" id="fb${i}"></div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+let answers = {};
+
+function selectAnswer(q, a) {
+  answers[q] = a;
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(el => {
+    el.style.background = '#2d2d30';
+    el.style.borderColor = '#3e3e42';
+  });
+  const selected = document.querySelector(`[data-q="${q}"][data-a="${a}"]`);
+  selected.style.background = '#2a3a4a';
+  selected.style.borderColor = '#007acc';
+}
+
+function checkQuiz() {
+  let score = 0;
+  quizData.forEach((item, i) => {
+    const fb = document.getElementById('fb' + i);
+    const options = document.querySelectorAll(`[data-q="${i}"]`);
+    options.forEach((el, j) => {
+      el.classList.remove('correct','wrong');
+      if (j === item.correct) el.classList.add('correct');
+      else if (answers[i] === j) el.classList.add('wrong');
+    });
+    if (answers[i] === item.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chinh xac!';
+    } else if (answers[i] !== undefined) {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Dap an dung la: ' + item.options[item.correct];
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Ban chua chon dap an. Dap an dung la: ' + item.options[item.correct];
+    }
+  });
+  document.getElementById('score-display').textContent = `Diem: ${score}/${quizData.length}`;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

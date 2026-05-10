@@ -33,7 +33,12 @@
       "Bash(python:*)",
       "Bash(where python:*)",
       "Bash(py:*)",
-      "Bash(sort -t' ' -k1 -n)"
+      "Bash(sort -t' ' -k1 -n)",
+      "Read(//c/Users/admin/AppData/Local/Programs/Python/**)",
+      "Read(//c/Users/admin/AppData/Local/Python/**)",
+      "Bash(uv run:*)",
+      "Bash(grep -v '^$')",
+      "Bash(wc:*)"
     ]
   }
 }

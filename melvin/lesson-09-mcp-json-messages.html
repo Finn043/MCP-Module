@@ -1,0 +1,519 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 09: Cac loai tin nhan MCP</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 09: Các loại tin nhắn MCP — Request, Result, Notification</h1>
+<p class="subtitle">Hiểu bidirectional messaging — nền tảng để chọn đúng transport</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- LÝ THUYẾT -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Tổng quan về JSON Messages trong MCP</h2>
+<p>Mọi giao tiếp trong MCP đều diễn ra thông qua <span class="highlight">JSON messages</span>, tuân theo chuẩn JSON-RPC 2.0. Khi client cần gọi một tool trên server, client gửi một JSON message; server xử lý và phản hồi bằng một JSON message khác.</p>
+
+<div class="card card-blue">
+<h3>Định dạng chung của MCP JSON message</h3>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "id": 1,
+  "method": "tools/call",
+  "params": {
+    "name": "add",
+    "arguments": { "a": 5, "b": 3 }
+  }
+}</code></pre>
+<p>Mỗi message có <code>jsonrpc</code> version, <code>id</code> để tracking, <code>method</code> để xác định hành động, và <code>params</code> chứa dữ liệu.</p>
+</div>
+
+<p>Có <span class="highlight">2 loại chính</span>:</p>
+<div class="card card-green">
+<p><strong>Request-Result</strong> — Có response. Gửi request, chờ result. Ví dụ: CallToolRequest → CallToolResult.</p>
+<p><strong>Notification</strong> — Không có response. One-way message. Gửi xong không mong đợi phản hồi. Ví dụ: Progress Notification.</p>
+</div>
+
+<h2>2. Request-Result Pairs</h2>
+<p>Những message này luôn đi theo cặp. Mỗi request phải có một result tương ứng. Đây là backbone của MCP communication.</p>
+
+<table>
+<tr><th>Request</th><th>Result</th><th>Mục đích</th></tr>
+<tr><td><code>Initialize Request</code></td><td><code>Initialize Result</code></td><td>Khởi tạo kết nối MCP</td></tr>
+<tr><td><code>Call Tool Request</code></td><td><code>Call Tool Result</code></td><td>Thực thi một tool</td></tr>
+<tr><td><code>List Tools Request</code></td><td><code>List Tools Result</code></td><td>Khám phá tools có sẵn</td></tr>
+<tr><td><code>Read Resource Request</code></td><td><code>Read Resource Result</code></td><td>Đọc dữ liệu resource</td></tr>
+<tr><td><code>List Resources Request</code></td><td><code>List Resources Result</code></td><td>Liệt kê resources</td></tr>
+<tr><td><code>List Prompts Request</code></td><td><code>List Prompts Result</code></td><td>Khám phá prompts có sẵn</td></tr>
+<tr><td><code>Get Prompt Request</code></td><td><code>Get Prompt Result</code></td><td>Lấy prompt template</td></tr>
+<tr><td><code>Create Message Request</code></td><td><code>Create Message Result</code></td><td>Sampling — server nhờ client gọi LLM</td></tr>
+<tr><td><code>List Roots Request</code></td><td><code>List Roots Result</code></td><td>Server hỏi client về file access</td></tr>
+</table>
+
+<div class="diagram">
+<span class="box">Client</span> <span class="arrow">── CallToolRequest ──→</span> <span class="box">Server</span><br>
+<span class="box">Client</span> <span class="arrow">←── CallToolResult ──</span> <span class="box">Server</span>
+</div>
+
+<h2>3. Notifications — Tin nhắn một chiều</h2>
+<p>Notifications là messages <span class="highlight">không mong đợi response</span>. Chúng đơn giản chỉ thông báo về một event nào đó đã xảy ra.</p>
+
+<table>
+<tr><th>Notification</th><th>Mục đích</th><th>Ai gửi?</th></tr>
+<tr><td><code>Progress Notification</code></td><td>Cập nhật tiến độ của tác vụ dài</td><td>Server → Client</td></tr>
+<tr><td><code>Logging Message Notification</code></td><td>Gửi log messages (info, warning, error)</td><td>Server → Client</td></tr>
+<tr><td><code>Tool List Changed Notification</code></td><td>Thông báo danh sách tools đã thay đổi</td><td>Server → Client</td></tr>
+<tr><td><code>Resource Updated Notification</code></td><td>Resource đã được cập nhật</td><td>Server → Client</td></tr>
+<tr><td><code>Initialized Notification</code></td><td>Client xác nhận đã khởi tạo xong</td><td>Client → Server</td></tr>
+</table>
+
+<div class="card card-yellow">
+<h3>Đặc điểm của Notification</h3>
+<p>Notification <strong>không có <code>id</code></strong> — vì không cần tracking response. Format đơn giản hơn request:</p>
+<pre><code>{
+  "jsonrpc": "2.0",
+  "method": "notifications/progress",
+  "params": {
+    "progress": 50,
+    "total": 100
+  }
+}</code></pre>
+</div>
+
+<h2>4. MCP là Bidirectional — Cả hai phía đều có thể chủ động</h2>
+<p>Đây là <span class="highlight">insight quan trọng nhất</span> về MCP: <strong>CẢ client VÀ server đều có thể gửi request và notification.</strong></p>
+
+<div class="diagram">
+<strong>Client → Server:</strong><br>
+<span class="box">CallToolRequest</span> <span class="arrow">→</span> <span class="box">Server xử lý</span> <span class="arrow">→</span> <span class="box">CallToolResult</span><br><br>
+<strong>Server → Client:</strong><br>
+<span class="box">CreateMessageRequest</span> <span class="arrow">→</span> <span class="box">Client gọi LLM</span> <span class="arrow">→</span> <span class="box">CreateMessageResult</span>
+</div>
+
+<div class="analogy">
+Hãy tưởng tượng MCP như một cuộc điện thoại — cả hai bên đều có thể nói và nghe. Client không chỉ "hỏi" và server không chỉ "trả lời". Server cũng có thể chủ động yêu cầu client làm việc (như sampling).
+</div>
+
+<p>MCP specification chia messages theo ai gửi:</p>
+<ul style="margin-left:20px;margin-bottom:14px;">
+<li><strong>Client messages</strong> — Requests client gửi đến server (tool calls, list requests) và notifications client gửi</li>
+<li><strong>Server messages</strong> — Requests server gửi đến client (sampling, list roots) và notifications server broadcast</li>
+</ul>
+
+<h2>5. Tại sao hiểu message types quan trọng khi chọn Transport?</h2>
+<p>MCP hỗ trợ nhiều transport methods (stdio, HTTP, ...). Mỗi transport có khả năng khác nhau về việc hỗ trợ bidirectional communication.</p>
+
+<div class="card card-red">
+<h3>Câu hỏi then chốt khi chọn transport</h3>
+<p><strong>Transport này có hỗ trợ bidirectional messaging không?</strong></p>
+<ul style="margin-left:20px;">
+<li><span class="highlight">stdio</span> — Có. Hoàn hảo. Cả hai phía gửi/nhận thoải mái qua stdin/stdout.</li>
+<li><span class="highlight">HTTP</span> — Giới hạn. Client dễ gửi request đến server, nhưng server <strong>khó</strong> initiate request đến client.</li>
+</ul>
+</div>
+
+<p>Khi bạn hiểu rằng MCP cần bidirectional communication, bạn sẽ hiểu tại sao:</p>
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>stdio</strong> hoạt động hoàn hảo — stdin/stdout cho phép cả hai chiều.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>HTTP</strong> cần workaround (SSE) — vì HTTP vốn là request-response, không phải bidirectional.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div>Một số MCP features <strong>bị mất</strong> khi dùng transport không hỗ trợ đầy đủ bidirectional.</div>
+</div>
+
+<div class="card card-green">
+<p><strong>Nối tiếp:</strong> Bài tiếp theo sẽ đi sâu vào stdio transport — transport đơn giản nhất và hỗ trợ bidirectional hoàn hảo.</p>
+</div>
+
+</div>
+
+<!-- DEMO -->
+<div id="demo" class="tab-content">
+
+<h2>🎮 Message Classifier — Phân loại tin nhắn MCP</h2>
+<p>Dưới đây là các JSON messages mẫu. Hãy phân loại mỗi message: <strong>Loại gì?</strong> (Request / Result / Notification), <strong>Ai gửi?</strong> (Client / Server), <strong>Có mong đợi response không?</strong></p>
+
+<div id="msg-display" class="card card-blue">
+<h3 id="msg-title">Message #1</h3>
+<pre id="msg-json" style="font-size:13px;"></pre>
+</div>
+
+<div style="margin:16px 0;">
+<p style="font-weight:600;color:#9cdcfe;margin-bottom:8px;">Loại message này là gì?</p>
+<div class="quiz-option" onclick="classifyType('request')">Request (mong đợi response)</div>
+<div class="quiz-option" onclick="classifyType('result')">Result (phản hồi cho request)</div>
+<div class="quiz-option" onclick="classifyType('notification')">Notification (không mong đợi response)</div>
+<div id="type-feedback" class="feedback"></div>
+</div>
+
+<div style="margin:16px 0;" id="sender-section">
+<p style="font-weight:600;color:#9cdcfe;margin-bottom:8px;">Ai gửi message này?</p>
+<div class="quiz-option" onclick="classifySender('client')">Client</div>
+<div class="quiz-option" onclick="classifySender('server')">Server</div>
+<div id="sender-feedback" class="feedback"></div>
+</div>
+
+<div style="margin:16px 0;" id="response-section">
+<p style="font-weight:600;color:#9cdcfe;margin-bottom:8px;">Message này có mong đợi response không?</p>
+<div class="quiz-option" onclick="classifyResponse('yes')">Có — đợi response</div>
+<div class="quiz-option" onclick="classifyResponse('no')">Không — one-way</div>
+<div id="response-feedback" class="feedback"></div>
+</div>
+
+<div style="text-align:center;margin-top:20px;">
+<button class="btn" id="next-msg-btn" onclick="nextMessage()" style="display:none;">Tin nhắn tiếp theo →</button>
+</div>
+
+<div id="demo-score" class="score-box" style="text-align:center;display:none;"></div>
+
+<div id="demo-complete" class="card card-green" style="display:none;text-align:center;">
+<h3>Hoàn thành!</h3>
+<p>Bạn đã phân loại tất cả messages. Điểm số của bạn:</p>
+<div id="final-score" class="score-box"></div>
+<button class="btn" onclick="resetDemo()" style="margin-top:12px;">Chơi lại</button>
+</div>
+
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức</h2>
+<p>Trả lời 5 câu hỏi để kiểm tra hiểu biết của bạn về MCP message types.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" id="submit-quiz" onclick="submitQuiz()">Nộp bài</button>
+<div id="quiz-result" style="display:none;margin-top:20px;"></div>
+
+<div class="nav-bar">
+<a href="lesson-08-primitive-comparison.html" class="nav-btn">← Bài trước</a>
+<a href="lesson-10-stdio-transport.html" class="nav-btn">Bài tiếp →</a>
+</div>
+</div>
+
+</div>
+
+<script>
+// ===== TAB SWITCHING =====
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== DEMO DATA =====
+const messages = [
+  {
+    title: "Message #1: Khởi tạo kết nối",
+    json: '{\n  "jsonrpc": "2.0",\n  "id": 1,\n  "method": "initialize",\n  "params": {\n    "protocolVersion": "2024-11-05",\n    "capabilities": {},\n    "clientInfo": { "name": "my-client" }\n  }\n}',
+    type: "request", sender: "client", expectsResponse: "yes"
+  },
+  {
+    title: "Message #2: Phản hồi khởi tạo",
+    json: '{\n  "jsonrpc": "2.0",\n  "id": 1,\n  "result": {\n    "protocolVersion": "2024-11-05",\n    "capabilities": { "tools": {} },\n    "serverInfo": { "name": "my-server" }\n  }\n}',
+    type: "result", sender: "server", expectsResponse: "no"
+  },
+  {
+    title: "Message #3: Xác nhận đã khởi tạo",
+    json: '{\n  "jsonrpc": "2.0",\n  "method": "notifications/initialized"\n}',
+    type: "notification", sender: "client", expectsResponse: "no"
+  },
+  {
+    title: "Message #4: Gọi tool",
+    json: '{\n  "jsonrpc": "2.0",\n  "id": 2,\n  "method": "tools/call",\n  "params": {\n    "name": "add",\n    "arguments": { "a": 5, "b": 3 }\n  }\n}',
+    type: "request", sender: "client", expectsResponse: "yes"
+  },
+  {
+    title: "Message #5: Kết quả tool",
+    json: '{\n  "jsonrpc": "2.0",\n  "id": 2,\n  "result": {\n    "content": [\n      { "type": "text", "text": "8" }\n    ]\n  }\n}',
+    type: "result", sender: "server", expectsResponse: "no"
+  },
+  {
+    title: "Message #6: Tiến độ",
+    json: '{\n  "jsonrpc": "2.0",\n  "method": "notifications/progress",\n  "params": {\n    "progressToken": "tok1",\n    "progress": 50,\n    "total": 100\n  }\n}',
+    type: "notification", sender: "server", expectsResponse: "no"
+  },
+  {
+    title: "Message #7: Server nhờ client gọi LLM (Sampling)",
+    json: '{\n  "jsonrpc": "2.0",\n  "id": 3,\n  "method": "sampling/createMessage",\n  "params": {\n    "messages": [\n      { "role": "user", "content": { "type": "text", "text": "Tóm tắt đoạn văn sau..." } }\n    ],\n    "maxTokens": 1000\n  }\n}',
+    type: "request", sender: "server", expectsResponse: "yes"
+  },
+  {
+    title: "Message #8: Log message",
+    json: '{\n  "jsonrpc": "2.0",\n  "method": "notifications/message",\n  "params": {\n    "level": "info",\n    "data": "Preparing to add numbers..."\n  }\n}',
+    type: "notification", sender: "server", expectsResponse: "no"
+  }
+];
+
+let currentMsg = 0;
+let demoScore = 0;
+let typeAnswered = false, senderAnswered = false, responseAnswered = false;
+
+function loadMessage() {
+  if (currentMsg >= messages.length) {
+    document.getElementById('demo-score').style.display = 'block';
+    document.getElementById('demo-score').textContent = 'Điểm: ' + demoScore + '/' + (messages.length * 3);
+    document.getElementById('demo-complete').style.display = 'block';
+    document.getElementById('final-score').textContent = demoScore + '/' + (messages.length * 3) + ' câu đúng';
+    document.getElementById('msg-display').style.display = 'none';
+    document.getElementById('sender-section').style.display = 'none';
+    document.getElementById('response-section').style.display = 'none';
+    document.getElementById('next-msg-btn').style.display = 'none';
+    return;
+  }
+  const msg = messages[currentMsg];
+  document.getElementById('msg-title').textContent = msg.title;
+  document.getElementById('msg-json').textContent = msg.json;
+  typeAnswered = false; senderAnswered = false; responseAnswered = false;
+  document.getElementById('type-feedback').className = 'feedback';
+  document.getElementById('type-feedback').innerHTML = '';
+  document.getElementById('sender-feedback').className = 'feedback';
+  document.getElementById('sender-feedback').innerHTML = '';
+  document.getElementById('response-feedback').className = 'feedback';
+  document.getElementById('response-feedback').innerHTML = '';
+  const typeOptions = document.querySelectorAll('#demo .quiz-option');
+  typeOptions.forEach(o => { o.className = 'quiz-option'; });
+  document.getElementById('next-msg-btn').style.display = 'none';
+  document.getElementById('msg-display').style.display = 'block';
+  document.getElementById('sender-section').style.display = 'block';
+  document.getElementById('response-section').style.display = 'block';
+}
+
+function classifyType(answer) {
+  if (typeAnswered) return;
+  typeAnswered = true;
+  const correct = messages[currentMsg].type;
+  const options = document.querySelectorAll('#demo > div:nth-child(3) .quiz-option');
+  options.forEach(o => {
+    const text = o.textContent.toLowerCase();
+    if (text.includes(correct)) o.classList.add('correct');
+    else if (text.includes(answer) && answer !== correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('type-feedback');
+  if (answer === correct) {
+    demoScore++;
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Đúng! Đây là ' + correct + '.';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Sai! Đây là ' + correct + '.';
+  }
+  checkAllAnswered();
+}
+
+function classifySender(answer) {
+  if (senderAnswered) return;
+  senderAnswered = true;
+  const correct = messages[currentMsg].sender;
+  const options = document.querySelectorAll('#sender-section .quiz-option');
+  options.forEach(o => {
+    const text = o.textContent.toLowerCase();
+    if (text === correct) o.classList.add('correct');
+    else if (text === answer && answer !== correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('sender-feedback');
+  if (answer === correct) {
+    demoScore++;
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Đúng! Gửi bởi ' + correct + '.';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Sai! Gửi bởi ' + correct + '.';
+  }
+  checkAllAnswered();
+}
+
+function classifyResponse(answer) {
+  if (responseAnswered) return;
+  responseAnswered = true;
+  const correct = messages[currentMsg].expectsResponse;
+  const options = document.querySelectorAll('#response-section .quiz-option');
+  options.forEach(o => {
+    const text = o.textContent.toLowerCase();
+    if ((correct === 'yes' && text.includes('đợi')) || (correct === 'no' && text.includes('one-way'))) o.classList.add('correct');
+    else if (text.includes(answer) && answer !== correct) o.classList.add('wrong');
+  });
+  const fb = document.getElementById('response-feedback');
+  const label = correct === 'yes' ? 'Có mong đợi response' : 'Không mong đợi response (one-way)';
+  if (answer === correct) {
+    demoScore++;
+    fb.className = 'feedback show ok';
+    fb.textContent = 'Đúng! ' + label + '.';
+  } else {
+    fb.className = 'feedback show bad';
+    fb.textContent = 'Sai! ' + label + '.';
+  }
+  checkAllAnswered();
+}
+
+function checkAllAnswered() {
+  if (typeAnswered && senderAnswered && responseAnswered) {
+    document.getElementById('next-msg-btn').style.display = 'inline-block';
+  }
+}
+
+function nextMessage() {
+  currentMsg++;
+  loadMessage();
+}
+
+function resetDemo() {
+  currentMsg = 0;
+  demoScore = 0;
+  document.getElementById('demo-complete').style.display = 'none';
+  document.getElementById('demo-score').style.display = 'none';
+  loadMessage();
+}
+
+loadMessage();
+
+// ===== QUIZ =====
+const quizData = [
+  {
+    q: "Notification có response không?",
+    options: ["Có — mọi message đều có response", "Không — notification là one-way, không mong đợi response", "Tùy thuộc vào loại notification", "Chỉ khi server yêu cầu"],
+    correct: 1
+  },
+  {
+    q: "Cả client và server đều có thể gửi request trong MCP?",
+    options: ["Sai — chỉ client mới gửi request", "Đúng — MCP là bidirectional protocol", "Sai — chỉ server mới gửi request", "Chỉ trong một số trường hợp đặc biệt"],
+    correct: 1
+  },
+  {
+    q: "CallToolRequest là loại message gì?",
+    options: ["Notification — one-way", "Result — phản hồi", "Request — mong đợi response", "Error message"],
+    correct: 2
+  },
+  {
+    q: "Progress Notification ai gửi và cho ai?",
+    options: ["Client gửi cho server", "Server gửi cho client", "Cả hai đều có thể gửi", "Third-party gửi cho client"],
+    correct: 1
+  },
+  {
+    q: "Tại sao cần hiểu message types trước khi học transport?",
+    options: ["Để biết dùng ngôn ngữ lập trình nào", "Vì transport phải hỗ trợ bidirectional messaging", "Để biết cần bao nhiêu bộ nhớ", "Không thực sự cần thiết"],
+    correct: 1
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((q, i) => {
+    html += '<div class="card card-blue" style="margin-bottom:16px;">';
+    html += '<p style="font-weight:600;color:#9cdcfe;margin-bottom:10px;">Câu ' + (i+1) + ': ' + q.q + '</p>';
+    q.options.forEach((opt, j) => {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">' + opt + '</div>';
+    });
+    html += '<div id="fb-'+i+'" class="feedback"></div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+let selectedAnswers = {};
+function selectAnswer(qi, ai) {
+  selectedAnswers[qi] = ai;
+  document.querySelectorAll('[data-q="'+qi+'"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="'+qi+'"][data-a="'+ai+'"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function submitQuiz() {
+  let score = 0;
+  quizData.forEach((q, i) => {
+    const fb = document.getElementById('fb-'+i);
+    const options = document.querySelectorAll('[data-q="'+i+'"]');
+    options.forEach(o => {
+      o.classList.remove('correct','wrong');
+      const a = parseInt(o.getAttribute('data-a'));
+      if (a === q.correct) o.classList.add('correct');
+      if (selectedAnswers[i] !== undefined && selectedAnswers[i] === a && a !== q.correct) o.classList.add('wrong');
+    });
+    if (selectedAnswers[i] === q.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai! Đáp án đúng: ' + q.options[q.correct];
+    }
+  });
+  const result = document.getElementById('quiz-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="score-box">Điểm: ' + score + '/' + quizData.length + '</div>';
+  document.getElementById('submit-quiz').style.display = 'none';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

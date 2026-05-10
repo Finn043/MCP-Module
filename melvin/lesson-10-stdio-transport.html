@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 10: stdio Transport</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 10: stdio Transport — Giao tiếp qua Standard I/O</h1>
+<p class="subtitle">Transport phổ biến nhất cho development — full bidirectional communication</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- LÝ THUYẾT -->
+<div id="theory" class="tab-content active">
+
+<h2>1. stdio Transport hoạt động như thế nào?</h2>
+<p>Trong stdio transport, client <span class="highlight">khởi chạy server như một subprocess</span> và giao tiếp qua standard input/output streams.</p>
+
+<div class="diagram">
+<span class="box" style="border-color:#4ec9b0;">Client</span>
+<span class="arrow">── ghi vào stdin ──→</span>
+<span class="box" style="border-color:#f44747;">Server (subprocess)</span><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span>
+<span class="arrow">←── đọc từ stdout ──</span>
+<span class="box" style="border-color:#f44747;">Server (subprocess)</span>
+</div>
+
+<p>Quá trình hoạt động:</p>
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>Client khởi chạy server</strong> — ví dụ <code>uv run server.py</code> như một subprocess.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>Client ghi JSON messages vào server's stdin</strong> — gửi requests, notifications.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div><strong>Server ghi JSON messages ra stdout</strong> — gửi responses, server-initiated requests.</div>
+</div>
+<div class="step">
+<div class="step-num">4</div>
+<div><strong>Bất kỳ phía nào cũng có thể gửi message bất kỳ lúc nào</strong> — true bidirectional.</div>
+</div>
+
+<div class="card card-green">
+<p>Chỉ hoạt động khi client và server chạy trên <strong>cùng một máy</strong>. Đây là giới hạn duy nhất của stdio.</p>
+</div>
+
+<h2>2. Line-delimited JSON</h2>
+<p>Mỗi message được gửi trên một dòng riêng biệt (newline-delimited). Format phổ biến nhất:</p>
+
+<div class="card card-blue">
+<h3>Format chuẩn</h3>
+<pre><code>Content-Length: 123\r\n
+\r\n
+{"jsonrpc":"2.0","id":1,"method":"initialize","params":{...}}</code></pre>
+<p>Hoặc đơn giản hơn — mỗi line là một JSON object hoàn chỉnh, phân tách bởi newline character.</p>
+</div>
+
+<div class="analogy">
+Hãy tưởng tượng stdin và stdout như hai ống nước nối giữa client và server. Client đổ JSON vào ống stdin, server nhận được. Server đổ JSON vào ống stdout, client nhận được. Hai ống này độc lập — cả hai đều có thể chảy cùng lúc.
+</div>
+
+<h2>3. 3-message Handshake qua stdio</h2>
+<p>Mọi kết nối MCP đều bắt đầu bằng 3-message handshake. Qua stdio, chỉ cần đúng 2 channels:</p>
+
+<div class="diagram">
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">── stdin ──→</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<strong style="color:#9cdcfe;">1. Initialize Request</strong><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">←── stdout ──</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<strong style="color:#9cdcfe;">2. Initialize Result</strong><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">── stdin ──→</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<strong style="color:#9cdcfe;">3. Initialized Notification</strong>
+</div>
+
+<div class="card card-yellow">
+<p>Chỉ sau khi handshake hoàn tất mới có thể gửi các requests khác (tool calls, prompt listings, etc.).</p>
+</div>
+
+<h2>4. Bốn Communication Patterns</h2>
+<p>Với stdio, cả 4 pattern giao tiếp đều hoạt động hoàn hảo:</p>
+
+<table>
+<tr><th>Hướng</th><th>Loại</th><th>Channel</th><th>Ví dụ</th></tr>
+<tr><td>Client → Server</td><td>Request</td><td>Client ghi vào stdin</td><td>CallToolRequest</td></tr>
+<tr><td>Server → Client</td><td>Response</td><td>Server ghi ra stdout</td><td>CallToolResult</td></tr>
+<tr><td>Server → Client</td><td>Request</td><td>Server ghi ra stdout</td><td>CreateMessageRequest (sampling)</td></tr>
+<tr><td>Client → Server</td><td>Response</td><td>Client ghi vào stdin</td><td>CreateMessageResult</td></tr>
+</table>
+
+<div class="card card-green">
+<h3>Bidirectional hoàn hảo!</h3>
+<p>stdio cho phép cả 4 pattern — đây là lý do nó được gọi là "ideal" transport. Không có giới hạn nào về hướng giao tiếp.</p>
+</div>
+
+<h2>5. stderr cho Debug</h2>
+<p>Server có một channel thứ ba: <span class="highlight">stderr</span>. Channel này hoàn toàn riêng biệt và <strong>không ảnh hưởng</strong> đến protocol communication (stdin/stdout).</p>
+
+<div class="card card-blue">
+<h3>Các role của stderr</h3>
+<ul style="margin-left:20px;">
+<li><strong>Debug logs</strong> — Server ghi log/debug info ra stderr</li>
+<li><strong>Error messages</strong> — Thông báo lỗi không liên quan đến MCP protocol</li>
+<li><strong>Diagnostics</strong> — Client có thể đọc stderr riêng để hiển thị debug info</li>
+</ul>
+</div>
+
+<div class="diagram">
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">── stdin ──→</span> <span class="box" style="border-color:#f44747;">Server</span> <span style="color:#4ec9b0;"> (MCP protocol)</span><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">←── stdout ──</span> <span class="box" style="border-color:#f44747;">Server</span> <span style="color:#4ec9b0;"> (MCP protocol)</span><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">←── stderr ──</span> <span class="box" style="border-color:#f44747;">Server</span> <span style="color:#ffd700;"> (debug/logs)</span>
+</div>
+
+<h2>6. stdio là "Ideal" Transport</h2>
+
+<div class="card card-green">
+<h3>Tại sao stdio được recommended cho development?</h3>
+<ul style="margin-left:20px;">
+<li><strong>Full bidirectional</strong> — Cả 4 communication patterns đều hoạt động</li>
+<li><strong>Đơn giản</strong> — Chỉ cần 2 channels (stdin + stdout)</li>
+<li><strong>Không cần network</strong> — Không lo firewall, port, CORS</li>
+<li><strong>Dễ debug</strong> — stderr riêng cho logs</li>
+<li><strong>Khởi tạo đơn giản</strong> — <code>mcp.run(transport="stdio")</code></li>
+</ul>
+</div>
+
+<div class="card card-yellow">
+<h3>Nhưng có giới hạn!</h3>
+<p><strong>Chỉ hoạt động trên cùng máy.</strong> Nếu cần remote server (production deployment), phải dùng transport khác như StreamableHTTP.</p>
+</div>
+
+<pre><code># Server code đơn giản
+from mcp.server.fastmcp import FastMCP
+
+mcp = FastMCP(name="My Server")
+
+@mcp.tool()
+def add(a: int, b: int) -> int:
+    return a + b
+
+if __name__ == "__main__":
+    mcp.run(transport="stdio")</code></pre>
+
+</div>
+
+<!-- DEMO -->
+<div id="demo" class="tab-content">
+
+<h2>🎮 Stdio Pipe Simulator</h2>
+<p>Simulate giao tiếp giữa Client và Server qua stdin/stdout pipes. Nhấn các nút để gửi messages và xem chúng di chuyển qua channels.</p>
+
+<div style="display:flex;gap:16px;margin:20px 0;align-items:stretch;">
+<!-- Client Panel -->
+<div style="flex:1;background:#252526;border:1px solid #4ec9b0;border-radius:10px;padding:16px;">
+<h3 style="color:#4ec9b0;text-align:center;margin-bottom:10px;">Client</h3>
+<div id="client-log" style="background:#1e1e1e;border-radius:6px;padding:10px;min-height:200px;font-family:'Courier New',monospace;font-size:12px;max-height:300px;overflow-y:auto;"></div>
+</div>
+
+<!-- Arrows -->
+<div style="display:flex;flex-direction:column;justify-content:center;align-items:center;gap:20px;min-width:80px;">
+<div id="arrow-stdin" style="font-size:20px;color:#4ec9b0;opacity:0.3;transition:opacity 0.3s;">stdin →</div>
+<div id="arrow-stdout" style="font-size:20px;color:#f44747;opacity:0.3;transition:opacity 0.3s;">← stdout</div>
+</div>
+
+<!-- Server Panel -->
+<div style="flex:1;background:#252526;border:1px solid #f44747;border-radius:10px;padding:16px;">
+<h3 style="color:#f44747;text-align:center;margin-bottom:10px;">Server</h3>
+<div id="server-log" style="background:#1e1e1e;border-radius:6px;padding:10px;min-height:200px;font-family:'Courier New',monospace;font-size:12px;max-height:300px;overflow-y:auto;"></div>
+</div>
+</div>
+
+<!-- stderr Panel -->
+<div style="background:#252526;border:1px solid #ffa500;border-radius:10px;padding:16px;margin:16px 0;">
+<h3 style="color:#ffa500;margin-bottom:8px;">stderr (Debug Logs)</h3>
+<div id="stderr-log" style="background:#1e1e1e;border-radius:6px;padding:10px;font-family:'Courier New',monospace;font-size:12px;color:#ffa500;min-height:60px;max-height:120px;overflow-y:auto;"></div>
+</div>
+
+<!-- Controls -->
+<div style="display:flex;flex-wrap:wrap;gap:10px;margin-top:16px;">
+<button class="btn" onclick="sendInit()">Gửi Initialize Request</button>
+<button class="btn" onclick="serverRespond()" id="btn-respond" style="display:none;">Server phản hồi (Initialize Result)</button>
+<button class="btn" onclick="sendNotif()" id="btn-notif" style="display:none;">Gửi Initialized Notification</button>
+<button class="btn" onclick="callTool()" id="btn-tool" style="display:none;">Gọi Tool (add 5+3)</button>
+<button class="btn" onclick="resetSim()" style="background:#3e3e42;">Reset</button>
+</div>
+
+<div id="sim-status" class="card card-blue" style="margin-top:16px;">
+<p id="status-text">Nhấn "Gửi Initialize Request" để bắt đầu handshake!</p>
+</div>
+
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức</h2>
+<p>Trả lời 5 câu hỏi về stdio transport.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" id="submit-quiz" onclick="submitQuiz()">Nộp bài</button>
+<div id="quiz-result" style="display:none;margin-top:20px;"></div>
+
+<div class="nav-bar">
+<a href="lesson-09-mcp-json-messages.html" class="nav-btn">← Bài trước</a>
+<a href="lesson-11-streamable-http-transport.html" class="nav-btn">Bài tiếp →</a>
+</div>
+</div>
+
+</div>
+
+<script>
+// ===== TAB SWITCHING =====
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== DEMO =====
+const clientLog = document.getElementById('client-log');
+const serverLog = document.getElementById('server-log');
+const stderrLog = document.getElementById('stderr-log');
+const statusText = document.getElementById('status-text');
+let step = 0;
+
+function addLog(panel, text, color) {
+  const line = document.createElement('div');
+  line.style.color = color || '#d4d4d4';
+  line.style.marginBottom = '4px';
+  line.textContent = text;
+  panel.appendChild(line);
+  panel.scrollTop = panel.scrollHeight;
+}
+
+function flashArrow(id) {
+  const el = document.getElementById(id);
+  el.style.opacity = '1';
+  setTimeout(() => el.style.opacity = '0.3', 800);
+}
+
+function sendInit() {
+  addLog(clientLog, '→ Gửi qua stdin:', '#4ec9b0');
+  addLog(clientLog, '  {"method":"initialize"}', '#9cdcfe');
+  flashArrow('arrow-stdin');
+  addLog(serverLog, '← Nhận từ stdin:', '#4ec9b0');
+  addLog(serverLog, '  {"method":"initialize"}', '#9cdcfe');
+  addLog(stderrLog, '[DEBUG] Nhận Initialize Request', '#ffa500');
+  document.getElementById('btn-respond').style.display = 'inline-block';
+  statusText.textContent = 'Step 1/3: Client đã gửi Initialize Request. Nhấn "Server phản hồi" để tiếp tục.';
+  step = 1;
+}
+
+function serverRespond() {
+  addLog(serverLog, '→ Ghi ra stdout:', '#f44747');
+  addLog(serverLog, '  {"id":1,"result":{"serverInfo":{}}}', '#9cdcfe');
+  flashArrow('arrow-stdout');
+  addLog(clientLog, '← Nhận từ stdout:', '#f44747');
+  addLog(clientLog, '  {"id":1,"result":{"serverInfo":{}}}', '#9cdcfe');
+  addLog(stderrLog, '[DEBUG] Gửi Initialize Result', '#ffa500');
+  document.getElementById('btn-respond').style.display = 'none';
+  document.getElementById('btn-notif').style.display = 'inline-block';
+  statusText.textContent = 'Step 2/3: Server đã phản hồi. Nhấn "Gửi Initialized Notification" để hoàn tất handshake.';
+  step = 2;
+}
+
+function sendNotif() {
+  addLog(clientLog, '→ Gửi qua stdin:', '#4ec9b0');
+  addLog(clientLog, '  {"method":"notifications/initialized"}', '#9cdcfe');
+  flashArrow('arrow-stdin');
+  addLog(serverLog, '← Nhận từ stdin:', '#4ec9b0');
+  addLog(serverLog, '  {"method":"notifications/initialized"}', '#9cdcfe');
+  addLog(stderrLog, '[DEBUG] Handshake hoàn tất!', '#ffa500');
+  document.getElementById('btn-notif').style.display = 'none';
+  document.getElementById('btn-tool').style.display = 'inline-block';
+  statusText.textContent = 'Step 3/3: Handshake hoàn tất! Bây giờ bạn có thể gọi tool.';
+  step = 3;
+}
+
+function callTool() {
+  addLog(clientLog, '→ Gửi qua stdin:', '#4ec9b0');
+  addLog(clientLog, '  {"method":"tools/call","params":{"name":"add","arguments":{"a":5,"b":3}}}', '#9cdcfe');
+  flashArrow('arrow-stdin');
+  addLog(serverLog, '← Nhận từ stdin: tools/call', '#4ec9b0');
+  addLog(stderrLog, '[DEBUG] Đang thực thi add(5, 3)...', '#ffa500');
+
+  setTimeout(() => {
+    flashArrow('arrow-stdout');
+    addLog(serverLog, '→ Ghi ra stdout:', '#f44747');
+    addLog(serverLog, '  {"id":2,"result":{"content":[{"text":"8"}]}}', '#9cdcfe');
+    addLog(clientLog, '← Nhận từ stdout:', '#f44747');
+    addLog(clientLog, '  Kết quả: 8', '#4ec9b0');
+    addLog(stderrLog, '[DEBUG] Tool add(5,3) = 8 hoàn tất', '#ffa500');
+    statusText.textContent = 'Tool call hoàn tất! Kết quả: 5 + 3 = 8. Nhấn "Gọi Tool" để gọi lại hoặc "Reset".';
+  }, 500);
+}
+
+function resetSim() {
+  clientLog.innerHTML = '';
+  serverLog.innerHTML = '';
+  stderrLog.innerHTML = '';
+  step = 0;
+  document.getElementById('btn-respond').style.display = 'none';
+  document.getElementById('btn-notif').style.display = 'none';
+  document.getElementById('btn-tool').style.display = 'none';
+  statusText.textContent = 'Nhấn "Gửi Initialize Request" để bắt đầu handshake!';
+}
+
+// ===== QUIZ =====
+const quizData = [
+  {
+    q: "stdio transport hoạt động trên mấy channels chính?",
+    options: ["1 (chỉ stdin)", "2 (stdin + stdout), plus stderr cho debug", "3 (stdin, stdout, stderr — đều là protocol channels)", "4 (stdin, stdout, stderr, network)"],
+    correct: 1
+  },
+  {
+    q: "Client gửi message cho server qua channel nào?",
+    options: ["Server's stdout", "Server's stdin", "Client's stderr", "HTTP POST"],
+    correct: 1
+  },
+  {
+    q: "stdio có hỗ trợ bidirectional communication không?",
+    options: ["Không — chỉ client gửi được", "Có một phần — chỉ request/response", "Có, hoàn hảo — cả 4 communication patterns đều hoạt động", "Chỉ khi cấu hình đặc biệt"],
+    correct: 2
+  },
+  {
+    q: "stderr dùng để làm gì trong MCP?",
+    options: ["Gửi MCP protocol messages", "Debug logs — không ảnh hưởng đến protocol", "Gửi error responses", "Kết nối backup"],
+    correct: 1
+  },
+  {
+    q: "stdio transport hoạt động khi client và server ở khác máy không?",
+    options: ["Có — stdio hỗ trợ remote connections", "Không — stdio chỉ hoạt động trên cùng máy", "Có — nhưng cần cấu hình thêm", "Chỉ khi dùng SSH tunnel"],
+    correct: 1
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((q, i) => {
+    html += '<div class="card card-blue" style="margin-bottom:16px;">';
+    html += '<p style="font-weight:600;color:#9cdcfe;margin-bottom:10px;">Câu ' + (i+1) + ': ' + q.q + '</p>';
+    q.options.forEach((opt, j) => {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">' + opt + '</div>';
+    });
+    html += '<div id="fb-'+i+'" class="feedback"></div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+let selectedAnswers = {};
+function selectAnswer(qi, ai) {
+  selectedAnswers[qi] = ai;
+  document.querySelectorAll('[data-q="'+qi+'"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="'+qi+'"][data-a="'+ai+'"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function submitQuiz() {
+  let score = 0;
+  quizData.forEach((q, i) => {
+    const fb = document.getElementById('fb-'+i);
+    const options = document.querySelectorAll('[data-q="'+i+'"]');
+    options.forEach(o => {
+      o.classList.remove('correct','wrong');
+      const a = parseInt(o.getAttribute('data-a'));
+      if (a === q.correct) o.classList.add('correct');
+      if (selectedAnswers[i] !== undefined && selectedAnswers[i] === a && a !== q.correct) o.classList.add('wrong');
+    });
+    if (selectedAnswers[i] === q.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai! Đáp án đúng: ' + q.options[q.correct];
+    }
+  });
+  const result = document.getElementById('quiz-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="score-box">Điểm: ' + score + '/' + quizData.length + '</div>';
+  document.getElementById('submit-quiz').style.display = 'none';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>

@@ -1,0 +1,661 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 14: MCP Inspector</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+.inspector{background:#1a1a2e;border:2px solid #3e3e42;border-radius:10px;overflow:hidden;margin:20px 0;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;}
+.inspector-header{background:#2d2d2d;padding:12px 16px;display:flex;align-items:center;gap:12px;border-bottom:1px solid #3e3e42;}
+.inspector-dot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+.inspector-body{padding:16px;}
+.inspector-tabs{display:flex;gap:0;border-bottom:1px solid #3e3e42;margin-bottom:16px;}
+.inspector-tab{padding:8px 16px;cursor:pointer;color:#858585;font-size:13px;border-bottom:2px solid transparent;transition:all 0.2s;}
+.inspector-tab.active{color:#fff;border-bottom-color:#007acc;}
+.inspector-tab:hover:not(.active){color:#ccc;}
+.inspector-panel{display:none;}
+.inspector-panel.active{display:block;}
+.log-entry{background:#1e1e1e;border:1px solid #3e3e42;border-radius:4px;padding:8px 12px;margin:6px 0;font-size:12px;font-family:'Courier New',monospace;}
+.log-entry.req{border-left:3px solid #007acc;}
+.log-entry.res{border-left:3px solid #4ec9b0;}
+.status-badge{display:inline-block;padding:3px 10px;border-radius:12px;font-size:12px;font-weight:600;}
+.status-disconnected{background:#3a1a1a;color:#f44747;}
+.status-connected{background:#1a3a2a;color:#4ec9b0;}
+.tool-item{background:#2d2d30;border:1px solid #3e3e42;border-radius:6px;padding:12px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.tool-item:hover{border-color:#007acc;}
+.tool-item.selected{border-color:#4ec9b0;background:#1a2a3a;}
+.param-input{background:#1e1e1e;border:1px solid #3e3e42;border-radius:4px;padding:6px 10px;color:#d4d4d4;width:100%;font-size:13px;margin:4px 0;}
+.param-input:focus{outline:none;border-color:#007acc;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>&#128270; Bai 14: MCP Inspector -- Kiem thu Server trong Trinh duyet</h1>
+<p class="subtitle">Cong cu essential cho development -- test MCP server ma khong can build client</p>
+
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Ly thuyet</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ===================== THEORY TAB ===================== -->
+<div id="theory" class="tab-content active">
+
+<h2>1. MCP Inspector la gi?</h2>
+
+<p><span class="highlight">MCP Inspector</span> la mot browser-based debugging tool duoc tich hop san trong MCP SDK. No cho phep ban test MCP server <strong>ma khong can xay dung client</strong> hoac ung dung hoan chinh.</p>
+
+<div class="card card-green">
+<h3>Tai sao Inspector quan trong?</h3>
+<p>Thay vi phai viet test scripts rieng biet hoac ket noi den ung dung hoan chinh, ban co the <span class="highlight"> nhanh chóng lap di lap lai qua trinh trien khai cac cong cu, kiem thu cac truong hop dac biet va gop loi trong thoi gian thuc</span>.</p>
+</div>
+
+<div class="analogy">
+Nghep cua MCP Inspector nhu mot "nha thu nghiem" cho server cua ban -- ban co the kiem tra tung linh kien (tools, resources, prompts) truoc khi lap rap chung vao ung dung chinh. Giong nhu ban test dong co truoc khi dua vao xe.
+</div>
+
+<h2>2. Khoi dong Inspector</h2>
+
+<p>Chi can mot cau lenh de khoi dong Inspector:</p>
+
+<pre><code>mcp dev mcp_server.py</code></pre>
+
+<div class="card card-blue">
+<h3>Dieu gi xay ra khi chay lenh nay?</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">Auto-start MCP Server</span> -- Inspector tu dong khoi dong server cua ban voi stdio transport.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Mo trinh duyet</span> -- Tu dong mo trinh duyet tai <code>http://127.0.0.1:6274</code>.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Ket noi</span> -- Inspector gui JSON-RPC messages den server cua ban thong qua stdio.</div>
+</div>
+</div>
+
+<div class="card card-yellow">
+<h3>Luu y quan trong</h3>
+<p>Lenh <code>mcp dev</code> la mot phan cua <code>mcp[cli]</code> package. Dam bao ban da cai dat <code>mcp[cli]>=1.8.0</code> trong dependencies.</p>
+</div>
+
+<h2>3. Testing Tools -- Kiem thu Cong cu</h2>
+
+<p>Sau khi nhan <strong>Connect</strong> trong Inspector, ban chuyen den tab <strong>Tools</strong>:</p>
+
+<div class="card card-green">
+<h3>Quy trinh testing Tools</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">List Tools</span> -- Nhan nut "List Tools" de xem tat ca tools co san. Moi tool hien thi ten, mo ta, va parameter schema.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Select Tool</span> -- Click vao tool ban muon test (vi du: <code>read_doc_contents</code>).</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Fill Parameters</span> -- Dien cac tham so (vi du: <code>doc_id = "report.pdf"</code>).</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div><span class="highlight">Run Tool</span> -- Nhan "Run Tool" de thuc thi. Xem ket qua tra ve.</div>
+</div>
+</div>
+
+<div class="diagram">
+  <div style="margin-bottom:10px;color:#ffd700;font-weight:700;">Testing Tools Workflow</div>
+  <div>
+    <span class="box">Connect</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">List Tools</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">Select Tool</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">Fill Params</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box">Run Tool</span>
+    <span class="arrow"> --&gt; </span>
+    <span class="box" style="border-color:#4ec9b0;">Result</span>
+  </div>
+</div>
+
+<h2>4. Testing Resources -- Kiem thu Tai nguyen</h2>
+
+<p>Chuyen den tab <strong>Resources</strong> va <strong>Resource Templates</strong> de test resources:</p>
+
+<div class="card card-blue">
+<h3>Hai loai Resources trong Inspector</h3>
+<table>
+  <tr><th>Section</th><th>Loai Resource</th><th>Vi du</th></tr>
+  <tr><td><span class="highlight">Resources</span></td><td>Static (Direct)</td><td><code>docs://documents</code> -- liet ke tat ca tai lieu</td></tr>
+  <tr><td><span class="highlight">Resource Templates</span></td><td>Parameterized (Templated)</td><td><code>docs://documents/{doc_id}</code> -- doc mot tai lieu cu the</td></tr>
+</table>
+</div>
+
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">List Resources</span> -- Xem tat ca static resources va templates.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Click to Read</span> -- Click vao resource de doc noi dung. Voi templated resource, nhap tham so truoc.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">View Result</span> -- Xem du lieu tra ve (JSON hoac text tuy theo MIME type).</div>
+</div>
+
+<h2>5. Testing Prompts -- Kiem thu Prompt Templates</h2>
+
+<p>Chuyen den tab <strong>Prompts</strong> de test cac prompt templates:</p>
+
+<div class="card card-yellow">
+<h3>Quy trinh testing Prompts</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">List Prompts</span> -- Xem tat ca prompts co san voi ten va mo ta.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Select Prompt</span> -- Chon prompt ban muon test (vi du: <code>format</code>).</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Fill Arguments</span> -- Dien cac tham so (vi du: <code>doc_id = "plan.md"</code>).</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div><span class="highlight">View Messages</span> -- Xem danh sach Message objects duoc tao ra. Day la nhung gi se gui den Claude.</div>
+</div>
+</div>
+
+<h2>6. Development Workflow -- Quy trinh Phat trien</h2>
+
+<p>Inspector la mot phan khong the thieu trong quy trinh phat trien MCP Server:</p>
+
+<div class="diagram">
+  <div style="margin-bottom:10px;color:#ffd700;font-weight:700;">Development Loop</div>
+  <div style="display:flex;justify-content:center;flex-wrap:wrap;gap:8px;">
+    <span class="box">Edit Code</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Restart Inspector</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Test Tools</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Test Resources</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Test Prompts</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box">Fix Issues</span>
+    <span class="arrow">--&gt;</span>
+    <span class="box" style="border-color:#ffd700;">Repeat</span>
+  </div>
+</div>
+
+<div class="card card-green">
+<h3>Diem manh cua Inspector</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div><span class="highlight">State persistence</span> -- Inspector duy tri trang thai server giua cac calls. Vi du: ban co the edit mot document, sau do read no de kiem tra thay doi.</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div><span class="highlight">Sequential testing</span> -- Test nhieu tools lien tiep. Ket qua cua tool truoc anh huong den tool sau.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div><span class="highlight">Real-time feedback</span> -- Nhìn thấy ngay ket qua hoac loi, khong can chay toan bo ung dung.</div>
+</div>
+</div>
+
+<div class="card card-red">
+<h3>Khi edit code, can lam gi?</h3>
+<p>Khi ban thay doi code trong <code>mcp_server.py</code>, ban can <span class="highlight">restart Inspector</span> (<code>Ctrl+C</code> roi chay lai <code>mcp dev mcp_server.py</code>). Inspector se tai lai server voi code moi.</p>
+</div>
+
+</div>
+
+<!-- ===================== DEMO TAB ===================== -->
+<div id="demo" class="tab-content">
+
+<h2>Mo phong Inspector Interface</h2>
+<p>Tuong tac voi giao dien mo phong duoi day de hieu quy trinh su dung MCP Inspector.</p>
+
+<div class="inspector">
+  <!-- Inspector header -->
+  <div class="inspector-header">
+    <span class="inspector-dot" id="status-dot" style="background:#f44747;"></span>
+    <span style="font-size:14px;font-weight:600;" id="status-text">Disconnected</span>
+    <button class="btn" onclick="inspectorConnect()" id="connect-btn" style="margin-top:0;padding:6px 16px;font-size:13px;">Connect</button>
+    <span style="color:#858585;font-size:12px;margin-left:auto;">MCP Inspector -- http://127.0.0.1:6274</span>
+  </div>
+
+  <!-- Inspector body -->
+  <div class="inspector-body">
+    <!-- Inspector tabs -->
+    <div class="inspector-tabs">
+      <div class="inspector-tab active" onclick="switchInspectorTab('tools')" id="itab-tools">Tools</div>
+      <div class="inspector-tab" onclick="switchInspectorTab('resources')" id="itab-resources">Resources</div>
+      <div class="inspector-tab" onclick="switchInspectorTab('prompts')" id="itab-prompts">Prompts</div>
+    </div>
+
+    <!-- Tools panel -->
+    <div id="ipanel-tools" class="inspector-panel active">
+      <button class="btn" onclick="listTools()" style="margin-bottom:12px;" id="list-tools-btn">List Tools</button>
+      <div id="tools-list"></div>
+    </div>
+
+    <!-- Resources panel -->
+    <div id="ipanel-resources" class="inspector-panel">
+      <button class="btn" onclick="listResources()" style="margin-bottom:12px;">List Resources</button>
+      <div id="resources-list"></div>
+    </div>
+
+    <!-- Prompts panel -->
+    <div id="ipanel-prompts" class="inspector-panel">
+      <button class="btn" onclick="listPrompts()" style="margin-bottom:12px;">List Prompts</button>
+      <div id="prompts-list"></div>
+    </div>
+
+    <!-- Log area -->
+    <div style="margin-top:16px;border-top:1px solid #3e3e42;padding-top:12px;">
+      <div style="color:#858585;font-size:12px;font-weight:600;margin-bottom:8px;">JSON-RPC LOG</div>
+      <div id="log-area"></div>
+    </div>
+  </div>
+</div>
+
+<div class="card card-blue" style="margin-top:20px;">
+<h3>Huong dan tuong tac</h3>
+<div class="step">
+  <div class="step-num">1</div>
+  <div>Nhan <strong>Connect</strong> de ket noi den server (mo phong).</div>
+</div>
+<div class="step">
+  <div class="step-num">2</div>
+  <div>Chuyen giua cac tab <strong>Tools</strong>, <strong>Resources</strong>, <strong>Prompts</strong>.</div>
+</div>
+<div class="step">
+  <div class="step-num">3</div>
+  <div>Nhan <strong>List Tools/Resources/Prompts</strong> de xem cac items co san.</div>
+</div>
+<div class="step">
+  <div class="step-num">4</div>
+  <div>Click vao moi item de xem chi tiet va ket qua.</div>
+</div>
+<div class="step">
+  <div class="step-num">5</div>
+  <div>Theo doi <strong>JSON-RPC Log</strong> ben duoi de hieu message exchange.</div>
+</div>
+</div>
+
+</div>
+
+<!-- ===================== QUIZ TAB ===================== -->
+<div id="quiz" class="tab-content">
+
+<h2>Kiem tra kien thuc -- Bai 14</h2>
+<p>Tra loi 5 cau hoi de kiem tra hieu cua ban ve MCP Inspector.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" onclick="checkQuiz()" id="check-btn">Kiem tra dap an</button>
+<div id="score-display" class="score-box"></div>
+
+</div>
+
+<!-- NAVIGATION -->
+<div class="nav-bar">
+  <a href="lesson-13-building-mcp-server.html" class="nav-btn">&larr; Bai 13</a>
+  <a href="lesson-15-building-mcp-client.html" class="nav-btn">Bai 15 &rarr;</a>
+</div>
+
+</div>
+
+<script>
+// Tab switching
+function switchTab(tab) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tab).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// Inspector state
+let isConnected = false;
+
+function inspectorConnect() {
+  isConnected = !isConnected;
+  const dot = document.getElementById('status-dot');
+  const text = document.getElementById('status-text');
+  const btn = document.getElementById('connect-btn');
+  if (isConnected) {
+    dot.style.background = '#4ec9b0';
+    text.textContent = 'Connected';
+    text.style.color = '#4ec9b0';
+    btn.textContent = 'Disconnect';
+    btn.style.background = '#f44747';
+    addLog('req', 'initialize()', '{"jsonrpc":"2.0","method":"initialize","params":{"protocolVersion":"2024-11-05"}}');
+    setTimeout(() => addLog('res', 'initialize result', '{"protocolVersion":"2024-11-05","capabilities":{"tools":{},"resources":{},"prompts":{}},"serverInfo":{"name":"DocumentMCP"}}'), 300);
+  } else {
+    dot.style.background = '#f44747';
+    text.textContent = 'Disconnected';
+    text.style.color = '#f44747';
+    btn.textContent = 'Connect';
+    btn.style.background = '#007acc';
+    document.getElementById('tools-list').innerHTML = '';
+    document.getElementById('resources-list').innerHTML = '';
+    document.getElementById('prompts-list').innerHTML = '';
+  }
+}
+
+function switchInspectorTab(tab) {
+  document.querySelectorAll('.inspector-tab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.inspector-panel').forEach(el => el.classList.remove('active'));
+  document.getElementById('itab-' + tab).classList.add('active');
+  document.getElementById('ipanel-' + tab).classList.add('active');
+}
+
+function addLog(type, label, content) {
+  const log = document.getElementById('log-area');
+  const entry = document.createElement('div');
+  entry.className = 'log-entry ' + type;
+  entry.innerHTML = '<span style="color:' + (type === 'req' ? '#007acc' : '#4ec9b0') + ';font-weight:600;">' + (type === 'req' ? 'REQUEST' : 'RESPONSE') + '</span> ' + label + '<br><code style="font-size:11px;color:#858585;">' + content + '</code>';
+  log.insertBefore(entry, log.firstChild);
+}
+
+function listTools() {
+  if (!isConnected) { alert('Hay nhan Connect truoc!'); return; }
+  addLog('req', 'tools/list', '{"jsonrpc":"2.0","method":"tools/list"}');
+  setTimeout(() => {
+    addLog('res', 'tools/list result', '{"tools":[{"name":"read_doc_contents","description":"Read the contents of a document..."},{"name":"edit_document","description":"Edit a document by replacing..."}]}');
+    const container = document.getElementById('tools-list');
+    container.innerHTML = `
+      <div class="tool-item" onclick="selectTool('read')">
+        <h4 style="color:#4ec9b0;">read_doc_contents</h4>
+        <p style="color:#858585;font-size:13px;">Read the contents of a document and return it as a string.</p>
+        <p style="color:#ffd700;font-size:12px;">Params: doc_id (string)</p>
+      </div>
+      <div class="tool-item" onclick="selectTool('edit')">
+        <h4 style="color:#4ec9b0;">edit_document</h4>
+        <p style="color:#858585;font-size:13px;">Edit a document by replacing a string in the documents content with a new string.</p>
+        <p style="color:#ffd700;font-size:12px;">Params: doc_id (string), old_str (string), new_str (string)</p>
+      </div>`;
+  }, 200);
+}
+
+function selectTool(tool) {
+  if (!isConnected) return;
+  document.querySelectorAll('.tool-item').forEach(el => el.classList.remove('selected'));
+  event.currentTarget.classList.add('selected');
+
+  if (tool === 'read') {
+    addLog('req', 'tools/call read_doc_contents', '{"method":"tools/call","params":{"name":"read_doc_contents","arguments":{"doc_id":"report.pdf"}}}');
+    setTimeout(() => {
+      addLog('res', 'tools/call result', '{"content":[{"type":"text","text":"The report details the state of a 20m condenser tower."}]}');
+      const container = document.getElementById('tools-list');
+      container.innerHTML += `
+        <div class="card card-green" style="margin-top:12px;">
+          <h4 style="color:#4ec9b0;">Result</h4>
+          <pre style="background:#1e1e1e;padding:10px;border-radius:4px;"><code>"The report details the state of a 20m condenser tower."</code></pre>
+        </div>`;
+    }, 300);
+  } else {
+    addLog('req', 'tools/call edit_document', '{"method":"tools/call","params":{"name":"edit_document","arguments":{"doc_id":"plan.md","old_str":"implementation","new_str":"execution"}}}');
+    setTimeout(() => {
+      addLog('res', 'tools/call result', '{"content":[{"type":"text","text":"Document edited successfully"}]}');
+      const container = document.getElementById('tools-list');
+      container.innerHTML += `
+        <div class="card card-green" style="margin-top:12px;">
+          <h4 style="color:#4ec9b0;">Result</h4>
+          <pre style="background:#1e1e1e;padding:10px;border-radius:4px;"><code>Document edited successfully</code></pre>
+        </div>`;
+    }, 300);
+  }
+}
+
+function listResources() {
+  if (!isConnected) { alert('Hay nhan Connect truoc!'); return; }
+  addLog('req', 'resources/list', '{"jsonrpc":"2.0","method":"resources/list"}');
+  setTimeout(() => {
+    addLog('res', 'resources/list result', '{"resources":[{"uri":"docs://documents","name":"list_docs"},{"uri":"docs://documents/{doc_id}","name":"fetch_doc"}]}');
+    const container = document.getElementById('resources-list');
+    container.innerHTML = `
+      <div style="margin-bottom:16px;">
+        <h4 style="color:#007acc;">Resources (Static)</h4>
+        <div class="tool-item" onclick="readResource('static')">
+          <h4 style="color:#4ec9b0;">docs://documents</h4>
+          <p style="color:#858585;font-size:13px;">MIME: application/json</p>
+        </div>
+      </div>
+      <div>
+        <h4 style="color:#007acc;">Resource Templates (Parameterized)</h4>
+        <div class="tool-item" onclick="readResource('template')">
+          <h4 style="color:#4ec9b0;">docs://documents/{doc_id}</h4>
+          <p style="color:#858585;font-size:13px;">MIME: text/plain</p>
+        </div>
+      </div>`;
+  }, 200);
+}
+
+function readResource(type) {
+  if (!isConnected) return;
+  if (type === 'static') {
+    addLog('req', 'resources/read', '{"method":"resources/read","params":{"uri":"docs://documents"}}');
+    setTimeout(() => {
+      addLog('res', 'resources/read result', '{"contents":[{"uri":"docs://documents","mimeType":"application/json","text":"[\\\"deposition.md\\\",\\\"report.pdf\\\",\\\"financials.docx\\\",\\\"outlook.pdf\\\",\\\"plan.md\\\",\\\"spec.txt\\\"]"}]}');
+      const container = document.getElementById('resources-list');
+      container.innerHTML += `
+        <div class="card card-blue" style="margin-top:12px;">
+          <h4 style="color:#4ec9b0;">Resource Content</h4>
+          <pre style="background:#1e1e1e;padding:10px;border-radius:4px;"><code>["deposition.md", "report.pdf", "financials.docx", "outlook.pdf", "plan.md", "spec.txt"]</code></pre>
+        </div>`;
+    }, 300);
+  } else {
+    addLog('req', 'resources/read', '{"method":"resources/read","params":{"uri":"docs://documents/report.pdf"}}');
+    setTimeout(() => {
+      addLog('res', 'resources/read result', '{"contents":[{"uri":"docs://documents/report.pdf","mimeType":"text/plain","text":"The report details the state of a 20m condenser tower."}]}');
+      const container = document.getElementById('resources-list');
+      container.innerHTML += `
+        <div class="card card-blue" style="margin-top:12px;">
+          <h4 style="color:#4ec9b0;">Resource Content (report.pdf)</h4>
+          <pre style="background:#1e1e1e;padding:10px;border-radius:4px;"><code>The report details the state of a 20m condenser tower.</code></pre>
+        </div>`;
+    }, 300);
+  }
+}
+
+function listPrompts() {
+  if (!isConnected) { alert('Hay nhan Connect truoc!'); return; }
+  addLog('req', 'prompts/list', '{"jsonrpc":"2.0","method":"prompts/list"}');
+  setTimeout(() => {
+    addLog('res', 'prompts/list result', '{"prompts":[{"name":"format","description":"Rewrites the contents of the document in Markdown format."}]}');
+    const container = document.getElementById('prompts-list');
+    container.innerHTML = `
+      <div class="tool-item" onclick="getPrompt()">
+        <h4 style="color:#4ec9b0;">format</h4>
+        <p style="color:#858585;font-size:13px;">Rewrites the contents of the document in Markdown format.</p>
+        <p style="color:#ffd700;font-size:12px;">Args: doc_id (string)</p>
+      </div>`;
+  }, 200);
+}
+
+function getPrompt() {
+  if (!isConnected) return;
+  addLog('req', 'prompts/get', '{"method":"prompts/get","params":{"name":"format","arguments":{"doc_id":"plan.md"}}}');
+  setTimeout(() => {
+    addLog('res', 'prompts/get result', '{"description":"Rewrites...","messages":[{"role":"user","content":{"type":"text","text":"Your goal is to reformat a document to be written with markdown syntax..."}}]}');
+    const container = document.getElementById('prompts-list');
+    container.innerHTML += `
+      <div class="card card-yellow" style="margin-top:12px;">
+        <h4 style="color:#4ec9b0;">Generated Messages</h4>
+        <div style="background:#1e1e1e;border-radius:4px;padding:10px;margin-top:8px;">
+          <p style="color:#ffd700;font-size:12px;font-weight:600;">role: user</p>
+          <p style="color:#d4d4d4;font-size:13px;">Your goal is to reformat a document to be written with markdown syntax.<br><br>The id of the document you need to reformat is:<br>&lt;document_id&gt;<br>plan.md<br>&lt;/document_id&gt;<br><br>Add in headers, bullet points, tables, etc as necessary...</p>
+        </div>
+      </div>`;
+  }, 300);
+}
+
+// Quiz data
+const quizData = [
+  {
+    q: "Lenh gi de khoi dong MCP Inspector?",
+    options: [
+      "mcp start mcp_server.py",
+      "mcp dev mcp_server.py",
+      "mcp inspect mcp_server.py",
+      "python -m inspector mcp_server.py"
+    ],
+    correct: 1
+  },
+  {
+    q: "Inspector cho phep test nhung gi?",
+    options: [
+      "Chi Tools",
+      "Tools va Resources",
+      "Tools, Resources, va Prompts",
+      "Chi Prompts"
+    ],
+    correct: 2
+  },
+  {
+    q: "Inspector duy tri state giua cac calls khong?",
+    options: [
+      "Khong, moi call bat dau tu dau",
+      "Co, thay doi persist giua cac calls",
+      "Chi voi Tools, khong voi Resources",
+      "Chi khi su dung HTTP transport"
+    ],
+    correct: 1
+  },
+  {
+    q: "Khi edit code trong mcp_server.py, can lam gi?",
+    options: [
+      "Khong can lam gi, Inspector tu detect thay doi",
+      "Restart Inspector roi test lai",
+      "Xoa cache roi refresh trinh duyet",
+      "Cai dat lai toan bo package"
+    ],
+    correct: 1
+  },
+  {
+    q: "Tai sao MCP Inspector quan trong?",
+    options: [
+      "No la cach duy nhat de chay MCP server",
+      "No thay the hoan toan viec viet client",
+      "Test server ma khong can build client hoac ung dung hoan chinh",
+      "No tu dong tao ra production code"
+    ],
+    correct: 2
+  }
+];
+
+// Render quiz
+function renderQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((item, i) => {
+    html += `<div class="card" id="q${i}">
+      <h3 style="color:#4fc1ff;">Cau ${i+1}: ${item.q}</h3>`;
+    item.options.forEach((opt, j) => {
+      html += `<div class="quiz-option" data-q="${i}" data-a="${j}" onclick="selectAnswer(${i},${j})">${opt}</div>`;
+    });
+    html += `<div class="feedback" id="fb${i}"></div></div>`;
+  });
+  container.innerHTML = html;
+}
+
+let answers = {};
+
+function selectAnswer(q, a) {
+  answers[q] = a;
+  document.querySelectorAll(`[data-q="${q}"]`).forEach(el => {
+    el.style.background = '#2d2d30';
+    el.style.borderColor = '#3e3e42';
+  });
+  const selected = document.querySelector(`[data-q="${q}"][data-a="${a}"]`);
+  selected.style.background = '#2a3a4a';
+  selected.style.borderColor = '#007acc';
+}
+
+function checkQuiz() {
+  let score = 0;
+  quizData.forEach((item, i) => {
+    const fb = document.getElementById('fb' + i);
+    const options = document.querySelectorAll(`[data-q="${i}"]`);
+    options.forEach((el, j) => {
+      el.classList.remove('correct','wrong');
+      if (j === item.correct) el.classList.add('correct');
+      else if (answers[i] === j) el.classList.add('wrong');
+    });
+    if (answers[i] === item.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chinh xac!';
+    } else if (answers[i] !== undefined) {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai. Dap an dung la: ' + item.options[item.correct];
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Ban chua chon dap an. Dap an dung la: ' + item.options[item.correct];
+    }
+  });
+  document.getElementById('score-display').textContent = `Diem: ${score}/${quizData.length}`;
+}
+
+renderQuiz();
+</script>
+</body>
+</html>

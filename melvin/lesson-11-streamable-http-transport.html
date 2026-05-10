@@ -1,0 +1,438 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Bai 11: StreamableHTTP Transport</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box;}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;background:#1e1e1e;color:#d4d4d4;line-height:1.7;}
+.container{max-width:900px;margin:0 auto;padding:30px 20px;}
+h1{color:#9cdcfe;font-size:28px;margin-bottom:6px;}
+.subtitle{color:#6a9955;font-style:italic;margin-bottom:30px;}
+h2{color:#4fc1ff;font-size:20px;margin:35px 0 15px;border-bottom:2px solid #007acc;padding-bottom:8px;}
+h3{color:#9cdcfe;font-size:16px;margin:20px 0 10px;}
+p{margin-bottom:14px;color:#d4d4d4;}
+.card{background:#252526;border:1px solid #3e3e42;border-radius:10px;padding:20px;margin:18px 0;}
+.card-blue{border-left:4px solid #007acc;}
+.card-green{border-left:4px solid #4ec9b0;}
+.card-yellow{border-left:4px solid #ffc107;}
+.card-red{border-left:4px solid #f44747;}
+.diagram{background:#1a1a2e;border:1px solid #3e3e42;border-radius:8px;padding:24px;margin:20px 0;font-family:'Courier New',monospace;font-size:13px;line-height:2;text-align:center;color:#9cdcfe;}
+.diagram .box{display:inline-block;border:1px solid #007acc;padding:4px 12px;border-radius:4px;margin:2px;background:#252526;}
+.diagram .arrow{color:#ffd700;}
+.tabs{display:flex;gap:0;margin-bottom:0;border-bottom:2px solid #3e3e42;}
+.tab{padding:10px 22px;background:#2d2d2d;border:1px solid #3e3e42;border-bottom:none;cursor:pointer;font-size:14px;color:#858585;border-radius:6px 6px 0 0;transition:all 0.2s;}
+.tab.active{background:#1e1e1e;color:#ffffff;border-bottom:2px solid #1e1e1e;margin-bottom:-2px;}
+.tab:hover:not(.active){background:#3e3e42;color:#cccccc;}
+.tab-content{display:none;background:#252526;border:1px solid #3e3e42;border-top:none;border-radius:0 0 10px 10px;padding:28px;}
+.tab-content.active{display:block;}
+.quiz-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:12px 16px;margin:8px 0;cursor:pointer;transition:all 0.2s;}
+.quiz-option:hover{border-color:#007acc;background:#2a3a4a;}
+.quiz-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.quiz-option.wrong{border-color:#f44747;background:#3a1a1a;}
+.feedback{margin-top:10px;padding:10px;border-radius:6px;font-size:14px;display:none;}
+.feedback.show{display:block;}
+.feedback.ok{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.feedback.bad{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.btn{padding:10px 22px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;margin-top:10px;}
+.btn:hover{background:#005f9e;}
+.score-box{font-size:18px;font-weight:700;color:#4ec9b0;margin-top:16px;}
+.analogy{background:#2d2d30;border-radius:8px;padding:18px;margin:16px 0;border-left:4px solid #ffd700;}
+.analogy::before{content:"Ví dụ thực tế: ";color:#ffd700;font-weight:700;}
+.highlight{color:#ffd700;font-weight:600;}
+.nav-bar{display:flex;justify-content:space-between;align-items:center;margin-top:30px;padding-top:20px;border-top:1px solid #3e3e42;}
+.nav-btn{padding:10px 20px;background:#007acc;color:white;text-decoration:none;border-radius:6px;font-weight:600;transition:background 0.2s;}
+.nav-btn:hover{background:#005f9e;}
+table{width:100%;border-collapse:collapse;margin:16px 0;}
+th{background:#007acc;color:white;padding:10px 14px;text-align:left;}
+td{padding:10px 14px;border:1px solid #3e3e42;}
+tr:nth-child(even) td{background:#2a2a2a;}
+.step{display:flex;align-items:flex-start;gap:14px;margin:14px 0;}
+.step-num{background:#007acc;color:white;border-radius:50%;width:30px;height:30px;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-weight:700;}
+pre{background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;padding:16px;overflow-x:auto;margin:14px 0;}
+code{font-family:'Courier New',monospace;color:#9cdcfe;}
+</style>
+</head>
+<body>
+<div class="container">
+<h1>Bài 11: StreamableHTTP Transport — Giao tiếp qua HTTP</h1>
+<p class="subtitle">Transport cho remote servers — hiểu HTTP limitations và SSE workaround</p>
+
+<div class="tabs">
+<div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
+<div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+<div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
+</div>
+
+<!-- LÝ THUYẾT -->
+<div id="theory" class="tab-content active">
+
+<h2>1. Tại sao cần HTTP transport?</h2>
+<p>stdio transport rất tuyệt nhưng có một giới hạn nghiêm trọng: <span class="highlight">chỉ hoạt động trên cùng máy</span>. Trong thực tế, bạn cần:</p>
+
+<ul style="margin-left:20px;margin-bottom:14px;">
+<li><strong>Remote MCP servers</strong> — Server chạy trên máy khác, client kết nối qua Internet</li>
+<li><strong>Public MCP servers</strong> — Server công khai, bất kỳ ai cũng có thể kết nối</li>
+<li><strong>Production deployment</strong> — Triển khai trên cloud infrastructure</li>
+</ul>
+
+<div class="card card-green">
+<p>StreamableHTTP transport cho phép MCP client kết nối đến remote servers qua HTTP — mở ra khả năng deploy MCP server ở bất kỳ đâu.</p>
+</div>
+
+<h2>2. Vấn đề cốt lõi của HTTP</h2>
+<p>HTTP được thiết kế cho <span class="highlight">client-initiated communication</span>. Điều này tạo ra vấn đề nghiêm trọng cho MCP — vì MCP cần bidirectional communication.</p>
+
+<div class="diagram">
+<strong style="color:#4ec9b0;">Client CÓ THỂ:</strong><br>
+<span class="arrow">→</span> Gửi requests đến server (server có URL)<br><br>
+<strong style="color:#4ec9b0;">Server CÓ THỂ:</strong><br>
+<span class="arrow">←</span> Response cho client requests<br><br>
+<strong style="color:#f44747;">Server KHÔNG THỂ:</strong><br>
+<span class="arrow">→</span> Initiate request đến client (không có client URL!)
+</div>
+
+<div class="card card-red">
+<h3>Tại sao đây là vấn đề?</h3>
+<p>Nhớ lại bài trước: MCP là <strong>bidirectional</strong>. Server cần gửi requests đến client (sampling, list roots) và notifications (progress, logging). HTTP chuẩn không hỗ trợ điều này!</p>
+</div>
+
+<h2>3. StreamableHTTP — Không phải SSE cũ!</h2>
+
+<div class="card card-red" style="background:#3a1a1a;">
+<h3 style="color:#f44747;">Quan trọng: Spec đã thay đổi!</h3>
+<p>MCP specification đã <strong>thay đổi transport từ SSE cũ sang StreamableHTTP</strong>. Đừng nhầm lẫn:</p>
+<ul style="margin-left:20px;">
+<li><strong>SSE cũ (deprecated)</strong> — Yêu cầu endpoint riêng <code>/sse</code>, phức tạp hơn, mỗi message cần endpoint riêng</li>
+<li><strong>StreamableHTTP (hiện tại)</strong> — Đơn giản hơn, tích hợp SSE vào chính HTTP response. Đây là spec hiện tại.</li>
+</ul>
+<p>StreamableHTTP giải quyết vấn đề bằng cách sử dụng <strong>Server-Sent Events (SSE) bên trong HTTP response</strong> — không cần endpoint riêng.</p>
+</div>
+
+<h2>4. StreamableHTTP Workaround — SSE trong HTTP Response</h2>
+<p>StreamableHTTP sử dụng SSE (Server-Sent Events) bên trong HTTP response để cho phép server gửi messages về client. Đây là workaround thông minh cho HTTP limitation.</p>
+
+<h3>Initialize Flow:</h3>
+<div class="step">
+<div class="step-num">1</div>
+<div><strong>Client gửi POST Initialize Request</strong> — Standard HTTP POST đến server URL.</div>
+</div>
+<div class="step">
+<div class="step-num">2</div>
+<div><strong>Server phản hồi với Initialize Result + <code>mcp-session-id</code> header</strong> — Response chứa session ID để tracking.</div>
+</div>
+<div class="step">
+<div class="step-num">3</div>
+<div><strong>Client gửi POST Initialized Notification với session ID</strong> — Xác nhận đã khởi tạo.</div>
+</div>
+
+<div class="diagram">
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">── POST /mcp ──→</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<strong style="color:#9cdcfe;">Initialize Request</strong><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">←── 200 OK + SSE ──</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<strong style="color:#ffd700;">Initialize Result + mcp-session-id header</strong><br><br>
+<span class="box" style="border-color:#4ec9b0;">Client</span> <span class="arrow">── POST /mcp ──→</span> <span class="box" style="border-color:#f44747;">Server</span><br>
+<strong style="color:#9cdcfe;">Initialized Notification (với session ID)</strong>
+</div>
+
+<h2>5. Session ID</h2>
+<p>Server trả về <span class="highlight">mcp-session-id</span> trong Initialize response header. Session ID này:</p>
+
+<div class="card card-blue">
+<ul style="margin-left:20px;">
+<li>Uniquely identifies client connection</li>
+<li><strong>Phải include trong TẤT CẢ requests sau initialization</strong></li>
+<li>Cho phép server tracking state của từng client</li>
+<li>Bị mất khi <code>stateless_http=True</code></li>
+</ul>
+</div>
+
+<pre><code>// Initialize Response Headers
+HTTP/1.1 200 OK
+Content-Type: text/event-stream
+mcp-session-id: abc123-def456-ghi789</code></pre>
+
+<h2>6. Hai Config Flags</h2>
+<p>StreamableHTTP có hai configuration flags quan trọng ảnh hưởng đến functionality:</p>
+
+<table>
+<tr><th>Flag</th><th>Mặc định</th><th>Khi True</th></tr>
+<tr><td><code>stateless_http</code></td><td>False</td><td>Không tracking session, không server-to-client requests. Mất: sampling, progress, logging.</td></tr>
+<tr><td><code>json_response</code></td><td>False</td><td>Disable streaming. Chỉ trả final JSON result. Không có intermediate messages.</td></tr>
+</table>
+
+<div class="card card-yellow">
+<h3>Thiết lập trong code</h3>
+<pre><code>mcp = FastMCP(
+    "mcp-server",
+    stateless_http=True,   # Mặc định False
+    json_response=True,    # Mặc định False
+)
+
+mcp.run(transport="streamable-http")</code></pre>
+</div>
+
+<h2>7. Tính năng nào bị ảnh hưởng?</h2>
+<p>Khi <code>stateless_http=True</code>, các tính năng cần server-to-client communication bị mất:</p>
+
+<table>
+<tr><th>Tính năng</th><th>Yêu cầu</th><th>stateless_http=True</th></tr>
+<tr><td>Sampling</td><td>Server → Client request</td><td style="color:#f44747;font-weight:600;">BROKEN</td></tr>
+<tr><td>Progress notifications</td><td>Server → Client message</td><td style="color:#f44747;font-weight:600;">BROKEN</td></tr>
+<tr><td>Logging messages</td><td>Server → Client message</td><td style="color:#f44747;font-weight:600;">BROKEN</td></tr>
+<tr><td>Resource subscriptions</td><td>Server → Client message</td><td style="color:#f44747;font-weight:600;">BROKEN</td></tr>
+<tr><td>Tool results</td><td>Client request → Server response</td><td style="color:#4ec9b0;font-weight:600;">Vẫn hoạt động</td></tr>
+<tr><td>List tools</td><td>Client request → Server response</td><td style="color:#4ec9b0;font-weight:600;">Vẫn hoạt động</td></tr>
+</table>
+
+<div class="card card-red">
+<p><strong>Lưu ý quan trọng:</strong> <code>ctx.info()</code> và <code>ctx.report_progress()</code> sẽ <strong>silently fail</strong> khi stateless — client không bao giờ nhận được chúng. Không có error, chỉ là messages bị mất.</p>
+</div>
+
+</div>
+
+<!-- DEMO -->
+<div id="demo" class="tab-content">
+
+<h2>🎮 HTTP Request/Response Simulator</h2>
+<p>Simulate Initialize flow qua HTTP, sau đó toggle config flags để xem tính năng nào bị ảnh hưởng.</p>
+
+<h3 style="color:#4fc1ff;">Initialize Flow</h3>
+
+<div id="http-flow" style="margin:16px 0;">
+<div id="step-1" class="card card-blue" style="cursor:pointer;" onclick="httpStep1()">
+<h3 style="color:#4ec9b0;">Step 1: POST Initialize Request</h3>
+<p style="color:#858585;">Nhấn vào đây để gửi...</p>
+</div>
+
+<div id="step-2" class="card card-blue" style="display:none;">
+<h3 style="color:#4ec9b0;">Step 2: Server Response</h3>
+<div style="background:#1e1e1e;border-radius:6px;padding:12px;margin-top:8px;">
+<p style="color:#ffd700;font-family:'Courier New',monospace;font-size:13px;">HTTP/1.1 200 OK</p>
+<p style="color:#ffd700;font-family:'Courier New',monospace;font-size:13px;">Content-Type: text/event-stream</p>
+<p style="color:#f44747;font-family:'Courier New',monospace;font-size:13px;font-weight:600;">mcp-session-id: <span id="session-id">sess-a1b2c3d4</span></p>
+<pre style="margin-top:8px;"><code>{"jsonrpc":"2.0","id":1,"result":{"protocolVersion":"2024-11-05","serverInfo":{"name":"remote-server"}}}</code></pre>
+</div>
+</div>
+
+<div id="step-2b" class="card" style="display:none;cursor:pointer;" onclick="httpStep2b()">
+<h3 style="color:#4ec9b0;">Step 3: POST Initialized Notification (với session ID)</h3>
+<p style="color:#858585;">Nhấn vào đây để gửi notification...</p>
+</div>
+
+<div id="step-3" class="card card-green" style="display:none;">
+<h3 style="color:#4ec9b0;">Handshake hoàn tất!</h3>
+<p>Session ID: <span style="color:#ffd700;font-family:'Courier New',monospace;">sess-a1b2c3d4</span></p>
+<p>Bây giờ toggle config flags bên dưới để xem tác động.</p>
+</div>
+</div>
+
+<h3 style="color:#4fc1ff;margin-top:30px;">Config Flags Toggle</h3>
+
+<div class="card card-yellow" style="margin:12px 0;">
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:15px;">
+<input type="checkbox" id="chk-stateless" onchange="updateFeatureTable()"> <code>stateless_http = <span id="stateless-val" style="color:#f44747;">False</span></code>
+</label>
+<p style="font-size:13px;color:#858585;margin-top:4px;">Khi True: không session tracking, mất server-to-client features</p>
+</div>
+
+<div class="card card-yellow" style="margin:12px 0;">
+<label style="display:flex;align-items:center;gap:10px;cursor:pointer;font-size:15px;">
+<input type="checkbox" id="chk-json" onchange="updateFeatureTable()"> <code>json_response = <span id="json-val" style="color:#f44747;">False</span></code>
+</label>
+<p style="font-size:13px;color:#858585;margin-top:4px;">Khi True: disable streaming, chỉ trả final JSON result</p>
+</div>
+
+<h3 style="color:#4fc1ff;margin-top:20px;">Tính năng</h3>
+<table id="feature-table">
+<tr><th>Tính năng</th><th>Yêu cầu</th><th>Trạng thái</th></tr>
+<tr id="feat-sampling"><td>Sampling</td><td>Server → Client request</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+<tr id="feat-progress"><td>Progress notifications</td><td>Server → Client message</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+<tr id="feat-logging"><td>Logging messages</td><td>Server → Client message</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+<tr id="feat-subscriptions"><td>Resource subscriptions</td><td>Server → Client message</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+<tr id="feat-toolresults"><td>Tool results</td><td>Client → Server → Client</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+<tr id="feat-listtools"><td>List tools/prompts</td><td>Client → Server → Client</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+<tr id="feat-streaming"><td>Streaming responses</td><td>SSE trong HTTP response</td><td class="feat-status" style="color:#4ec9b0;">Hoạt động</td></tr>
+</table>
+
+</div>
+
+<!-- QUIZ -->
+<div id="quiz" class="tab-content">
+
+<h2>📝 Kiểm tra kiến thức</h2>
+<p>Trả lời 5 câu hỏi về StreamableHTTP transport.</p>
+
+<div id="quiz-container"></div>
+
+<button class="btn" id="submit-quiz" onclick="submitQuiz()">Nộp bài</button>
+<div id="quiz-result" style="display:none;margin-top:20px;"></div>
+
+<div class="nav-bar">
+<a href="lesson-10-stdio-transport.html" class="nav-btn">← Bài trước</a>
+<a href="lesson-12-streamable-http-deep-dive.html" class="nav-btn">Bài tiếp →</a>
+</div>
+</div>
+
+</div>
+
+<script>
+// ===== TAB SWITCHING =====
+function switchTab(tabName) {
+  document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(el => el.classList.remove('active'));
+  document.getElementById(tabName).classList.add('active');
+  event.target.classList.add('active');
+}
+
+// ===== DEMO =====
+function httpStep1() {
+  const el = document.getElementById('step-1');
+  el.innerHTML = '<h3 style="color:#4ec9b0;">Step 1: POST Initialize Request (đã gửi)</h3>' +
+    '<div style="background:#1e1e1e;border-radius:6px;padding:12px;margin-top:8px;">' +
+    '<p style="color:#ffd700;font-family:\'Courier New\',monospace;font-size:13px;">POST /mcp HTTP/1.1</p>' +
+    '<p style="color:#ffd700;font-family:\'Courier New\',monospace;font-size:13px;">Content-Type: application/json</p>' +
+    '<pre style="margin-top:8px;"><code>{"jsonrpc":"2.0","id":1,"method":"initialize","params":{"protocolVersion":"2024-11-05","clientInfo":{"name":"my-client"}}}</code></pre></div>';
+  el.style.cursor = 'default';
+  el.onclick = null;
+  document.getElementById('step-2').style.display = 'block';
+  document.getElementById('step-2b').style.display = 'block';
+}
+
+function httpStep2b() {
+  const el = document.getElementById('step-2b');
+  el.innerHTML = '<h3 style="color:#4ec9b0;">Step 3: POST Initialized Notification (đã gửi)</h3>' +
+    '<div style="background:#1e1e1e;border-radius:6px;padding:12px;margin-top:8px;">' +
+    '<p style="color:#ffd700;font-family:\'Courier New\',monospace;font-size:13px;">POST /mcp HTTP/1.1</p>' +
+    '<p style="color:#f44747;font-family:\'Courier New\',monospace;font-size:13px;">mcp-session-id: sess-a1b2c3d4</p>' +
+    '<pre style="margin-top:8px;"><code>{"jsonrpc":"2.0","method":"notifications/initialized"}</code></pre>' +
+    '<p style="color:#4ec9b0;font-family:\'Courier New\',monospace;font-size:13px;margin-top:8px;">→ HTTP 202 Accepted</p></div>';
+  el.style.cursor = 'default';
+  el.onclick = null;
+  document.getElementById('step-3').style.display = 'block';
+}
+
+function updateFeatureTable() {
+  const stateless = document.getElementById('chk-stateless').checked;
+  const jsonResponse = document.getElementById('chk-json').checked;
+
+  document.getElementById('stateless-val').textContent = stateless ? 'True' : 'False';
+  document.getElementById('stateless-val').style.color = stateless ? '#4ec9b0' : '#f44747';
+  document.getElementById('json-val').textContent = jsonResponse ? 'True' : 'False';
+  document.getElementById('json-val').style.color = jsonResponse ? '#4ec9b0' : '#f44747';
+
+  const features = [
+    { id: 'feat-sampling', needsServerToClient: true, needsStreaming: false },
+    { id: 'feat-progress', needsServerToClient: true, needsStreaming: false },
+    { id: 'feat-logging', needsServerToClient: true, needsStreaming: false },
+    { id: 'feat-subscriptions', needsServerToClient: true, needsStreaming: false },
+    { id: 'feat-toolresults', needsServerToClient: false, needsStreaming: false },
+    { id: 'feat-listtools', needsServerToClient: false, needsStreaming: false },
+    { id: 'feat-streaming', needsServerToClient: false, needsStreaming: true }
+  ];
+
+  features.forEach(f => {
+    const statusCell = document.querySelector('#' + f.id + ' .feat-status');
+    let broken = false;
+    if (stateless && f.needsServerToClient) broken = true;
+    if (jsonResponse && f.needsStreaming) broken = true;
+
+    if (broken) {
+      statusCell.textContent = 'BROKEN';
+      statusCell.style.color = '#f44747';
+      document.getElementById(f.id).style.opacity = '0.6';
+    } else {
+      statusCell.textContent = 'Hoạt động';
+      statusCell.style.color = '#4ec9b0';
+      document.getElementById(f.id).style.opacity = '1';
+    }
+  });
+}
+
+// ===== QUIZ =====
+const quizData = [
+  {
+    q: "Tại sao không thể dùng stdio cho remote servers?",
+    options: ["stdio quá chậm cho remote connections", "stdio chỉ hoạt động trên cùng máy (subprocess)", "stdio không hỗ trợ JSON", "stdio cần cấu hình phức tạp"],
+    correct: 1
+  },
+  {
+    q: "Vấn đề cốt lõi của HTTP đối với MCP bidirectional communication?",
+    options: ["HTTP quá chậm", "HTTP không hỗ trợ JSON", "Server không thể initiate request đến client (không có client URL)", "HTTP không hỗ trợ POST requests"],
+    correct: 2
+  },
+  {
+    q: "StreamableHTTP dùng gì để workaround HTTP limitation?",
+    options: ["WebSocket", "Long polling", "SSE (Server-Sent Events) trong HTTP response", "gRPC"],
+    correct: 2
+  },
+  {
+    q: "Session ID lấy từ đâu?",
+    options: ["Client tự tạo", "Header trong Initialize response từ server", "URL parameter", "Environment variable"],
+    correct: 1
+  },
+  {
+    q: "Khi stateless_http=True, tính năng nào bị mất?",
+    options: ["Tool results", "List tools", "Sampling, progress notifications, logging", "Tất cả đều bị mất"],
+    correct: 2
+  }
+];
+
+function buildQuiz() {
+  const container = document.getElementById('quiz-container');
+  let html = '';
+  quizData.forEach((q, i) => {
+    html += '<div class="card card-blue" style="margin-bottom:16px;">';
+    html += '<p style="font-weight:600;color:#9cdcfe;margin-bottom:10px;">Câu ' + (i+1) + ': ' + q.q + '</p>';
+    q.options.forEach((opt, j) => {
+      html += '<div class="quiz-option" data-q="'+i+'" data-a="'+j+'" onclick="selectAnswer('+i+','+j+')">' + opt + '</div>';
+    });
+    html += '<div id="fb-'+i+'" class="feedback"></div>';
+    html += '</div>';
+  });
+  container.innerHTML = html;
+}
+
+let selectedAnswers = {};
+function selectAnswer(qi, ai) {
+  selectedAnswers[qi] = ai;
+  document.querySelectorAll('[data-q="'+qi+'"]').forEach(el => {
+    el.style.borderColor = '#3e3e42';
+    el.style.background = '#2d2d30';
+  });
+  const selected = document.querySelector('[data-q="'+qi+'"][data-a="'+ai+'"]');
+  selected.style.borderColor = '#007acc';
+  selected.style.background = '#2a3a4a';
+}
+
+function submitQuiz() {
+  let score = 0;
+  quizData.forEach((q, i) => {
+    const fb = document.getElementById('fb-'+i);
+    const options = document.querySelectorAll('[data-q="'+i+'"]');
+    options.forEach(o => {
+      o.classList.remove('correct','wrong');
+      const a = parseInt(o.getAttribute('data-a'));
+      if (a === q.correct) o.classList.add('correct');
+      if (selectedAnswers[i] !== undefined && selectedAnswers[i] === a && a !== q.correct) o.classList.add('wrong');
+    });
+    if (selectedAnswers[i] === q.correct) {
+      score++;
+      fb.className = 'feedback show ok';
+      fb.textContent = 'Chính xác!';
+    } else {
+      fb.className = 'feedback show bad';
+      fb.textContent = 'Sai! Đáp án đúng: ' + q.options[q.correct];
+    }
+  });
+  const result = document.getElementById('quiz-result');
+  result.style.display = 'block';
+  result.innerHTML = '<div class="score-box">Điểm: ' + score + '/' + quizData.length + '</div>';
+  document.getElementById('submit-quiz').style.display = 'none';
+}
+
+buildQuiz();
+</script>
+</body>
+</html>
