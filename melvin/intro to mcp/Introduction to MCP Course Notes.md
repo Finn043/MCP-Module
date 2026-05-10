@@ -1,6 +1,6 @@
 # Introduction to MCP — Anthropic Course Notes
 
-![Introduction to MCP — Anthropic Course](images/figure%201.jpg)
+![Introduction to MCP — Anthropic Course](images/figure%201.png)
 
 ## Table of Contents
 
@@ -26,7 +26,7 @@
 
 ## What is MCP?
 
-![What is MCP?](images/figure%202.jpg)
+![What is MCP?](images/figure%202.png)
 
 **Model Context Protocol (MCP)** is a communication layer that provides Claude with context and tools without requiring you to write tedious integration code. It shifts the burden of tool definitions and execution away from your server to specialized MCP servers.
 
@@ -36,7 +36,7 @@ At its core, MCP defines a standard architecture:
 - Each MCP Server contains **tools**, **prompts**, and **resources**
 - Each MCP Server acts as an interface to some outside service
 
-![MCP simplifies integrations — from N×M to N+M](images/figure%203.jpg)
+![MCP simplifies integrations — from N×M to N+M](images/figure%203.png)
 
 ---
 
@@ -60,7 +60,7 @@ Imagine building a chat interface where users ask Claude about their GitHub data
 
 ## Architecture Overview
 
-![MCP Architecture — Host, Client, and Server](images/figure%204.jpg)
+![MCP Architecture — Host, Client, and Server](images/figure%204.png)
 
 ### Basic Flow
 
@@ -86,13 +86,13 @@ When a user asks "What repositories do I have?", here's the complete flow:
 10. **Final Response** — Claude formulates an answer using the data
 11. **User Gets Answer** — Server delivers Claude's response back to the user
 
-![Query flow — step by step](images/figure%205.jpg)
+![Query flow — step by step](images/figure%205.png)
 
 ---
 
 ## MCP Servers
 
-![MCP Servers — tools, resources, and prompts](images/figure%206.jpg)
+![MCP Servers — tools, resources, and prompts](images/figure%206.png)
 
 MCP Servers provide access to data or functionality from outside services. They expose three types of primitives in a standardized way:
 
@@ -106,7 +106,7 @@ In our GitHub example, the MCP Server for GitHub contains tools like `get_repos(
 
 ## MCP Clients
 
-![MCP Clients — the communication bridge](images/figure%207.jpg)
+![MCP Clients — the communication bridge](images/figure%207.png)
 
 The MCP client is the communication bridge between your server and MCP servers. It handles message exchange and protocol details so your application doesn't have to.
 
@@ -129,11 +129,13 @@ MCP is transport agnostic — the client and server can communicate over differe
 | `ListPromptsRequest` | `ListPromptsResult` | List available prompt templates |
 | `GetPromptRequest` | `GetPromptResult` | Get a specific prompt with args filled in |
 
+![MCP Message Types — request/response pairs](images/figure%208.png)
+
 ---
 
 ## Three Core Primitives
 
-![Three Core Primitives — who controls what](images/figure%209.jpg)
+![Three Core Primitives — who controls what](images/figure%209.png)
 
 | Primitive | Controlled By | Purpose | Example |
 |---|---|---|---|
@@ -145,7 +147,7 @@ MCP is transport agnostic — the client and server can communicate over differe
 
 ## Project: Document Manager CLI
 
-![Project overview — Document Manager CLI](images/figure%2010.jpg)
+![Project overview — Document Manager CLI](images/figure%2010.png)
 
 The course project is a CLI chat application that manages documents using MCP. It has a document MCP server and a client that connects to Claude.
 
@@ -176,8 +178,6 @@ The course project is a CLI chat application that manages documents using MCP. I
    ```
 
 ### Project Structure
-
-![Project file structure](images/figure%2011.jpg)
 
 ```
 cli_project/
@@ -211,7 +211,7 @@ dependencies = [
 
 ## Part 1 — Defining Tools
 
-![Defining tools with the Python MCP SDK](images/figure%2012.jpg)
+![Defining tools with the Python MCP SDK](images/figure%2011.png)
 
 The Python MCP SDK uses decorators and type hints to define tools — no manual JSON schemas required.
 
@@ -276,7 +276,7 @@ def edit_document(
 
 ## Part 2 — The Server Inspector
 
-![MCP Server Inspector — browser-based testing](images/figure%2014.jpg)
+![MCP Server Inspector — browser-based testing](images/figure%2012.png)
 
 The MCP SDK includes a built-in browser-based inspector for testing your server without a full application. It becomes an essential part of your development process — instead of writing separate test scripts or connecting to full applications, you can quickly iterate on tool implementations, test edge cases, and debug issues in real-time.
 
@@ -300,7 +300,7 @@ You can test tools in sequence — e.g., edit a document then read it to verify 
 
 ## Part 3 — Implementing the Client
 
-![Client architecture overview](images/figure%2015.jpg)
+![Client architecture overview](images/figure%2013.png)
 
 The MCP client wraps the SDK's `ClientSession` and provides a clean interface for your application. In most real-world projects, you'll either implement an MCP client or an MCP server — not both. We build both in this project so you can see how they work together.
 
@@ -310,11 +310,15 @@ The MCP client wraps the SDK's `ClientSession` and provides a clean interface fo
 Your App → MCPClient (custom class) → ClientSession (SDK) → MCP Server
 ```
 
+![Client session and resource management](images/figure%2014.png)
+
 The client consists of two main components:
 - **MCP Client** — A custom class we create to make using the session easier
 - **Client Session** — The actual connection to the server (part of the MCP Python SDK)
 
 The client manages connection lifecycle via `AsyncExitStack` — ensuring proper cleanup. It's what enables our code to interact with the MCP server at two key points: getting a list of available tools to send to Claude, and executing tools when Claude requests them.
+
+![How the client fits into the application flow](images/figure%2015.png)
 
 ### Connection Setup
 
@@ -367,11 +371,15 @@ The client acts as the bridge between your application logic and the MCP server'
 
 ## Part 4 — Defining Resources
 
-![Resources — app-controlled data access](images/figure%2017.jpg)
+![Resources — document mention feature example](images/figure%2016.png)
 
 Resources expose data to clients — similar to GET handlers in an HTTP server. They're for **fetching information**, not performing actions. Resources can be directly included in prompts rather than requiring tool calls — a more efficient way to provide context to the AI model. When a user mentions a document, your system automatically injects its contents into the prompt sent to Claude, eliminating the need for Claude to use tools to fetch the information.
 
+![Resources — injecting content into prompts](images/figure%2017.png)
+
 Resources follow a request-response pattern. When your client needs data, it sends a `ReadResourceRequest` with a URI to identify which resource it wants. The MCP server processes this request and returns the data in a `ReadResourceResult`.
+
+![Resources — request-response flow](images/figure%2018.png)
 
 ### Direct Resources (Static URI)
 
@@ -403,6 +411,8 @@ The SDK automatically parses URI parameters and passes them as keyword arguments
 
 The SDK handles serialization automatically — just return the data structure.
 
+![Resource types — direct and templated](images/figure%2020.png)
+
 ### Testing Resources
 
 ```bash
@@ -411,11 +421,13 @@ mcp dev mcp_server.py
 
 In the inspector, you'll see **Resources** (static) and **Resource Templates** (parameterized) sections.
 
+![Testing resources in the MCP Inspector](images/figure%2021.png)
+
 ---
 
 ## Part 5 — Accessing Resources
 
-![Accessing resources via @ mentions](images/figure%2019.jpg)
+![Accessing resources via @ mentions](images/figure%2019.png)
 
 Resources can be directly included in prompts rather than requiring tool calls — a more efficient way to provide context. When a user types something like "What's in the @..." the code recognizes this as a resource request, sends a `ReadResourceRequest` to the MCP server, and gets back a `ReadResourceResult` with the actual content.
 
@@ -465,13 +477,15 @@ When a user types `@report.pdf`, the system fetches the resource content and inj
 
 ## Part 6 — Defining Prompts
 
-![Defining prompts — user-controlled workflows](images/figure%2020.jpg)
+![Defining prompts — user-controlled workflows](images/figure%2023.png)
 
 Prompts are pre-built, tested instruction templates. They give better results than ad-hoc user instructions because the server author invests time in crafting and testing them.
 
 **Why use prompts?** Users can already ask Claude to do most tasks directly. For example, a user could type "reformat the report.pdf in markdown" and get decent results. But they'll get much better results if you provide a thoroughly tested, specialized prompt that handles edge cases and follows best practices. As the MCP server author, you can spend time crafting, testing, and evaluating prompts that work consistently across different scenarios. Users benefit from this expertise without having to become prompt engineering experts themselves.
 
 Prompts work best when they're specialized for your MCP server's domain. A document management server might have prompts for formatting, summarizing, or analyzing documents. A data analysis server might have prompts for generating reports or visualizations. The goal is to provide prompts that are so well-crafted and tested that users prefer them over writing their own instructions from scratch.
+
+![Format command workflow — /format doc_id](images/figure%2024.png)
 
 ### Format Document Prompt
 
@@ -514,7 +528,9 @@ The function returns a list of `Message` objects that get sent directly to Claud
 
 ## Part 7 — Prompts in the Client
 
-![Prompts in the client — slash commands](images/figure%2022.jpg)
+![Testing prompts in the CLI](images/figure%2026.png)
+
+![Prompts in the client — slash commands](images/figure%2022.png)
 
 The client needs two methods: one to list available prompts, another to retrieve a specific prompt with arguments filled in.
 
@@ -565,11 +581,11 @@ The complete workflow for prompts is:
 
 This system creates reusable, parameterized prompts that maintain consistency while allowing customization through variables.
 
+![How prompts work — message flow](images/figure%2027.png)
+
 ---
 
 ## MCP Review — When to Use Each Primitive
-
-![When to use each primitive](images/figure%2024.jpg)
 
 Each primitive is controlled by a different part of your application stack:
 
@@ -587,7 +603,7 @@ Prompts are triggered by user actions. Users decide when to run these predefined
 
 ### Decision Guide
 
-![Decision guide — which primitive to use](images/figure%2025.jpg)
+![Decision guide — which primitive to use](images/figure%2025.png)
 
 ```
 Need to give Claude new capabilities?       → Use TOOLS    (model-controlled)
@@ -614,8 +630,6 @@ Want predefined workflows for users?         → Use PROMPTS   (user-controlled)
 ---
 
 ## Key Takeaways
-
-![Key takeaways](images/figure%2028.jpg)
 
 1. **MCP eliminates integration boilerplate** — Instead of writing tool schemas and API wrappers yourself, MCP servers provide them ready-to-use.
 
@@ -884,36 +898,34 @@ Wires everything together:
 
 ## Slide Reference Index
 
-All 29 course slides are saved in the `images/` folder. Below is a complete index of every slide with a brief description:
+All 27 course slides are saved in the `images/` folder. Below is a complete index of every slide with a brief description:
 
 | Slide | File | Description |
 |:---:|---|---|
-| 1 | [figure 1.jpg](images/figure%201.jpg) | Course title — Introduction to MCP |
-| 2 | [figure 2.jpg](images/figure%202.jpg) | What is MCP? — Protocol overview |
-| 3 | [figure 3.jpg](images/figure%203.jpg) | The N×M integration problem (before vs. after MCP) |
-| 4 | [figure 4.jpg](images/figure%204.jpg) | MCP Architecture — Host → Client → Server |
-| 5 | [figure 5.jpg](images/figure%205.jpg) | Step-by-step query flow diagram |
-| 6 | [figure 6.jpg](images/figure%206.jpg) | MCP Servers — tools, resources, and prompts |
-| 7 | [figure 7.jpg](images/figure%207.jpg) | MCP Clients — the communication bridge |
-| 8 | [figure 8.jpg](images/figure%208.jpg) | Key message types — request/response pairs |
-| 9 | [figure 9.jpg](images/figure%209.jpg) | Three core primitives — who controls what |
-| 10 | [figure 10.jpg](images/figure%2010.jpg) | Project overview — Document Manager CLI |
-| 11 | [figure 11.jpg](images/figure%2011.jpg) | Project setup and file structure |
-| 12 | [figure 12.jpg](images/figure%2012.jpg) | Part 1 — Defining tools with the SDK |
-| 13 | [figure 13.jpg](images/figure%2013.jpg) | Tool implementation — read and edit documents |
-| 14 | [figure 14.jpg](images/figure%2014.jpg) | Part 2 — The Server Inspector |
-| 15 | [figure 15.jpg](images/figure%2015.jpg) | Part 3 — Client architecture and connection setup |
-| 16 | [figure 16.jpg](images/figure%2016.jpg) | Client code — session management and core methods |
-| 17 | [figure 17.jpg](images/figure%2017.jpg) | Part 4 — Defining resources (static and templated) |
-| 18 | [figure 18.jpg](images/figure%2018.jpg) | Resource code — URI templates and MIME types |
-| 19 | [figure 19.jpg](images/figure%2019.jpg) | Part 5 — Accessing resources via @ mentions |
-| 20 | [figure 20.jpg](images/figure%2020.jpg) | Part 6 — Defining prompts |
-| 21 | [figure 21.jpg](images/figure%2021.jpg) | Prompt implementation — format_document example |
-| 22 | [figure 22.jpg](images/figure%2022.jpg) | Part 7 — Using prompts in the client |
-| 23 | [figure 23.jpg](images/figure%2023.jpg) | Slash command handling code |
-| 24 | [figure 24.jpg](images/figure%2024.jpg) | MCP Review — when to use each primitive |
-| 25 | [figure 25.jpg](images/figure%2025.jpg) | Decision guide — tools vs. resources vs. prompts |
-| 26 | [figure 26.jpg](images/figure%2026.jpg) | Real-world examples in Claude's interface |
-| 27 | [figure 27.jpg](images/figure%2027.jpg) | Summary table of all primitives |
-| 28 | [figure 28.jpg](images/figure%2028.jpg) | Key takeaways |
-| 29 | [figure 29.jpg](images/figure%2029.jpg) | Course completion and next steps |
+| 1 | [figure 1.png](images/figure%201.png) | MCP overview — Introduction to MCP |
+| 2 | [figure 2.png](images/figure%202.png) | The Problem MCP Solves — GitHub example |
+| 3 | [figure 3.png](images/figure%203.png) | The N×M integration problem (before vs. after MCP) |
+| 4 | [figure 4.png](images/figure%204.png) | How MCP Works — shifting the burden |
+| 5 | [figure 5.png](images/figure%205.png) | MCP Servers Explained — tools, resources, prompts |
+| 6 | [figure 6.png](images/figure%206.png) | Transport Agnostic — communication protocols |
+| 7 | [figure 7.png](images/figure%207.png) | Transport options — stdio, HTTP, WebSockets |
+| 8 | [figure 8.png](images/figure%208.png) | MCP Message Types — request/response pairs |
+| 9 | [figure 9.png](images/figure%209.png) | ListToolsRequest/ListToolsResult exchange |
+| 10 | [figure 10.png](images/figure%2010.png) | How It All Works Together — complete flow |
+| 11 | [figure 11.png](images/figure%2011.png) | Defining tools with the Python MCP SDK |
+| 12 | [figure 12.png](images/figure%2012.png) | Server Inspector — testing tools |
+| 13 | [figure 13.png](images/figure%2013.png) | Client Architecture overview |
+| 14 | [figure 14.png](images/figure%2014.png) | Client session and resource management |
+| 15 | [figure 15.png](images/figure%2015.png) | How the client fits into the application |
+| 16 | [figure 16.png](images/figure%2016.png) | Resources — document mention feature |
+| 17 | [figure 17.png](images/figure%2017.png) | Resources — injecting content into prompts |
+| 18 | [figure 18.png](images/figure%2018.png) | Resources — request-response flow |
+| 19 | [figure 19.png](images/figure%2019.png) | Resources — flow from client to server |
+| 20 | [figure 20.png](images/figure%2020.png) | Resource types — direct and templated |
+| 21 | [figure 21.png](images/figure%2021.png) | Testing resources in the MCP Inspector |
+| 22 | [figure 22.png](images/figure%2022.png) | Accessing resources via @ mentions |
+| 23 | [figure 23.png](images/figure%2023.png) | Defining prompts — overview |
+| 24 | [figure 24.png](images/figure%2024.png) | Format command workflow — /format doc_id |
+| 25 | [figure 25.png](images/figure%2025.png) | Testing prompts in the MCP Inspector |
+| 26 | [figure 26.png](images/figure%2026.png) | Testing prompts in the CLI |
+| 27 | [figure 27.png](images/figure%2027.png) | How prompts work — message flow and lifecycle |

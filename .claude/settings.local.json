@@ -29,7 +29,11 @@
       "Bash(curl -s -o \"figure 26.jpg\" \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/10b4132e-4a5b-46f7-a476-539e28fd2d02/65506e1266d162f1818d6c7838c202fb.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1778391714&Signature=YggOPa4DC/DpT96NAE/r0XOLAF4=\")",
       "Bash(curl -s -o \"figure 27.jpg\" \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/10b4132e-4a5b-46f7-a476-539e28fd2d02/ecc52b7baab7ec4209c714a15e4eaacf.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1778391714&Signature=aT5PIuJQRqGtR9RTrKnrTuzG5z0=\")",
       "Bash(curl -s -o \"figure 28.jpg\" \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/10b4132e-4a5b-46f7-a476-539e28fd2d02/5f9a4c21fe18cbaf262b18670520b0f0.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1778391714&Signature=1tvvl/EBkDN9UDmddAwPaQvwclI=\")",
-      "Bash(curl -s -o \"figure 29.jpg\" \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/10b4132e-4a5b-46f7-a476-539e28fd2d02/5f8d4a282d7eed456192768273c053c5.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1778391714&Signature=f3rZxYiU9g2Evlh90T0uQZTIu50=\")"
+      "Bash(curl -s -o \"figure 29.jpg\" \"https://maas-log-prod.cn-wlcb.ufileos.com/anthropic/10b4132e-4a5b-46f7-a476-539e28fd2d02/5f8d4a282d7eed456192768273c053c5.jpg?UCloudPublicKey=TOKEN_e15ba47a-d098-4fbd-9afc-a0dcf0e4e621&Expires=1778391714&Signature=f3rZxYiU9g2Evlh90T0uQZTIu50=\")",
+      "Bash(python:*)",
+      "Bash(where python:*)",
+      "Bash(py:*)",
+      "Bash(sort -t' ' -k1 -n)"
     ]
   }
 }
