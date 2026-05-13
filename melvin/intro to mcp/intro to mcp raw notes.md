@@ -458,56 +458,56 @@ These are high-level guidelines to help you choose the right primitive for your 
 I already include the code from the zip files   
 
 
-[figure1]: images/figure%201.png
+[figure1]: images/mcp-architecture-overview.png
 
-[figure2]: images/figure%202.png
+[figure2]: images/github-chat-interface.png
 
-[figure3]: images/figure%203.png
+[figure3]: images/github-tool-explosion.png
 
-[figure4]: images/figure%204.png
+[figure4]: images/mcp-shifts-tool-burden.png
 
-[figure5]: images/figure%205.png
+[figure5]: images/mcp-server-github-get-repos.png
 
-[figure6]: images/figure%206.png
+[figure6]: images/transport-agnostic-stdio.png
 
-[figure7]: images/figure%207.png
+[figure7]: images/mcp-over-http-websockets.png
 
-[figure8]: images/figure%208.png
+[figure8]: images/list-tools-request-result.png
 
-[figure9]: images/figure%209.png
+[figure9]: images/call-tool-request-result.png
 
-[figure10]: images/figure%2010.png
+[figure10]: images/end-to-end-query-flow.png
 
-[figure11]: images/figure%2011.png
+[figure11]: images/sdk-tool-definition-decorators.png
 
-[figure12]: images/figure%2012.png
+[figure12]: images/mcp-inspector-testing-tool.png
 
-[figure13]: images/figure%2013.png
+[figure13]: images/mcp-client-architecture.png
 
-[figure14]: images/figure%2014.png
+[figure14]: images/client-session-resource-management.png
 
-[figure15]: images/figure%2015.png
+[figure15]: images/application-flow-list-and-call-tool.png
 
-[figure16]: images/figure%2016.png
+[figure16]: images/document-mention-autocomplete.png
 
-[figure17]: images/figure%2017.png
+[figure17]: images/resource-content-injected-into-prompt.png
 
-[figure18]: images/figure%2018.png
+[figure18]: images/read-resource-request-result.png
 
-[figure19]: images/figure%2019.png
+[figure19]: images/full-resource-request-flow.png
 
-[figure20]: images/figure%2020.png
+[figure20]: images/templated-resource-uri-parsing.png
 
-[figure21]: images/figure%2021.png
+[figure21]: images/mcp-inspector-resources-tabs.png
 
-[figure22]: images/figure%2022.png
+[figure22]: images/at-mention-read-resource-request.png
 
-[figure23]: images/figure%2023.png
+[figure23]: images/mcp-prompts-pre-built-instructions.png
 
-[figure24]: images/figure%2024.png
+[figure24]: images/user-vs-prebuilt-prompt-quality.png
 
-[figure25]: images/figure%2025.png
+[figure25]: images/mcp-inspector-testing-prompt.png
 
-[figure26]: images/figure%2026.png
+[figure26]: images/cli-slash-command-format.png
 
-[figure27]: images/figure%2027.png
+[figure27]: images/prompt-workflow-define-request-return.png

@@ -38,7 +38,18 @@
       "Read(//c/Users/admin/AppData/Local/Python/**)",
       "Bash(uv run:*)",
       "Bash(grep -v '^$')",
-      "Bash(wc:*)"
+      "Bash(wc:*)",
+      "Bash(bash:*)",
+      "Bash(mv \"figure 1.png\" \"mcp-architecture-overview.png\")",
+      "Bash(mv \"figure 2.png\" \"github-chat-interface.png\")",
+      "Bash(mv \"figure 3.png\" \"github-tool-explosion.png\")",
+      "Bash(mv \"figure 4.png\" \"mcp-shifts-tool-burden.png\")",
+      "Bash(mv \"figure 5.png\" \"mcp-server-github-get-repos.png\")",
+      "Bash(mv \"image1.png\" \"sampling-server-direct-claude-access.png\")",
+      "Bash(mv \"image2.png\" \"sampling-server-delegates-to-client.png\")",
+      "Bash(mv \"image3.png\" \"roots-claude-cannot-find-file.png\")",
+      "Bash(mv \"image4.png\" \"roots-complex-filesystem-structure.png\")",
+      "Bash(mv \"image5.png\" \"json-call-tool-request-result-example.png\")"
     ]
   }
 }
