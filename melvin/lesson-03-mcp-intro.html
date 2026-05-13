@@ -64,6 +64,49 @@ code{font-family:'Courier New',monospace;color:#9cdcfe;}
 .log-entry .method{color:#4fc1ff;}
 .log-entry .data{color:#ce9178;}
 .log-entry .note{color:#858585;font-style:italic;}
+
+/* Coding Practice Styles */
+.practice-section{margin:24px 0;padding:20px;background:#252526;border-radius:10px;border:1px solid #3e3e42;}
+.practice-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.practice-title{color:#9cdcfe;font-size:18px;font-weight:600;}
+.practice-badge{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;}
+.practice-badge.pending{background:#3e3e42;color:#858585;}
+.practice-badge.completed{background:#1a3a2a;color:#4ec9b0;}
+.practice-badge.viewed{background:#3a3a1a;color:#ffd700;}
+.practice-desc{color:#d4d4d4;margin-bottom:16px;line-height:1.7;font-size:14px;}
+.code-editor{background:#1e1e1e;border:2px solid #3e3e42;border-radius:6px;padding:14px;font-family:'Courier New',monospace;font-size:14px;color:#d4d4d4;min-height:80px;resize:vertical;transition:border-color 0.2s;width:100%;}
+.code-editor:focus{outline:none;border-color:#007acc;}
+.code-editor::placeholder{color:#858585;}
+.code-output{margin-top:12px;padding:12px 16px;border-radius:6px;font-size:14px;display:none;}
+.code-output.show{display:block;}
+.code-output.success{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.code-output.error{background:#3a1a1a;color:#f44747;border:1px solid #f44747;}
+.solution-box{margin-top:16px;display:none;}
+.solution-box.show{display:block;}
+.solution-content{background:#1a1a2e;border-left:4px solid #ffd700;padding:14px;border-radius:6px;}
+.solution-label{color:#ffd700;font-weight:600;margin-bottom:8px;font-size:13px;}
+.solution-code{background:#1e1e1e;padding:12px;border-radius:4px;font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
+.practice-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn-check{padding:10px 20px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;transition:background 0.2s;}
+.btn-check:hover{background:#005f9e;}
+.btn-hint{padding:10px 20px;background:#2d2d30;color:#ffd700;border:1px solid #3e3e42;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;}
+.btn-hint:hover{background:#3e3e42;}
+.btn-solution{padding:10px 20px;background:#2d2d30;color:#858585;border:1px solid #3e3e42;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.btn-solution:hover{border-color:#ffd700;color:#ffd700;}
+.xp-section{margin-top:30px;padding:20px;background:#2d2d30;border-radius:8px;border:1px solid #3e3e42;}
+.xp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.xp-label{color:#fff;font-weight:600;font-size:15px;}
+.xp-count{color:#4ec9b0;font-size:16px;font-weight:700;}
+.xp-bar-container{height:8px;background:#1e1e1e;border-radius:4px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:#4ec9b0;width:0%;transition:width 0.3s ease;}
+.xp-text{margin-top:8px;color:#858585;font-size:13px;}
+.hint-box{margin-top:12px;padding:12px;background:#2d2d30;border-left:3px solid #ffc107;border-radius:4px;display:none;font-size:13px;color:#d4d4d4;}
+.hint-box.show{display:block;}
+.match-column{display:flex;flex-direction:column;gap:12px;margin:16px 0;}
+.match-item{display:flex;align-items:center;gap:12px;padding:10px;background:#2d2d30;border-radius:6px;}
+.match-label{color:#9cdcfe;font-weight:600;min-width:100px;}
+.match-select{padding:8px 16px;background:#1e1e1e;border:1px solid #3e3e42;border-radius:6px;color:#d4d4d4;cursor:pointer;transition:border-color 0.2s;}
+.match-select:hover{border-color:#007acc;}
 </style>
 </head>
 <body>
@@ -75,6 +118,7 @@ code{font-family:'Courier New',monospace;color:#9cdcfe;}
   <div class="tabs">
     <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
     <div class="tab" onclick="switchTab('demo')">Demo</div>
+    <div class="tab" onclick="switchTab('practice')">Luyện tập Code</div>
     <div class="tab" onclick="switchTab('quiz')">Quiz</div>
   </div>
 
@@ -263,6 +307,130 @@ code{font-family:'Courier New',monospace;color:#9cdcfe;}
 
     <div class="card card-blue" style="margin-top:20px;">
       <p><strong>Luồng mô phỏng:</strong> Người dùng hỏi về repositories &rarr; Host phát hiện cần tools &rarr; Client/Server trao đổi JSON-RPC &rarr; Claude quyết định dùng tool &rarr; MCP Server gọi GitHub API &rarr; Kết quả chảy ngược &rarr; Claude tổng hợp câu trả lời.</p>
+    </div>
+  </div>
+
+  <!-- ==================== CODING PRACTICE TAB ==================== -->
+  <div id="tab-practice" class="tab-content">
+    <div class="xp-section">
+      <div class="xp-header">
+        <span class="xp-label">Tiến độ bài tập</span>
+        <span class="xp-count" id="xp-count">0/2</span>
+      </div>
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xp-fill"></div>
+      </div>
+      <div class="xp-text" id="xp-text">Hoàn tất cả bài tập để tiếp tục!</div>
+    </div>
+
+    <!-- EXERCISE 1: Component Matching -->
+    <div class="practice-block" id="exercise-1">
+      <div class="practice-header">
+        <span class="practice-title">Bài tập 1: So khớp MCP Components</span>
+        <span class="practice-badge pending" id="badge-1">⬜ Chưa làm</span>
+      </div>
+      <p class="practice-desc">
+        Chọn MCP component khớp với mỗi mô tả:
+      </p>
+
+      <div class="match-column">
+        <div class="match-item">
+          <span class="match-label">Ứng dụng Claude:</span>
+          <select id="match-1-1" class="match-select">
+            <option value="">-- Chọn --</option>
+            <option value="client">MCP Client</option>
+            <option value="server">MCP Server</option>
+            <option value="host">Host Application</option>
+            <option value="transport">Transport Layer</option>
+          </select>
+        </div>
+      </div>
+      <div class="match-column">
+        <div class="match-item">
+          <span class="match-label">Provider công cụ:</span>
+          <select id="match-1-2" class="match-select">
+            <option value="">-- Chọn --</option>
+            <option value="client">MCP Client</option>
+            <option value="server">MCP Server</option>
+            <option value="host">Host Application</option>
+            <option value="transport">Transport Layer</option>
+          </select>
+        </div>
+      </div>
+      <div class="match-column">
+        <div class="match-item">
+          <span class="match-label">Giao tiếp liên lạc:</span>
+          <select id="match-1-3" class="match-select">
+            <option value="">-- Chọn --</option>
+            <option value="client">MCP Client</option>
+            <option value="server">MCP Server</option>
+            <option value="host">Host Application</option>
+            <option value="transport">Transport Layer</option>
+          </select>
+        </div>
+      </div>
+
+      <div id="hint-1" class="hint-box">
+        💡 <strong>Gợi ý:</strong>
+        <ul style="margin-left:16px;margin-top:8px;">
+          <li><strong>Host Application</strong> - Ứng dụng Claude (AI)</li>
+          <li><strong>MCP Client</strong> - Thư viện kết nối đến MCP Server</li>
+          <li><strong>MCP Server</strong> - Provider công cụ cho AI sử dụng</li>
+          <li><strong>Transport Layer</strong> - Cơ chế truyền tin nhắn (stdio, HTTP)</li>
+        </ul>
+      </div>
+
+      <div id="output-1" class="code-output"></div>
+
+      <div class="practice-actions">
+        <button class="btn-check" onclick="checkExercise(1)">✓ Kiểm tra</button>
+      </div>
+    </div>
+
+    <!-- EXERCISE 2: Handshake Ordering -->
+    <div class="practice-block" id="exercise-2">
+      <div class="practice-header">
+        <span class="practice-title">Bài tập 2: Sắp xếp MCP Handshake</span>
+        <span class="practice-badge pending" id="badge-2">⬜ Chưa làm</span>
+      </div>
+      <p class="practice-desc">
+        Sắp xếp 3 messages trong MCP handshake theo đúng thứ tự:
+      </p>
+
+      <div style="margin:16px 0;">
+        <div id="handshake-steps" style="display:grid;grid-template-columns:repeat(3,1fr);gap:12px;">
+          <div class="mcq-option" onclick="selectHandshake(2, 'init')" id="handshake-init">
+            <strong>1.</strong> Initialize Request
+          </div>
+          <div class="mcq-option" onclick="selectHandshake(2, 'result')" id="handshake-result">
+            <strong>2.</strong> Initialize Result
+          </div>
+          <div class="mcq-option" onclick="selectHandshake(2, 'notif')" id="handshake-notif">
+            <strong>3.</strong> Initialized Notification
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:16px;text-align:center;">
+        <strong>Thứ tự:</strong>
+        <div id="handshake-order" style="display:flex;justify-content:center;gap:12px;margin-top:8px;">
+          <span style="padding:8px 16px;background:#2d2d30;border-radius:4px;border:1px dashed #3e3e42;" id="order-1">?</span>
+          <span style="font-size:20px;color:#ffd700;">→</span>
+          <span style="padding:8px 16px;background:#2d2d30;border-radius:4px;border:1px dashed #3e3e42;" id="order-2">?</span>
+          <span style="font-size:20px;color:#ffd700;">→</span>
+          <span style="padding:8px 16px;background:#2d2d30;border-radius:4px;border:1px dashed #3e3e42;" id="order-3">?</span>
+        </div>
+      </div>
+
+      <div id="hint-2" class="hint-box">
+        💡 <strong>Gợi ý:</strong> Handshake bắt đầu bằng request, server trả về result, rồi client gửi notification xác nhận.
+      </div>
+
+      <div id="output-2" class="code-output"></div>
+
+      <div class="practice-actions">
+        <button class="btn-check" onclick="checkExercise(2)">✓ Kiểm tra</button>
+      </div>
     </div>
   </div>
 

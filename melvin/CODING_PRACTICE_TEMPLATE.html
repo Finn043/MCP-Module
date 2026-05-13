@@ -1,0 +1,374 @@
+<!-- ============================================ -->
+<!-- CODING PRACTICE TEMPLATE - COPY TO EACH LESSON -->
+<!-- ============================================ -->
+
+<!-- UPDATE TABS SECTION (Add 4th tab) -->
+<div class="tabs">
+  <div class="tab active" onclick="switchTab('theory')">Lý thuyết</div>
+  <div class="tab" onclick="switchTab('demo')">Demo</div>
+  <div class="tab" onclick="switchTab('practice')">Luyện tập Code</div>
+  <div class="tab" onclick="switchTab('quiz')">Quiz</div>
+</div>
+
+<!-- ============================================ -->
+<!-- ADD THESE CSS STYLES TO <style> -->
+<!-- ============================================ -->
+
+/* Coding Practice Styles */
+.practice-section { margin: 24px 0; padding: 20px; background: #252526; border-radius: 10px; border: 1px solid #3e3e42; }
+.practice-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; }
+.practice-title { color: #9cdcfe; font-size: 18px; font-weight: 600; }
+.practice-badge { padding: 4px 12px; border-radius: 4px; font-size: 12px; font-weight: 600; }
+.practice-badge.pending { background: #3e3e42; color: #858585; }
+.practice-badge.completed { background: #1a3a2a; color: #4ec9b0; }
+.practice-badge.viewed { background: #3a3a1a; color: #ffd700; }
+
+.practice-desc { color: #d4d4d4; margin-bottom: 16px; line-height: 1.7; font-size: 14px; }
+
+/* Code Editor */
+.code-editor {
+  background: #1e1e1e;
+  border: 2px solid #3e3e42;
+  border-radius: 6px;
+  padding: 14px;
+  font-family: 'Courier New', monospace;
+  font-size: 14px;
+  color: #d4d4d4;
+  min-height: 120px;
+  resize: vertical;
+  transition: border-color 0.2s;
+}
+.code-editor:focus { outline: none; border-color: #007acc; }
+.code-editor::placeholder { color: #858585; }
+
+/* Code Output/Feedback */
+.code-output { margin-top: 12px; padding: 12px 16px; border-radius: 6px; font-size: 14px; display: none; }
+.code-output.show { display: block; }
+.code-output.success { background: #1a3a2a; color: #4ec9b0; border: 1px solid #4ec9b0; }
+.code-output.error { background: #3a1a1a; color: #f44747; border: 1px solid #f44747; }
+
+/* Solution Box */
+.solution-box { margin-top: 16px; display: none; }
+.solution-box.show { display: block; }
+.solution-content {
+  background: #1a1a2e;
+  border-left: 4px solid #ffd700;
+  padding: 14px;
+  border-radius: 6px;
+}
+.solution-label { color: #ffd700; font-weight: 600; margin-bottom: 8px; font-size: 13px; }
+.solution-code { background: #1e1e1e; padding: 12px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 13px; color: #9cdcfe; }
+
+/* Practice Actions */
+.practice-actions { display: flex; gap: 10px; margin-top: 16px; flex-wrap: wrap; }
+.btn-check { padding: 10px 20px; background: #007acc; color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 14px; font-weight: 600; transition: background 0.2s; }
+.btn-check:hover { background: #005f9e; }
+.btn-hint { padding: 10px 20px; background: #2d2d30; color: #ffd700; border: 1px solid #3e3e42; border-radius: 6px; cursor: pointer; font-size: 14px; transition: background 0.2s; }
+.btn-hint:hover { background: #3e3e42; }
+.btn-solution { padding: 10px 20px; background: #2d2d30; color: #858585; border: 1px solid #3e3e42; border-radius: 6px; cursor: pointer; font-size: 14px; transition: all 0.2s; }
+.btn-solution:hover { border-color: #ffd700; color: #ffd700; }
+
+/* XP Progress */
+.xp-section { margin-top: 30px; padding: 20px; background: #2d2d30; border-radius: 8px; border: 1px solid #3e3e42; }
+.xp-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 12px; }
+.xp-label { color: #fff; font-weight: 600; font-size: 15px; }
+.xp-count { color: #4ec9b0; font-size: 16px; font-weight: 700; }
+.xp-bar-container { height: 8px; background: #1e1e1e; border-radius: 4px; overflow: hidden; }
+.xp-bar-fill { height: 100%; background: #4ec9b0; width: 0%; transition: width 0.3s ease; }
+.xp-text { margin-top: 8px; color: #858585; font-size: 13px; }
+
+/* Hints */
+.hint-box { margin-top: 12px; padding: 12px; background: #2d2d30; border-left: 3px solid #ffc107; border-radius: 4px; display: none; font-size: 13px; color: #d4d4d4; }
+.hint-box.show { display: block; }
+
+/* Multiple Choice Options */
+.mcq-options { display: grid; gap: 12px; margin-top: 16px; }
+.mcq-option {
+  background: #2d2d30;
+  border: 2px solid #3e3e42;
+  border-radius: 6px;
+  padding: 14px 16px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.mcq-option:hover { border-color: #007acc; background: #2a3a4a; }
+.mcq-option.selected { border-color: #007acc; background: #1e3a5f; }
+.mcq-option.correct { border-color: #4ec9b0; background: #1a3a2a; }
+.mcq-option.wrong { border-color: #f44747; background: #3a1a1a; }
+
+/* ============================================ -->
+<!-- ADD THESE JAVASCRIPT FUNCTIONS -->
+<!-- ============================================ -->
+
+// Track exercise completion state
+const exercises = {};
+
+// Load progress from localStorage
+function loadProgress() {
+  const lessonId = getLessonId();
+  const totalExercises = getTotalExercises();
+  let completedCount = 0;
+
+  for (let i = 1; i <= totalExercises; i++) {
+    const key = `mcp_${lessonId}_ex_${i}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      exercises[i] = JSON.parse(saved);
+      if (exercises[i].completed) completedCount++;
+      updateExerciseBadge(i);
+    } else {
+      exercises[i] = { completed: false, viewed: false };
+    }
+  }
+  updateXPBar(completedCount, totalExercises);
+}
+
+// Get lesson ID from current page URL
+function getLessonId() {
+  const match = window.location.pathname.match(/lesson-(\d+)/);
+  return match ? match[1] : '00';
+}
+
+// Get total exercises for current lesson
+function getTotalExercises() {
+  return document.querySelectorAll('.practice-block').length;
+}
+
+// Update exercise badge
+function updateExerciseBadge(num) {
+  const badge = document.getElementById(`badge-${num}`);
+  if (!badge) return;
+
+  if (exercises[num].completed) {
+    badge.className = 'practice-badge completed';
+    badge.textContent = '✅ Hoàn thành';
+  } else if (exercises[num].viewed) {
+    badge.className = 'practice-badge viewed';
+    badge.textContent = '📝 Đã xem';
+  } else {
+    badge.className = 'practice-badge pending';
+    badge.textContent = '⬜ Chưa làm';
+  }
+}
+
+// Update XP progress bar
+function updateXPBar(completed, total) {
+  const percent = Math.round((completed / total) * 100);
+  document.getElementById('xp-fill').style.width = percent + '%';
+  document.getElementById('xp-count').textContent = `${completed}/${total}`;
+  document.getElementById('xp-text').textContent = percent === 100 ? 'Hoàn tất cả!' : `Còn ${total - completed} bài tập`;
+}
+
+// Save exercise progress
+function saveProgress(num, completed) {
+  const lessonId = getLessonId();
+  const key = `mcp_${lessonId}_ex_${num}`;
+  exercises[num][completed ? 'completed' : 'viewed'] = true;
+  localStorage.setItem(key, JSON.stringify(exercises[num]));
+  updateExerciseBadge(num);
+
+  if (completed) {
+    const total = getTotalExercises();
+    const completedCount = Object.values(exercises).filter(e => e.completed).length;
+    updateXPBar(completedCount, total);
+  }
+}
+
+// Show hint
+function showHint(num) {
+  const hint = document.getElementById(`hint-${num}`);
+  if (hint) hint.classList.toggle('show');
+}
+
+// Show solution
+function showSolution(num) {
+  const solution = document.getElementById(`solution-${num}`);
+  const output = document.getElementById(`output-${num}`);
+
+  if (solution) {
+    solution.classList.toggle('show');
+    if (solution.classList.contains('show')) {
+      saveProgress(num, false); // Mark as viewed, not completed
+      if (output) {
+        output.className = 'code-output show';
+        output.innerHTML = '📋 <strong>Đã xem giải pháp.</strong> Hãy thử làm lại trước khi xem kết quả!';
+      }
+    }
+  }
+}
+
+// Reset exercise
+function resetExercise(num) {
+  const editor = document.getElementById(`editor-${num}`);
+  const output = document.getElementById(`output-${num}`);
+  const solution = document.getElementById(`solution-${num}`);
+
+  if (editor) editor.value = '';
+  if (output) {
+    output.className = 'code-output';
+    output.innerHTML = '';
+  }
+  if (solution) solution.classList.remove('show');
+}
+
+// Update switchTab to handle 4 tabs
+function switchTab(tabName) {
+  // Remove active class from all tabs
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+
+  // Add active class to clicked tab
+  const tabMap = { 'theory': 0, 'demo': 1, 'practice': 2, 'quiz': 3 };
+  const tabs = document.querySelectorAll('.tab');
+  if (tabs[tabMap[tabName]]) tabs[tabMap[tabName]].classList.add('active');
+
+  // Show corresponding content
+  const content = document.getElementById(`tab-${tabName}`);
+  if (content) content.classList.add('active');
+}
+
+// ============================================ -->
+<!-- EXAMPLE CODING PRACTICE TAB HTML -->
+<!-- ============================================ -->
+
+<div id="tab-practice" class="tab-content">
+  <div class="xp-section">
+    <div class="xp-header">
+      <span class="xp-label">Tiến độ bài tập</span>
+      <span class="xp-count" id="xp-count">0/3</span>
+    </div>
+    <div class="xp-bar-container">
+      <div class="xp-bar-fill" id="xp-fill"></div>
+    </div>
+    <div class="xp-text" id="xp-text">Hoàn tất cả bài tập để tiếp tục!</div>
+  </div>
+
+  <!-- EXERCISE 1 EXAMPLE -->
+  <div class="practice-block" id="exercise-1">
+    <div class="practice-header">
+      <span class="practice-title">Bài tập 1: Tên bài tập ở đây</span>
+      <span class="practice-badge pending" id="badge-1">⬜ Chưa làm</span>
+    </div>
+    <p class="practice-desc">
+      Mô tả bài tập ở đây. Học viên cần làm gì?
+    </p>
+    <div id="hint-1" class="hint-box">
+      💡 <strong>Gợi ý:</strong> Đây là gợi ý cho bài tập này...
+    </div>
+    <textarea
+      id="editor-1"
+      class="code-editor"
+      placeholder="Nhập câu trả lời của bạn ở đây..."
+      rows="6"
+    ></textarea>
+    <div id="output-1" class="code-output"></div>
+    <div id="solution-1" class="solution-box">
+      <div class="solution-label">Giải pháp:</div>
+      <div class="solution-code">
+        <!-- SOLUTION CODE GOES HERE -->
+      </div>
+    </div>
+    <div class="practice-actions">
+      <button class="btn-check" onclick="checkExercise(1)">✓ Kiểm tra</button>
+      <button class="btn-hint" onclick="showHint(1)">💡 Gợi ý</button>
+      <button class="btn-solution" onclick="showSolution(1)">📋 Xem giải pháp</button>
+      <button class="btn-solution" onclick="resetExercise(1)">↺ Làm lại</button>
+    </div>
+  </div>
+
+  <!-- EXERCISE 2 EXAMPLE (Multiple Choice) -->
+  <div class="practice-block" id="exercise-2">
+    <div class="practice-header">
+      <span class="practice-title">Bài tập 2: Multiple Choice</span>
+      <span class="practice-badge pending" id="badge-2">⬜ Chưa làm</span>
+    </div>
+    <p class="practice-desc">
+      Chọn đáp án đúng cho câu hỏi sau:
+    </p>
+    <div class="mcq-options">
+      <div class="mcq-option" onclick="selectMCQ(2, 'a')">
+        A. Option A - Incorrect
+      </div>
+      <div class="mcq-option" onclick="selectMCQ(2, 'b')">
+        B. Option B - Correct
+      </div>
+      <div class="mcq-option" onclick="selectMCQ(2, 'c')">
+        C. Option C - Incorrect
+      </div>
+    </div>
+    <div id="output-2" class="code-output"></div>
+    <div class="practice-actions">
+      <button class="btn-check" onclick="checkExercise(2)">✓ Kiểm tra</button>
+    </div>
+  </div>
+</div>
+
+<!-- ============================================ -->
+<!-- EXERCISE VALIDATION FUNCTIONS (Custom per exercise) -->
+<!-- ============================================ -->
+
+// Exercise 1: Text/Code validation
+function checkExercise(num) {
+  let isCorrect = false;
+  let feedback = '';
+
+  switch(num) {
+    case 1:
+      // Example: Check for specific keywords in answer
+      const answer = document.getElementById('editor-1').value.trim();
+      if (answer.includes('jsonrpc') && answer.includes('2.0')) {
+        isCorrect = true;
+        feedback = '✅ <strong>Chính xác!</strong> Bạn đã hiểu đúng cấu trúc JSON-RPC.';
+      } else {
+        feedback = '❌ <strong>Chưa đúng.</strong> Gợi ý: Kiểm tra xem có field <code>jsonrpc</code> với giá trị <code>"2.0"</code> chưa?';
+      }
+      break;
+
+    case 2:
+      // Multiple choice
+      const selected = mcqSelections[2];
+      if (selected === 'b') {
+        isCorrect = true;
+        feedback = '✅ <strong>Chính xác!</strong> Option B là đáp án đúng.';
+      } else if (selected) {
+        isCorrect = false;
+        feedback = '❌ <strong>Sai rồi.</strong> Thử lại nhé!';
+        markMCQWrong(2, selected);
+      } else {
+        feedback = '⚠️ <strong>Chưa chọn.</strong> Hãy chọn một đáp án trước khi kiểm tra.';
+      }
+      break;
+  }
+
+  const output = document.getElementById(`output-${num}`);
+  output.innerHTML = feedback;
+  output.className = `code-output show ${isCorrect ? 'success' : 'error'}`;
+
+  if (isCorrect) {
+    saveProgress(num, true);
+    // Disable buttons after completion
+    document.querySelector(`#exercise-${num} .btn-check`).disabled = true;
+  }
+}
+
+// Multiple choice state
+const mcqSelections = {};
+
+function selectMCQ(exerciseNum, option) {
+  mcqSelections[exerciseNum] = option;
+
+  // Update UI
+  const options = document.querySelectorAll(`#exercise-${exerciseNum} .mcq-option`);
+  options.forEach(opt => opt.classList.remove('selected'));
+  options[option.charCodeAt(0) - 97].classList.add('selected');
+}
+
+function markMCQWrong(exerciseNum, wrongOption) {
+  const options = document.querySelectorAll(`#exercise-${exerciseNum} .mcq-option`);
+  options[wrongOption.charCodeAt(0) - 97].classList.add('wrong');
+}
+
+// Initialize on page load
+document.addEventListener('DOMContentLoaded', () => {
+  loadProgress();
+});

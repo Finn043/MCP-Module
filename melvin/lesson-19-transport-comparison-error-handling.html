@@ -59,6 +59,50 @@ code{font-family:'Courier New',monospace;color:#9cdcfe;}
 .error-card:hover{border-color:#f44747;}
 .error-card .error-detail{display:none;margin-top:10px;}
 .error-card.open .error-detail{display:block;}
+
+/* Coding Practice Styles */
+.practice-section{margin:24px 0;padding:20px;background:#252526;border-radius:10px;border:1px solid #3e3e42;}
+.practice-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.practice-title{color:#9cdcfe;font-size:18px;font-weight:600;}
+.practice-badge{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;}
+.practice-badge.pending{background:#3e3e42;color:#858585;}
+.practice-badge.completed{background:#1a3a2a;color:#4ec9b0;}
+.practice-badge.viewed{background:#3a3a1a;color:#ffd700;}
+.practice-desc{color:#d4d4d4;margin-bottom:16px;line-height:1.7;font-size:14px;}
+.code-editor{background:#1e1e1e;border:2px solid #3e3e42;border-radius:6px;padding:14px;font-family:'Courier New',monospace;font-size:14px;color:#d4d4d4;min-height:120px;resize:vertical;transition:border-color 0.2s;width:100%;}
+.code-editor:focus{outline:none;border-color:#007acc;}
+.code-editor::placeholder{color:#858585;}
+.code-output{margin-top:12px;padding:12px 16px;border-radius:6px;font-size:14px;display:none;}
+.code-output.show{display:block;}
+.code-output.success{background:#1a3a2a;color:#4ec9b0;border:1px solid #4ec9b0;}
+.code-output.error{background:#3a3a1a;color:#f44747;border:1px solid #f44747;}
+.solution-box{margin-top:16px;display:none;}
+.solution-box.show{display:block;}
+.solution-content{background:#1a1a2e;border-left:4px solid #ffd700;padding:14px;border-radius:6px;}
+.solution-label{color:#ffd700;font-weight:600;margin-bottom:8px;font-size:13px;}
+.solution-code{background:#1e1e1e;padding:12px;border-radius:4px;font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
+.practice-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn-check{padding:10px 20px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;transition:background 0.2s;}
+.btn-check:hover{background:#005f9e;}
+.btn-hint{padding:10px 20px;background:#2d2d30;color:#ffd700;border:1px solid #3e3e42;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;}
+.btn-hint:hover{background:#3e3e42;}
+.btn-solution{padding:10px 20px;background:#2d2d30;color:#858585;border:1px solid #3e3e42;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.btn-solution:hover{border-color:#ffd700;color:#ffd700;}
+.xp-section{margin-top:30px;padding:20px;background:#2d2d30;border-radius:8px;border:1px solid #3e3e42;}
+.xp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.xp-label{color:#fff;font-weight:600;font-size:15px;}
+.xp-count{color:#4ec9b0;font-size:16px;font-weight:700;}
+.xp-bar-container{height:8px;background:#1e1e1e;border-radius:4px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:#4ec9b0;width:0%;transition:width 0.3s ease;}
+.xp-text{margin-top:8px;color:#858585;font-size:13px;}
+.hint-box{margin-top:12px;padding:12px;background:#2d2d30;border-left:3px solid #ffc107;border-radius:4px;display:none;font-size:13px;color:#d4d4d4;}
+.hint-box.show{display:block;}
+.mcq-options{display:grid;gap:12px;margin-top:16px;}
+.mcq-option{background:#2d2d30;border:2px solid #3e3e42;border-radius:6px;padding:14px 16px;cursor:pointer;transition:all 0.2s;}
+.mcq-option:hover{border-color:#007acc;background:#2a3a4a;}
+.mcq-option.selected{border-color:#007acc;background:#1e3a5f;}
+.mcq-option.correct{border-color:#4ec9b0;background:#1a3a2a;}
+.mcq-option.wrong{border-color:#f44747;background:#3a1a1a;}
 </style>
 </head>
 <body>
@@ -337,6 +381,23 @@ code{font-family:'Courier New',monospace;color:#9cdcfe;}
 </div>
 
 <!-- QUIZ TAB -->
+<div id="tab-practice" class="tab-content">    <div class="xp-section">
+      <div class="xp-header">
+        <span class="xp-label">Tiến độ bài tập</span>
+        <span class="xp-count" id="xp-count">0/2</span>
+      
+
+	function checkExercise(num) {
+	  const output = document.getElementById(`output-${num}`);
+	  output.innerHTML = '🔧 <strong>Đang phát triển...</strong><br>Bài tập này sẽ được thêm trong phiên bản sau.';
+	  output.className = 'code-output show';
+	}
+</div>
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xp-fill"></div>
+      </div>
+      <div class="xp-text" id="xp-text">Hoàn tất cả bài tập để tiếp tục!</div>
+    </div>  <!-- TODO: Add exercises --></div>
 <div id="tab-quiz" class="tab-content">
 
 <h2>📝 Kiểm tra kiến thức — Transport & Errors</h2>
