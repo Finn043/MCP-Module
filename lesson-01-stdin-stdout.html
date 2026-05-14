@@ -60,7 +60,79 @@ code{font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
 .terminal-err{color:#f44747;}
 .pipe-arrow{font-size:24px;color:#ffd700;text-align:center;padding:8px;animation:pulse 1.5s infinite;}
 @keyframes pulse{0%,100%{opacity:1;}50%{opacity:0.4;}}
+
+/* Code Editor Styles */
+.code-editor-container{background:#1a1a1e;border:2px solid #3e3e42;border-radius:10px;margin:20px 0;overflow:hidden;}
+.code-editor-header{display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:#252526;border-bottom:1px solid #3e3e42;}
+.code-editor-title{color:#9cdcfe;font-weight:600;font-size:14px;}
+.code-editor-actions{display:flex;gap:8px;}
+.code-editor-toolbar{display:flex;gap:8px;padding:8px 16px;background:#2d2d30;border-bottom:1px solid #3e3e42;}
+.btn-code{padding:6px 14px;background:#007acc;color:white;border:none;border-radius:4px;cursor:pointer;font-size:12px;font-weight:600;transition:all 0.2s;}
+.btn-code:hover{background:#005f9e;}
+.btn-code.secondary{background:#3e3e42;color:#858585;}
+.btn-code.secondary:hover{background:#4a4a4e;color:#d4d4d4;}
+.language-select{padding:6px 10px;background:#2d2d30;border:1px solid #3e3e42;border-radius:4px;color:#d4d4d4;font-size:12px;cursor:pointer;}
+.language-select:hover{border-color:#007acc;}
+.cm-editor{height:280px;font-family:'Fira Code','Courier New',monospace;font-size:13px;}
+.cm-editor .cm-gutters{background:#1a1a1e;border-right:1px solid #3e3e42;color:#858585;}
+.cm-editor .cm-activeLineGutter{background:#2a2a2e;color:#d4d4d4;}
+.cm-editor .cm-line{padding:0 8px;min-height:20px;}
+.cm-editor .cm-activeLine{background:#2a2a2e;}
+.cm-editor .cm-selectionBackground{background:#264f78;}
+.cm-editor .cm-focused{outline:none;}
+.cm-editor .cm-cursor{border-left:2px solid #007acc;}
+.cm-editor .cm-scroller{overflow:auto;}
+.code-output{background:#0d1117;border-top:2px solid #3e3e42;padding:16px;min-height:100px;}
+.output-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;color:#858585;font-size:12px;font-weight:600;}
+.output-content{font-family:'Fira Code','Courier New',monospace;font-size:13px;line-height:1.6;white-space:pre-wrap;}
+.output-success{color:#4ec9b0;}
+.output-error{color:#f44747;}
+.output-info{color:#9cdcfe;}
+.output-warning{color:#ffc107;}
+.output-system{color:#858585;}
+
+/* Practice Tab Styles */
+.practice-section{margin:20px 0;padding:20px;background:#252526;border-radius:10px;border:1px solid #3e3e42;}
+.practice-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;}
+.practice-title{color:#9cdcfe;font-size:18px;font-weight:600;}
+.practice-badge{padding:4px 12px;border-radius:4px;font-size:12px;font-weight:600;}
+.practice-badge.pending{background:#3e3e42;color:#858585;}
+.practice-badge.completed{background:#1a3a2a;color:#4ec9b0;}
+.practice-badge.viewed{background:#3a3a1a;color:#ffd700;}
+.practice-desc{color:#d4d4d4;margin-bottom:16px;line-height:1.7;font-size:14px;}
+.hint-box{margin-top:12px;padding:12px;background:#2d2d30;border-left:3px solid #ffc107;border-radius:4px;display:none;font-size:13px;color:#d4d4d4;}
+.hint-box.show{display:block;}
+.solution-box{margin-top:16px;display:none;}
+.solution-box.show{display:block;}
+.solution-content{background:#1a1a2e;border-left:4px solid #ffd700;padding:14px;border-radius:6px;}
+.solution-label{color:#ffd700;font-weight:600;margin-bottom:8px;font-size:13px;}
+.solution-code{background:#1e1e1e;padding:12px;border-radius:4px;font-family:'Fira Code','Courier New',monospace;font-size:13px;color:#9cdcfe;}
+.practice-actions{display:flex;gap:10px;margin-top:16px;flex-wrap:wrap;}
+.btn-check{padding:10px 20px;background:#007acc;color:white;border:none;border-radius:6px;cursor:pointer;font-size:14px;font-weight:600;transition:background 0.2s;}
+.btn-check:hover{background:#005f9e;}
+.btn-check:disabled{background:#3e3e42;color:#858585;cursor:not-allowed;}
+.btn-hint{padding:10px 20px;background:#2d2d30;color:#ffd700;border:1px solid #3e3e42;border-radius:6px;cursor:pointer;font-size:14px;transition:background 0.2s;}
+.btn-hint:hover{background:#3e3e42;}
+.btn-solution{padding:10px 20px;background:#2d2d30;color:#858585;border:1px solid #3e3e42;border-radius:6px;cursor:pointer;font-size:14px;transition:all 0.2s;}
+.btn-solution:hover{border-color:#ffd700;color:#ffd700;}
+
+/* XP Progress */
+.xp-section{margin-top:24px;padding:20px;background:#2d2d30;border-radius:8px;border:1px solid #3e3e42;}
+.xp-header{display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;}
+.xp-label{color:#fff;font-weight:600;font-size:15px;}
+.xp-count{color:#4ec9b0;font-size:16px;font-weight:700;}
+.xp-bar-container{height:8px;background:#1e1e1e;border-radius:4px;overflow:hidden;}
+.xp-bar-fill{height:100%;background:#4ec9b0;width:0%;transition:width 0.3s ease;}
+.xp-text{margin-top:8px;color:#858585;font-size:13px;}
+.practice-block{margin:20px 0;padding:20px;background:#252526;border-radius:10px;border:1px solid #3e3e42;}
 </style>
+
+<!-- CodeMirror CDN -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/python/python.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/mode/javascript/javascript.min.js"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/codemirror.min.css">
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/codemirror/5.65.16/theme/dracula.min.css">
 </head>
 <body>
 <div class="container">
@@ -70,6 +142,7 @@ code{font-family:'Courier New',monospace;font-size:13px;color:#9cdcfe;}
   <div class="tabs">
     <div class="tab active" onclick="switchTab('theory')">📖 Lý thuyết</div>
     <div class="tab" onclick="switchTab('demo')">🎮 Demo</div>
+    <div class="tab" onclick="switchTab('practice')">💻 Luyện tập Code</div>
     <div class="tab" onclick="switchTab('quiz')">📝 Quiz</div>
   </div>
 
@@ -200,6 +273,213 @@ $ cat requests.txt | python3 server.py | python3 parser.py</code></pre>
     <button class="btn" style="background:#3e3e42;margin-left:8px;" onclick="resetPipe()">↺ Reset</button>
   </div>
 
+  <!-- PRACTICE TAB -->
+  <div class="tab-content" id="tab-practice">
+    <div class="xp-section">
+      <div class="xp-header">
+        <span class="xp-label">Tiến độ bài tập</span>
+        <span class="xp-count" id="xp-count">0/3</span>
+      </div>
+      <div class="xp-bar-container">
+        <div class="xp-bar-fill" id="xp-fill"></div>
+      </div>
+      <div class="xp-text" id="xp-text">Hoàn tất tất cả bài tập để tiếp tục!</div>
+    </div>
+
+    <!-- EXERCISE 1: Code Editor - stdin reading -->
+    <div class="practice-block" id="exercise-1">
+      <div class="practice-header">
+        <span class="practice-title">Bài tập 1: Đọc từ stdin</span>
+        <span class="practice-badge pending" id="badge-1">⬜ Chưa làm</span>
+      </div>
+      <p class="practice-desc">
+        Viết code để đọc một dòng từ stdin và in ra màn hình. Code của bạn sẽ được kiểm tra cú pháp và cấu trúc.
+      </p>
+
+      <div class="code-editor-container">
+        <div class="code-editor-header">
+          <span class="code-editor-title">🐍 Python Editor</span>
+          <div class="code-editor-actions">
+            <select class="language-select" id="lang-1" onchange="changeLanguage(1)">
+              <option value="python">Python</option>
+              <option value="javascript">JavaScript</option>
+            </select>
+          </div>
+        </div>
+        <textarea id="editor-1"># Đọc một dòng từ stdin và in ra màn hình
+# Yêu cầu: dùng sys.stdin.readline()
+
+import sys
+
+# Viết code của bạn ở đây:
+
+
+</textarea>
+        <div class="code-output" id="output-1">
+          <div class="output-header">
+            <span>📤 Output</span>
+          </div>
+          <div class="output-content" id="output-content-1"></div>
+        </div>
+      </div>
+
+      <div id="hint-1" class="hint-box">
+        💡 <strong>Gợi ý:</strong> Dùng <code>sys.stdin.readline()</code> để đọc dòng, rồi dùng <code>print()</code> để in ra. Đừng quên <code>.strip()</code> để xóa newline!
+      </div>
+
+      <div id="solution-1" class="solution-box">
+        <div class="solution-label">Giải pháp:</div>
+        <div class="solution-code">
+import sys
+line = sys.stdin.readline()
+print(f"Đọc được: {line.strip()}")
+        </div>
+      </div>
+
+      <div class="practice-actions">
+        <button class="btn-check" id="btn-check-1" onclick="checkExercise(1)">✓ Kiểm tra</button>
+        <button class="btn-code" onclick="runCode(1)">▶️ Chạy Code</button>
+        <button class="btn-hint" onclick="showHint(1)">💡 Gợi ý</button>
+        <button class="btn-code secondary" onclick="copyCode(1)">📋 Copy</button>
+        <button class="btn-code secondary" onclick="clearCode(1)">🗑️ Xóa</button>
+      </div>
+    </div>
+
+    <!-- EXERCISE 2: stdout writing with flush -->
+    <div class="practice-block" id="exercise-2">
+      <div class="practice-header">
+        <span class="practice-title">Bài tập 2: Ghi stdout với flush()</span>
+        <span class="practice-badge pending" id="badge-2">⬜ Chưa làm</span>
+      </div>
+      <p class="practice-desc">
+        Viết code để ghi message ra stdout và đảm bảo nó được gửi ngay lập tức (không bị buffer).
+      </p>
+
+      <div class="code-editor-container">
+        <div class="code-editor-header">
+          <span class="code-editor-title">🐍 Python Editor</span>
+          <div class="code-editor-actions">
+            <select class="language-select" id="lang-2" onchange="changeLanguage(2)">
+              <option value="python">Python</option>
+              <option value="javascript">JavaScript</option>
+            </select>
+          </div>
+        </div>
+        <textarea id="editor-2"># Ghi message ra stdout và flush ngay lập tức
+# Yêu cầu: dùng sys.stdout.write() và sys.stdout.flush()
+
+import sys
+
+# Viết code của bạn ở đây:
+
+
+</textarea>
+        <div class="code-output" id="output-2">
+          <div class="output-header">
+            <span>📤 Output</span>
+          </div>
+          <div class="output-content" id="output-content-2"></div>
+        </div>
+      </div>
+
+      <div id="hint-2" class="hint-box">
+        💡 <strong>Gợi ý:</strong> Dùng <code>sys.stdout.write(message)</code> để ghi, rồi gọi <code>sys.stdout.flush()</code> để ép gửi ngay.
+      </div>
+
+      <div id="solution-2" class="solution-box">
+        <div class="solution-label">Giải pháp:</div>
+        <div class="solution-code">
+import sys
+sys.stdout.write("Hello MCP!\n")
+sys.stdout.flush()
+        </div>
+      </div>
+
+      <div class="practice-actions">
+        <button class="btn-check" id="btn-check-2" onclick="checkExercise(2)">✓ Kiểm tra</button>
+        <button class="btn-code" onclick="runCode(2)">▶️ Chạy Code</button>
+        <button class="btn-hint" onclick="showHint(2)">💡 Gợi ý</button>
+        <button class="btn-code secondary" onclick="copyCode(2)">📋 Copy</button>
+        <button class="btn-code secondary" onclick="clearCode(2)">🗑️ Xóa</button>
+      </div>
+    </div>
+
+    <!-- EXERCISE 3: Complete MCP Server Pattern -->
+    <div class="practice-block" id="exercise-3">
+      <div class="practice-header">
+        <span class="practice-title">Bài tập 3: Hoàn thiện MCP Server Pattern</span>
+        <span class="practice-badge pending" id="badge-3">⬜ Chưa làm</span>
+      </div>
+      <p class="practice-desc">
+        Hoàn thiện code để tạo MCP server cơ bản: đọc JSON từ stdin, xử lý, và trả response về stdout.
+      </p>
+
+      <div class="code-editor-container">
+        <div class="code-editor-header">
+          <span class="code-editor-title">🐍 Python Editor</span>
+          <div class="code-editor-actions">
+            <select class="language-select" id="lang-3" onchange="changeLanguage(3)">
+              <option value="python">Python</option>
+            </select>
+          </div>
+        </div>
+        <textarea id="editor-3"># MCP Server cơ bản - hoàn thiện code ở các vị trí ...
+import sys, json
+
+while True:
+    line = sys.stdin.readline()
+    if not line:
+        break
+
+    request = json.loads(line)
+    # TODO: Xử lý request ở đây
+    response = {"jsonrpc": "2.0", "result": "pong", "id": request.get("id")}
+
+    # TODO: Ghi response ra stdout với flush
+    # Viết code của bạn ở đây:
+
+
+</textarea>
+        <div class="code-output" id="output-3">
+          <div class="output-header">
+            <span>📤 Output</span>
+          </div>
+          <div class="output-content" id="output-content-3"></div>
+        </div>
+      </div>
+
+      <div id="hint-3" class="hint-box">
+        💡 <strong>Gợi ý:</strong> Dùng <code>sys.stdout.write(json.dumps(response) + "\n")</code> và <code>sys.stdout.flush()</code>
+      </div>
+
+      <div id="solution-3" class="solution-box">
+        <div class="solution-label">Giải pháp:</div>
+        <div class="solution-code">
+import sys, json
+
+while True:
+    line = sys.stdin.readline()
+    if not line:
+        break
+
+    request = json.loads(line)
+    response = {"jsonrpc": "2.0", "result": "pong", "id": request.get("id")}
+
+    sys.stdout.write(json.dumps(response) + "\n")
+    sys.stdout.flush()
+        </div>
+      </div>
+
+      <div class="practice-actions">
+        <button class="btn-check" id="btn-check-3" onclick="checkExercise(3)">✓ Kiểm tra</button>
+        <button class="btn-code" onclick="runCode(3)">▶️ Chạy Code</button>
+        <button class="btn-hint" onclick="showHint(3)">💡 Gợi ý</button>
+        <button class="btn-code secondary" onclick="copyCode(3)">📋 Copy</button>
+        <button class="btn-code secondary" onclick="clearCode(3)">🗑️ Xóa</button>
+      </div>
+    </div>
+  </div>
+
   <!-- QUIZ TAB -->
   <div class="tab-content" id="tab-quiz">
     <h2>📝 Kiểm tra kiến thức</h2>
@@ -219,9 +499,263 @@ $ cat requests.txt | python3 server.py | python3 parser.py</code></pre>
 function switchTab(name) {
   document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
   document.querySelectorAll('.tab-content').forEach(t => t.classList.remove('active'));
-  const tabs = ['theory','demo','quiz'];
+  const tabs = ['theory','demo','practice','quiz'];
   document.querySelectorAll('.tab')[tabs.indexOf(name)].classList.add('active');
   document.getElementById('tab-'+name).classList.add('active');
+  if (name === 'practice' && !window.practiceInitialized) {
+    initializeCodeEditors();
+    window.practiceInitialized = true;
+  }
+}
+
+// ========== Coding Practice ==========
+let exercises = {1: {completed: false, viewed: false}, 2: {completed: false, viewed: false}, 3: {completed: false, viewed: false}};
+let codeEditors = {};
+
+function initializeCodeEditors() {
+  for (let i = 1; i <= 3; i++) {
+    const textarea = document.getElementById(`editor-${i}`);
+    if (textarea && !codeEditors[i]) {
+      codeEditors[i] = CodeMirror.fromTextArea(textarea, {
+        mode: 'python',
+        theme: 'dracula',
+        lineNumbers: true,
+        indentUnit: 4,
+        tabSize: 4,
+        indentWithTabs: false,
+        lineWrapping: true,
+        autofocus: false,
+        viewportMargin: Infinity
+      });
+    }
+  }
+  loadPracticeProgress();
+}
+
+function changeLanguage(exerciseNum) {
+  const lang = document.getElementById(`lang-${exerciseNum}`).value;
+  if (codeEditors[exerciseNum]) {
+    codeEditors[exerciseNum].setOption('mode', lang === 'python' ? 'python' : 'javascript');
+  }
+}
+
+function runCode(exerciseNum) {
+  const code = codeEditors[exerciseNum] ? codeEditors[exerciseNum].getValue() : '';
+  const outputEl = document.getElementById(`output-${exerciseNum}`);
+  const contentEl = document.getElementById(`output-content-${exerciseNum}`);
+  const outputHeader = outputEl.querySelector('.output-header span');
+
+  outputEl.style.display = 'block';
+  contentEl.innerHTML = '<span class="output-system">⏳ Đang chạy code...</span>';
+
+  // Simulate code execution (in real implementation, this would use Pyodide or backend)
+  setTimeout(() => {
+    contentEl.innerHTML = '';
+    const lines = [];
+    let hasError = false;
+
+    try {
+      // Basic validation and simulation
+      if (exerciseNum === 1) {
+        if (code.includes('sys.stdin.readline')) {
+          lines.push('<span class="output-success">✓ Đã phát hiện sys.stdin.readline()</span>');
+          if (code.includes('print(')) {
+            lines.push('<span class="output-success">✓ Đã phát hiện print() để in kết quả</span>');
+          }
+          lines.push('<span class="output-info">📥 stdin: Hello World</span>');
+          lines.push('<span class="output-success">📤 stdout: Hello World</span>');
+        } else {
+          lines.push('<span class="output-warning">⚠️ Chưa tìm thấy sys.stdin.readline()</span>');
+          lines.push('<span class="output-system">💡 Hãy dùng sys.stdin.readline() để đọc từ stdin</span>');
+        }
+      } else if (exerciseNum === 2) {
+        if (code.includes('sys.stdout.write')) {
+          lines.push('<span class="output-success">✓ Đã phát hiện sys.stdout.write()</span>');
+          if (code.includes('flush()')) {
+            lines.push('<span class="output-success">✓ Đã phát hiện flush() - data sẽ được gửi ngay!</span>');
+          } else {
+            lines.push('<span class="output-warning">⚠️ Chưa gọi flush() - data có thể bị buffer</span>');
+          }
+          lines.push('<span class="output-success">📤 stdout: Hello MCP!</span>');
+        } else {
+          lines.push('<span class="output-warning">⚠️ Chưa tìm thấy sys.stdout.write()</span>');
+          lines.push('<span class="output-system">💡 Hãy dùng sys.stdout.write() để ghi ra stdout</span>');
+        }
+      } else if (exerciseNum === 3) {
+        if (code.includes('sys.stdout.write') && code.includes('flush()')) {
+          lines.push('<span class="output-success">✓ MCP Server pattern hoàn chỉnh!</span>');
+          lines.push('<span class="output-info">📥 stdin: {"jsonrpc":"2.0","method":"ping","id":1}</span>');
+          lines.push('<span class="output-success">📤 stdout: {"jsonrpc":"2.0","result":"pong","id":1}</span>');
+        } else {
+          lines.push('<span class="output-warning">⚠️ Code chưa hoàn chỉnh</span>');
+          if (!code.includes('sys.stdout.write')) {
+            lines.push('<span class="output-system">💡 Thêm sys.stdout.write() để gửi response</span>');
+          }
+          if (!code.includes('flush()')) {
+            lines.push('<span class="output-system">💡 Thêm flush() để gửi ngay lập tức</span>');
+          }
+        }
+      }
+      outputHeader.textContent = '✅ Đã chạy';
+    } catch (e) {
+      hasError = true;
+      lines.push(`<span class="output-error">❌ Lỗi: ${e.message}</span>`);
+      outputHeader.textContent = '❌ Lỗi';
+    }
+
+    contentEl.innerHTML = lines.join('<br>');
+  }, 500);
+}
+
+function checkExercise(exerciseNum) {
+  const code = codeEditors[exerciseNum] ? codeEditors[exerciseNum].getValue() : '';
+  const outputEl = document.getElementById(`output-${exerciseNum}`);
+  const contentEl = document.getElementById(`output-content-${exerciseNum}`);
+  const btn = document.getElementById(`btn-check-${exerciseNum}`);
+
+  let isCorrect = false;
+  let feedback = '';
+
+  switch(exerciseNum) {
+    case 1:
+      if (code.includes('sys.stdin.readline') && code.includes('print(')) {
+        isCorrect = true;
+        feedback = '✅ <strong>Hoàn hảo!</strong> Code đã đúng: đọc từ stdin và in ra stdout.';
+      } else if (code.includes('sys.stdin.readline')) {
+        feedback = '⚠️ <strong>Gần đúng!</strong> Đã có sys.stdin.readline(), hãy thêm print() để in kết quả.';
+      } else if (code.includes('print(')) {
+        feedback = '⚠️ <strong>Chưa đúng!</strong> Đã có print(), nhưng thiếu sys.stdin.readline() để đọc input.';
+      } else {
+        feedback = '❌ <strong>Chưa đúng.</strong> Hãy dùng sys.stdin.readline() để đọc từ stdin.';
+      }
+      break;
+
+    case 2:
+      if (code.includes('sys.stdout.write') && code.includes('flush()')) {
+        isCorrect = true;
+        feedback = '✅ <strong>Hoàn hảo!</strong> Code đã đúng: ghi stdout với flush() để gửi ngay.';
+      } else if (code.includes('sys.stdout.write')) {
+        feedback = '⚠️ <strong>Gần đúng!</strong> Đã có sys.stdout.write(), hãy thêm flush() để gửi ngay.';
+      } else if (code.includes('flush()')) {
+        feedback = '⚠️ <strong>Chưa đúng!</strong> Đã có flush(), nhưng thiếu sys.stdout.write().';
+      } else {
+        feedback = '❌ <strong>Chưa đúng.</strong> Hãy dùng sys.stdout.write() và flush().';
+      }
+      break;
+
+    case 3:
+      if (code.includes('sys.stdout.write') && code.includes('flush()') && code.includes('json.dumps')) {
+        isCorrect = true;
+        feedback = '✅ <strong>Hoàn hảo!</strong> MCP Server pattern hoàn chỉnh!';
+      } else if (code.includes('sys.stdout.write') && code.includes('flush()')) {
+        feedback = '⚠️ <strong>Gần đúng!</strong> Đã có write + flush, hãy kiểm tra json.dumps().';
+      } else {
+        feedback = '❌ <strong>Chưa đúng.</strong> MCP server cần: sys.stdout.write(json.dumps(response) + "\\n") + flush()';
+      }
+      break;
+  }
+
+  outputEl.style.display = 'block';
+  contentEl.innerHTML = feedback;
+
+  if (isCorrect) {
+    contentEl.className = 'output-content output-success';
+    btn.disabled = true;
+    btn.textContent = '✅ Đã hoàn thành';
+    savePracticeProgress(exerciseNum, true);
+  } else {
+    contentEl.className = 'output-content output-error';
+  }
+}
+
+function showHint(exerciseNum) {
+  const hint = document.getElementById(`hint-${exerciseNum}`);
+  if (hint) hint.classList.toggle('show');
+}
+
+function copyCode(exerciseNum) {
+  const code = codeEditors[exerciseNum] ? codeEditors[exerciseNum].getValue() : '';
+  navigator.clipboard.writeText(code).then(() => {
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '✅ Đã copy!';
+    setTimeout(() => {
+      btn.textContent = originalText;
+    }, 2000);
+  });
+}
+
+function clearCode(exerciseNum) {
+  if (codeEditors[exerciseNum]) {
+    codeEditors[exerciseNum].setValue('');
+    codeEditors[exerciseNum].focus();
+  }
+  const outputEl = document.getElementById(`output-${exerciseNum}`);
+  const contentEl = document.getElementById(`output-content-${exerciseNum}`);
+  contentEl.innerHTML = '';
+  outputEl.style.display = 'none';
+}
+
+function loadPracticeProgress() {
+  const lessonId = '01';
+  const totalExercises = 3;
+  let completedCount = 0;
+
+  for (let i = 1; i <= totalExercises; i++) {
+    const key = `mcp_${lessonId}_ex_${i}`;
+    const saved = localStorage.getItem(key);
+    if (saved) {
+      exercises[i] = JSON.parse(saved);
+      if (exercises[i].completed) {
+        completedCount++;
+        updateExerciseBadge(i);
+        const btn = document.getElementById(`btn-check-${i}`);
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = '✅ Đã hoàn thành';
+        }
+      }
+    }
+  }
+  updateXPBar(completedCount, totalExercises);
+}
+
+function updateExerciseBadge(num) {
+  const badge = document.getElementById(`badge-${num}`);
+  if (!badge) return;
+
+  if (exercises[num].completed) {
+    badge.className = 'practice-badge completed';
+    badge.textContent = '✅ Hoàn thành';
+  } else if (exercises[num].viewed) {
+    badge.className = 'practice-badge viewed';
+    badge.textContent = '📝 Đã xem';
+  }
+}
+
+function updateXPBar(completed, total) {
+  const percent = Math.round((completed / total) * 100);
+  document.getElementById('xp-fill').style.width = percent + '%';
+  document.getElementById('xp-count').textContent = `${completed}/${total}`;
+  document.getElementById('xp-text').textContent = percent === 100 ? '🎉 Hoàn tất tất cả!' : `Còn ${total - completed} bài tập`;
+}
+
+function savePracticeProgress(num, completed) {
+  const lessonId = '01';
+  const key = `mcp_${lessonId}_ex_${num}`;
+  if (completed) {
+    exercises[num].completed = true;
+  } else {
+    exercises[num].viewed = true;
+  }
+  localStorage.setItem(key, JSON.stringify(exercises[num]));
+  updateExerciseBadge(num);
+
+  if (completed) {
+    const total = 3;
+    const completedCount = Object.values(exercises).filter(e => e.completed).length;
+    updateXPBar(completedCount, total);
+  }
 }
 
 // Demo 1: Echo server
